@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TapTheMap — Influencers Battle</title>
+  <meta name="description" content="Tap your country, back your captain, and light up the map. Secure by Stripe · SSL · Anonymous possible." />
+  <link rel="canonical" href="https://www.tapthemap.world/" />
+
+  <!-- Icons (optional) -->
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- OpenGraph -->
+  <meta property="og:title" content="TapTheMap — Influencers Battle" />
+  <meta property="og:description" content="Tap your country and choose 5 / 20 / 50 / 100 €. Every contribution lights up your land." />
+  <meta property="og:image" content="https://www.tapthemap.world/og.png" />
+  <meta property="og:url" content="https://www.tapthemap.world/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Preconnects -->
+  <link rel="preconnect" href="https://js.stripe.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] },
+          colors: { ink:{900:'#0b1020',800:'#0d162f',700:'#111B33',600:'#1a2744'} },
+          boxShadow: { glass:'0 10px 30px rgba(0,0,0,.35)' }
+        }
+      }
+    }
+  </script>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    .aurora:before,.aurora:after{
+      content:"";position:absolute;inset:-20%;filter:blur(120px);opacity:.55;pointer-events:none;
+      background:radial-gradient(600px 400px at 15% 10%, rgba(56,189,248,.6), transparent 60%),
+                 radial-gradient(600px 400px at 85% 20%, rgba(168,85,247,.5), transparent 60%),
+                 radial-gradient(600px 400px at 70% 85%, rgba(34,197,94,.45), transparent 60%);
+    }
+  </style>
+</head>
+<body class="bg-ink-900 text-white font-sans antialiased selection:bg-blue-600 selection:text-white">
+  <!-- Header -->
+  <header class="sticky top-0 z-30">
+    <div class="mx-auto max-w-7xl px-6 pt-5">
+      <div class="backdrop-blur-md bg-white/5 border border-white/10 shadow-glass rounded-2xl px-5 py-4 flex items-center justify-between">
+        <a href="/" class="text-xl md:text-2xl font-bold tracking-tight">tapthemap.world</a>
+        <nav class="hidden md:flex items-center gap-8 text-slate-200/90">
+          <a href="#leaders" class="hover:text-white">Leaders</a>
+          <a href="#about" class="hover:text-white">About</a>
+          <a href="#faq" class="hover:text-white">FAQ</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero + Map -->
+  <main class="relative aurora">
+    <section class="mx-auto max-w-7xl px-6">
+      <div class="grid lg:grid-cols-[1fr_380px] gap-6 mt-10">
+        <!-- Left: Map & copy -->
+        <div class="relative">
+          <div class="mb-6">
+            <h1 class="text-3xl md:text-5xl font-bold leading-tight">Fill the map. Your country, your pride.</h1>
+            <p class="mt-4 text-slate-300 max-w-2xl">
+              Tap your country and choose 5 / 20 / 50 / 100 € or “Other”.
+              Every contribution lights up your land.
+              <span class="text-slate-200">Secure by Stripe · SSL · Anonymous option.</span>
+            </p>
+            <div class="mt-5 flex items-center gap-3 text-slate-300 text-sm">
+              <span class="inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live
+              </span>
+              <span>·</span>
+              <span>Apple/Google Pay supported</span>
+            </div>
+          </div>
+
+          <!-- Controls above map -->
+          <div class="flex items-center gap-3 mb-3">
+            <label for="countrySelect" class="text-sm text-slate-300">Country:</label>
+            <select id="countrySelect" class="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none">
+              <option value="HRV|Croatia">Croatia (HRV)</option>
+              <option value="DEU|Germany">Germany (DEU)</option>
+              <option value="USA|United States">United States (USA)</option>
+              <option value="GBR|United Kingdom">United Kingdom (GBR)</option>
+              <option value="FRA|France">France (FRA)</option>
+              <option value="ITA|Italy">Italy (ITA)</option>
+              <option value="ESP|Spain">Spain (ESP)</option>
+              <option value="POL|Poland">Poland (POL)</option>
+              <option value="IND|India">India (IND)</option>
+              <option value="BRA|Brazil">Brazil (BRA)</option>
+            </select>
+            <button id="openDonate" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl">
+              Donate
+            </button>
+          </div>
+
+          <!-- Map -->
+          <div id="map" class="relative h-[62vh] min-h-[420px] w-full rounded-3xl overflow-hidden border border-white/10 bg-ink-800 shadow-glass"></div>
+        </div>
+
+        <!-- Right: Today panel -->
+        <aside class="lg:sticky lg:top-28">
+          <div class="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-5 shadow-glass">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-semibold">🔥 Today’s heat</h2>
+              <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
+            </div>
+            <ul id="todayList" class="mt-4 space-y-4">
+              <!-- Will be filled from /.netlify/functions/stats -->
+              <li class="text-slate-400 text-sm">Loading live stats…</li>
+            </ul>
+            <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
+          </div>
+
+          <div class="mt-6 backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-5 shadow-glass">
+            <h3 class="text-lg font-semibold">Become a Captain</h3>
+            <p class="text-slate-300 mt-2">Apply and get your referral link. Weekly Captain = most unique donors.</p>
+            <a href="/join" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-semibold">Apply →</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Trust row -->
+    <section class="mx-auto max-w-7xl px-6 mt-8">
+      <div class="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-wrap items-center gap-4 text-slate-200/90">
+        <div class="inline-flex items-center gap-2"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span> Secure by Stripe</div>
+        <span>·</span>
+        <div>SSL</div>
+        <span>·</span>
+        <div>Anonymous mode available</div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-7xl px-6 py-12 text-slate-300" id="about">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div>
+          <div class="text-white font-semibold">TapTheMap</div>
+          <p class="mt-2 text-sm">Influencers Battle — captains per country rally unique donors. No quid pro quo; private gift.</p>
+        </div>
+        <div class="text-sm">
+          <div class="font-semibold text-white">Info</div>
+          <ul class="mt-2 space-y-1">
+            <li><a class="hover:text-white" href="#faq">FAQ</a></li>
+            <li><a class="hover:text-white" href="/rules">Rules</a></li>
+            <li><a class="hover:text-white" href="/privacy">Privacy</a></li>
+          </ul>
+        </div>
+        <div class="text-sm">
+          <div class="font-semibold text-white">Contact</div>
+          <ul class="mt-2 space-y-1">
+            <li><a class="hover:text-white" href="mailto:hello@tapthemap.world">hello@tapthemap.world</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Donate Modal -->
+  <div id="donateModal" class="fixed inset-0 z-40 hidden">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative z-10 max-w-2xl mx-auto mt-24">
+      <div class="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200">
+        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <div id="modalCountry" class="text-xl font-bold">Croatia</div>
+            <div class="text-sm text-slate-600">Choose amount</div>
+          </div>
+          <button id="closeModal" class="p-2 text-slate-500 hover:text-slate-800">✕</button>
+        </div>
+        <div class="p-6 grid md:grid-cols-[1fr_160px] gap-6">
+          <div>
+            <div class="flex flex-wrap gap-3">
+              <button data-amt="5" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">5 €</button>
+              <button data-amt="20" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">20 €</button>
+              <button data-amt="50" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">50 €</button>
+              <button data-amt="100" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">100 €</button>
+              <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2">
+                <input id="otherAmt" type="number" min="1" step="1" placeholder="Other" class="w-24 bg-transparent outline-none text-slate-800" />
+                <button id="otherBtn" class="text-blue-700 font-semibold">OK</button>
+              </div>
+            </div>
+            <div class="mt-4 text-sm text-slate-600">Private gift, no quid pro quo. We show @handles only with consent.</div>
+          </div>
+          <div>
+            <div class="rounded-xl border border-slate-200 p-3 grid place-items-center h-[150px] text-slate-500">
+              <div id="qrBox">QR will appear after creating the Checkout link</div>
+            </div>
+            <button id="payNow" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl">Pay now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // ======= State & helpers =======
+    const modal = document.getElementById('donateModal');
+    const openDonateBtn = document.getElementById('openDonate');
+    const closeBtn = document.getElementById('closeModal');
+    const payNow = document.getElementById('payNow');
+    const modalCountry = document.getElementById('modalCountry');
+    const qrBox = document.getElementById('qrBox');
+    const countrySelect = document.getElementById('countrySelect');
+    const todayList = document.getElementById('todayList');
+
+    const qs = new URLSearchParams(location.search);
+    const initialISO = qs.get('c') || 'HRV';
+    const initialRef = qs.get('ref') || '';
+
+    const isoToName = {
+      HRV:'Croatia', DEU:'Germany', USA:'United States', GBR:'United Kingdom',
+      FRA:'France', ITA:'Italy', ESP:'Spain', POL:'Poland', IND:'India', BRA:'Brazil'
+    };
+
+    let chosen = {
+      country_iso: initialISO,
+      country_name: isoToName[initialISO] || initialISO,
+      amount: 20,
+      ref: initialRef
+    };
+
+    function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
+    function closeModal(){ modal.classList.add('hidden'); }
+
+    // ======= Leaflet map (dark) =======
+    const mapEl = document.getElementById('map');
+    const map = L.map(mapEl, { zoomControl: false, worldCopyJump: true }).setView([20, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap & CARTO', detectRetina: true, maxZoom: 6, minZoom: 2
+    }).addTo(map);
+
+    // Simple UX: clicking map just opens the donate modal for the selected country
+    map.on('click', () => openModal());
+
+    // ======= UI events =======
+    openDonateBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    document.querySelectorAll('.amt-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        chosen.amount = parseInt(btn.dataset.amt,10);
+        document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('ring','ring-offset-2'));
+        btn.classList.add('ring','ring-offset-2');
+      });
+    });
+    document.getElementById('otherBtn').addEventListener('click', ()=>{
+      const v = parseInt(document.getElementById('otherAmt').value,10);
+      if(v>0) chosen.amount = v;
+    });
+
+    countrySelect.addEventListener('change', ()=>{
+      const [iso, name] = countrySelect.value.split('|');
+      chosen.country_iso = iso; chosen.country_name = name;
+      modalCountry.textContent = chosen.country_name;
+    });
+
+    // Set initial select from URL param ?c=
+    const initialValue = Object.entries(isoToName).find(([k]) => k === initialISO);
+    if (initialValue) countrySelect.value = `${initialISO}|${isoToName[initialISO]}`;
+
+    // ======= Pay now → Stripe Checkout via Netlify Function =======
+    payNow.addEventListener('click', async ()=>{
+      try {
+        const res = await fetch('/.netlify/functions/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(chosen) // { country_iso, country_name, amount, ref }
+        });
+
+        if (res.status === 503) {
+          alert('Payments are not configured yet. Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Netlify → Environment variables.');
+          return;
+        }
+        if (!res.ok) {
+          const t = await res.text();
+          alert('Checkout error: ' + t);
+          return;
+        }
+
+        const { url } = await res.json();
+        if (url) window.location.href = url;
+        else alert('No checkout URL returned.');
+      } catch (e) {
+        alert('Network error. Try again.');
+      }
+    });
+
+    // ======= Today’s heat: load from /.netlify/functions/stats =======
+    async function loadStats(){
+      try {
+        const res = await fetch('/.netlify/functions/stats', { cache:'no-store' });
+        if (!res.ok) throw new Error('stats failed');
+        const data = await res.json(); // [{ iso, total_eur, donors_24h, donors_7d, last_ts }]
+        if (!Array.isArray(data) || !data.length) {
+          todayList.innerHTML = `<li class="text-slate-400 text-sm">No data yet — be the first to light up your country.</li>`;
+          return;
+        }
+        // sort by donors_24h desc, then total_eur desc
+        data.sort((a,b)=> (b.donors_24h - a.donors_24h) || (parseFloat(b.total_eur)-parseFloat(a.total_eur)));
+        const top = data.slice(0,5);
+        todayList.innerHTML = top.map(row=>{
+          const name = isoToName[row.iso] || row.iso;
+          return `<li class="flex items-center justify-between">
+            <div class="flex items-center gap-3"><span class="font-semibold">${name}</span></div>
+            <div class="text-blue-300">€${row.total_eur}</div>
+          </li>`;
+        }).join('');
+      } catch {
+        todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats temporarily unavailable.</li>`;
+      }
+    }
+    loadStats();
+    setInterval(loadStats, 20000); // update every 20s
+  </script>
+</body>
+</html>
