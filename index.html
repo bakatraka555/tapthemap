@@ -24,21 +24,19 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Minimal CSS fallback -->
   <style>
     html,body{height:100%}
     body{background:#0b1020;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #map{height:62vh;min-height:420px}
     .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
     .leaflet-container{background:#0b1020}
-    /* Dark select */
-    select{color:#fff !important;background-color:rgba(255,255,255,.1) !important;border:1px solid rgba(255,255,255,.15)!important}
+    select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
+    .badge{font-size:.75rem;color:#a3e635}
   </style>
 </head>
 <body class="bg-ink-900 text-white antialiased">
-  <!-- Header -->
   <header class="sticky top-0 z-30">
     <div class="mx-auto max-w-7xl px-6 pt-5">
       <div class="card px-5 py-4 flex items-center justify-between">
@@ -52,11 +50,9 @@
     </div>
   </header>
 
-  <!-- Main -->
   <main>
     <section class="mx-auto max-w-7xl px-6">
       <div class="grid lg:grid-cols-[1fr_380px] gap-6 mt-10">
-        <!-- Left -->
         <div>
           <div class="mb-6">
             <h1 class="text-3xl md:text-5xl font-bold leading-tight">Fill the map. Your country, your pride.</h1>
@@ -93,12 +89,10 @@
             </button>
           </div>
 
-          <!-- Map (dark) -->
           <div id="map" class="card overflow-hidden relative z-0"></div>
-          <p class="text-xs text-slate-400 mt-2">Tip: hover a country, then click to donate for that country.</p>
+          <div id="mapStatus" class="mt-2 badge">Loading world…</div>
         </div>
 
-        <!-- Right -->
         <aside class="lg:sticky lg:top-28">
           <div class="card p-5">
             <div class="flex items-center justify-between">
@@ -121,7 +115,6 @@
     </section>
   </main>
 
-  <!-- Donate Modal -->
   <div id="donateModal" class="fixed inset-0 z-40 hidden">
     <div class="absolute inset-0 bg-black/60"></div>
     <div class="relative z-10 max-w-2xl mx-auto mt-24">
@@ -158,9 +151,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script>
-    // ----- State -----
+    // State
     const modal = document.getElementById('donateModal');
     const openDonateBtn = document.getElementById('openDonate');
     const closeBtn = document.getElementById('closeModal');
@@ -168,6 +160,7 @@
     const modalCountry = document.getElementById('modalCountry');
     const countrySelect = document.getElementById('countrySelect');
     const todayList = document.getElementById('todayList');
+    const mapStatus = document.getElementById('mapStatus');
 
     const qs = new URLSearchParams(location.search);
     const initialISO = qs.get('c') || 'HRV';
@@ -177,19 +170,22 @@
     function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
     function closeModal(){ modal.classList.add('hidden'); }
 
-    // ----- Leaflet (dark tiles) -----
-    const map = L.map('map', { zoomControl:false, worldCopyJump:true }).setView([20,0], 2);
+    // Leaflet map
+    const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
 
-    // Fallback: click anywhere opens modal (dok GeoJSON ne dođe)
-    map.on('click', openModal);
+    // Dedicated pane for countries (on top)
+    map.createPane('countries');
+    map.getPane('countries').style.zIndex = 650;
+    map.getPane('countries').style.pointerEvents = 'auto';
 
-    // ----- Load world GEOJSON, hover & click-to-donate (dvostruki izvor + fallback) -----
+    // GeoJSON (two CDNs)
     const SRC_A = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
     const SRC_B = 'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
-    const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.08 };
+
+    const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.10 };
     const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
 
     function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || ''; }
@@ -197,17 +193,20 @@
 
     async function loadWorld(){
       try {
-        let res = await fetch(SRC_A, { cache:'force-cache' });
-        if(!res.ok) throw 0;
-        return await res.json();
+        const r1 = await fetch(SRC_A, { cache:'reload' });
+        if (r1.ok) return r1.json();
+        const r2 = await fetch(SRC_B, { cache:'reload' });
+        return r2.json();
       } catch {
-        const res = await fetch(SRC_B, { cache:'force-cache' });
-        return await res.json();
+        const r2 = await fetch(SRC_B, { cache:'reload' });
+        return r2.json();
       }
     }
 
     loadWorld().then(geo=>{
+      mapStatus.textContent = 'World ready ✓';
       const layer = L.geoJSON(geo, {
+        pane: 'countries',
         style: () => baseStyle,
         onEachFeature: (f, lyr) => {
           const iso = getISO3(f.properties);
@@ -222,17 +221,15 @@
               chosen.country_name = name || chosen.country_name;
               modalCountry.textContent = chosen.country_name;
 
-              // Sync select (add option if missing)
-              const existing = Array.from(countrySelect.options).find(o => o.value.startsWith((iso||'---')+'|'));
-              if (existing) {
-                countrySelect.value = existing.value;
-              } else if (iso && name) {
-                const opt = document.createElement('option');
-                opt.value = `${iso}|${name}`;
-                opt.textContent = `${name} (${iso})`;
+              // sync select
+              const val = `${iso}|${name}`;
+              let opt = Array.from(countrySelect.options).find(o => o.value.startsWith(iso + '|'));
+              if (!opt && iso && name) {
+                opt = document.createElement('option');
+                opt.value = val; opt.textContent = `${name} (${iso})`;
                 countrySelect.appendChild(opt);
-                countrySelect.value = opt.value;
               }
+              if (opt) countrySelect.value = opt.value;
 
               const b = e.target.getBounds();
               if (b && b.isValid()) map.fitBounds(b, { maxZoom: 4, padding:[20,20] });
@@ -241,9 +238,12 @@
           });
         }
       }).addTo(map);
-    }).catch(()=>{/* ignore; fallback map.on('click') stays active */});
+    }).catch(()=>{
+      mapStatus.textContent = 'World failed to load';
+      map.on('click', openModal);
+    });
 
-    // ----- UI -----
+    // UI
     document.getElementById('openDonate')?.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
 
@@ -266,7 +266,7 @@
     });
     countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
-    // ----- Pay now → Checkout -----
+    // Checkout
     payNow.addEventListener('click', async ()=>{
       try {
         const res = await fetch('/.netlify/functions/checkout', {
@@ -280,7 +280,7 @@
       } catch { alert('Network error.'); }
     });
 
-    // ----- Today’s heat (stats) -----
+    // Today’s heat
     async function loadStats(){
       try {
         const res = await fetch('/.netlify/functions/stats', { cache:'no-store' });
