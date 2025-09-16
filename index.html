@@ -183,53 +183,65 @@
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
 
-    // ----- Load world GEOJSON, hover & click-to-donate -----
-    const WORLD_GEOJSON = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
+    // Fallback: click anywhere opens modal (dok GeoJSON ne dođe)
+    map.on('click', openModal);
+
+    // ----- Load world GEOJSON, hover & click-to-donate (dvostruki izvor + fallback) -----
+    const SRC_A = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
+    const SRC_B = 'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
     const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.08 };
     const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
 
     function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || ''; }
     function getName(p){ return p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || ''; }
 
-    fetch(WORLD_GEOJSON)
-      .then(r=>r.json())
-      .then(geo=>{
-        const layer = L.geoJSON(geo, {
-          style: () => baseStyle,
-          onEachFeature: (f, lyr) => {
-            const iso = getISO3(f.properties);
-            const name = getName(f.properties) || iso || 'Unknown';
-            lyr.bindTooltip(name, { sticky:true, opacity:0.95 });
+    async function loadWorld(){
+      try {
+        let res = await fetch(SRC_A, { cache:'force-cache' });
+        if(!res.ok) throw 0;
+        return await res.json();
+      } catch {
+        const res = await fetch(SRC_B, { cache:'force-cache' });
+        return await res.json();
+      }
+    }
 
-            lyr.on({
-              mouseover: (e) => { e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-              mouseout:  (e) => { layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
-              click:     (e) => {
-                chosen.country_iso = iso || chosen.country_iso;
-                chosen.country_name = name || chosen.country_name;
-                modalCountry.textContent = chosen.country_name;
+    loadWorld().then(geo=>{
+      const layer = L.geoJSON(geo, {
+        style: () => baseStyle,
+        onEachFeature: (f, lyr) => {
+          const iso = getISO3(f.properties);
+          const name = getName(f.properties) || iso || 'Unknown';
+          lyr.bindTooltip(name, { sticky:true, opacity:0.95 });
 
-                // Sync select (add option if missing)
-                const existing = Array.from(countrySelect.options).find(o => o.value.startsWith((iso||'---')+'|'));
-                if (existing) {
-                  countrySelect.value = existing.value;
-                } else if (iso && name) {
-                  const opt = document.createElement('option');
-                  opt.value = `${iso}|${name}`;
-                  opt.textContent = `${name} (${iso})`;
-                  countrySelect.appendChild(opt);
-                  countrySelect.value = opt.value;
-                }
+          lyr.on({
+            mouseover: (e) => { e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
+            mouseout:  (e) => { layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
+            click:     (e) => {
+              chosen.country_iso = iso || chosen.country_iso;
+              chosen.country_name = name || chosen.country_name;
+              modalCountry.textContent = chosen.country_name;
 
-                const b = e.target.getBounds();
-                if (b && b.isValid()) map.fitBounds(b, { maxZoom: 4, padding:[20,20] });
-                openModal();
+              // Sync select (add option if missing)
+              const existing = Array.from(countrySelect.options).find(o => o.value.startsWith((iso||'---')+'|'));
+              if (existing) {
+                countrySelect.value = existing.value;
+              } else if (iso && name) {
+                const opt = document.createElement('option');
+                opt.value = `${iso}|${name}`;
+                opt.textContent = `${name} (${iso})`;
+                countrySelect.appendChild(opt);
+                countrySelect.value = opt.value;
               }
-            });
-          }
-        }).addTo(map);
-      })
-      .catch(()=> console.warn('GeoJSON load failed.'));
+
+              const b = e.target.getBounds();
+              if (b && b.isValid()) map.fitBounds(b, { maxZoom: 4, padding:[20,20] });
+              openModal();
+            }
+          });
+        }
+      }).addTo(map);
+    }).catch(()=>{/* ignore; fallback map.on('click') stays active */});
 
     // ----- UI -----
     document.getElementById('openDonate')?.addEventListener('click', openModal);
