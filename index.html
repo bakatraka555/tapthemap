@@ -24,14 +24,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Minimal CSS da sve bude čitljivo i kad Tailwind kasni -->
+  <!-- Minimal CSS fallback -->
   <style>
     html,body{height:100%}
     body{background:#0b1020;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #map{height:62vh;min-height:420px}
     .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
-    /* Dark select (fix "white on white") */
-    select{color:#fff !important;background-color:rgba(255,255,255,.1) !important;border:1px solid rgba(255,255,255,.15) !important}
+    .leaflet-container{background:#0b1020}
+    /* Dark select */
+    select{color:#fff !important;background-color:rgba(255,255,255,.1) !important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
   </style>
@@ -93,7 +94,7 @@
           </div>
 
           <!-- Map (dark) -->
-          <div id="map" class="card overflow-hidden"></div>
+          <div id="map" class="card overflow-hidden relative z-0"></div>
           <p class="text-xs text-slate-400 mt-2">Tip: hover a country, then click to donate for that country.</p>
         </div>
 
@@ -172,9 +173,7 @@
     const initialISO = qs.get('c') || 'HRV';
     const initialRef = qs.get('ref') || '';
 
-    const isoToName = { HRV:'Croatia', DEU:'Germany', USA:'United States', GBR:'United Kingdom', FRA:'France', ITA:'Italy', ESP:'Spain', POL:'Poland', IND:'India', BRA:'Brazil' };
-
-    let chosen = { country_iso: initialISO, country_name: isoToName[initialISO] || initialISO, amount: 20, ref: initialRef };
+    let chosen = { country_iso: initialISO, country_name: 'Croatia', amount: 20, ref: initialRef };
     function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
     function closeModal(){ modal.classList.add('hidden'); }
 
@@ -184,40 +183,56 @@
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
 
-    // ----- Load world GEOJSON, enable hover + click-to-donate -----
-    // CSP: connect-src must allow https://cdn.jsdelivr.net
+    // ----- Load world GEOJSON, hover & click-to-donate -----
     const WORLD_GEOJSON = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
+    const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.08 };
+    const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
 
-    function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.gu_a3 || p.postal || ''; }
-    function getName(p){ return p.NAME_EN || p.ADMIN || p.name || p.NAME_LONG || p.SOVEREIGNT || ''; }
+    function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || ''; }
+    function getName(p){ return p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || ''; }
 
-    fetch(WORLD_GEOJSON).then(r=>r.json()).then(geo=>{
-      const layer = L.geoJSON(geo, {
-        style: ()=>({ color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.08 }),
-        onEachFeature: (feature, lyr)=>{
-          const iso = getISO3(feature.properties);
-          const name = getName(feature.properties) || iso || 'Unknown';
-          lyr.bindTooltip(name, {sticky:true, direction:'auto', opacity:0.9});
+    fetch(WORLD_GEOJSON)
+      .then(r=>r.json())
+      .then(geo=>{
+        const layer = L.geoJSON(geo, {
+          style: () => baseStyle,
+          onEachFeature: (f, lyr) => {
+            const iso = getISO3(f.properties);
+            const name = getName(f.properties) || iso || 'Unknown';
+            lyr.bindTooltip(name, { sticky:true, opacity:0.95 });
 
-          lyr.on({
-            mouseover: (e)=> e.target.setStyle({fillOpacity:0.28, weight:1.2}),
-            mouseout:  (e)=> layer.resetStyle(e.target),
-            click: ()=>{
-              chosen.country_iso = iso || chosen.country_iso;
-              chosen.country_name = name || chosen.country_name;
-              modalCountry.textContent = chosen.country_name;
-              // sync select if possible
-              const opt = Array.from(countrySelect.options).find(o=>o.value.startsWith((iso||'---')+'|'));
-              if(opt) countrySelect.value = opt.value;
-              openModal();
-            }
-          });
-        }
-      }).addTo(map);
-    }).catch(()=> console.warn('World geojson failed to load. Check CSP connect-src for cdn.jsdelivr.net'));
+            lyr.on({
+              mouseover: (e) => { e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
+              mouseout:  (e) => { layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
+              click:     (e) => {
+                chosen.country_iso = iso || chosen.country_iso;
+                chosen.country_name = name || chosen.country_name;
+                modalCountry.textContent = chosen.country_name;
+
+                // Sync select (add option if missing)
+                const existing = Array.from(countrySelect.options).find(o => o.value.startsWith((iso||'---')+'|'));
+                if (existing) {
+                  countrySelect.value = existing.value;
+                } else if (iso && name) {
+                  const opt = document.createElement('option');
+                  opt.value = `${iso}|${name}`;
+                  opt.textContent = `${name} (${iso})`;
+                  countrySelect.appendChild(opt);
+                  countrySelect.value = opt.value;
+                }
+
+                const b = e.target.getBounds();
+                if (b && b.isValid()) map.fitBounds(b, { maxZoom: 4, padding:[20,20] });
+                openModal();
+              }
+            });
+          }
+        }).addTo(map);
+      })
+      .catch(()=> console.warn('GeoJSON load failed.'));
 
     // ----- UI -----
-    openDonateBtn.addEventListener('click', openModal);
+    document.getElementById('openDonate')?.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
 
     document.querySelectorAll('.amt-btn').forEach(btn=>{
@@ -244,7 +259,7 @@
       try {
         const res = await fetch('/.netlify/functions/checkout', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(chosen) // { country_iso, country_name, amount, ref }
+          body: JSON.stringify(chosen)
         });
         if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
         if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
@@ -265,7 +280,7 @@
         }
         data.sort((a,b)=> (b.donors_24h - a.donors_24h) || (parseFloat(b.total_eur)-parseFloat(a.total_eur)));
         todayList.innerHTML = data.slice(0,5).map(row=>{
-          const name = isoToName[row.iso] || row.iso;
+          const name = row.name || row.iso || '—';
           return `<li class="flex items-center justify-between">
             <div class="flex items-center gap-3"><span class="font-semibold">${name}</span></div>
             <div class="text-blue-300">€${row.total_eur}</div>
