@@ -24,12 +24,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Fallback da nije blijedo i bez Tailwinda -->
+  <!-- Minimal CSS da sve bude čitljivo i kad Tailwind kasni -->
   <style>
     html,body{height:100%}
     body{background:#0b1020;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #map{height:62vh;min-height:420px}
     .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
+    /* Dark select (fix "white on white") */
+    select{color:#fff !important;background-color:rgba(255,255,255,.1) !important;border:1px solid rgba(255,255,255,.15) !important}
+    select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
+    select option{color:#fff;background:#0b1020}
   </style>
 </head>
 <body class="bg-ink-900 text-white antialiased">
@@ -71,7 +75,7 @@
 
           <div class="flex items-center gap-3 mb-3">
             <label for="countrySelect" class="text-sm text-slate-300">Country:</label>
-            <select id="countrySelect" class="bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none">
+            <select id="countrySelect" class="rounded-xl px-3 py-2 text-sm focus:outline-none">
               <option value="HRV|Croatia">Croatia (HRV)</option>
               <option value="DEU|Germany">Germany (DEU)</option>
               <option value="USA|United States">United States (USA)</option>
@@ -90,6 +94,7 @@
 
           <!-- Map (dark) -->
           <div id="map" class="card overflow-hidden"></div>
+          <p class="text-xs text-slate-400 mt-2">Tip: hover a country, then click to donate for that country.</p>
         </div>
 
         <!-- Right -->
@@ -166,6 +171,7 @@
     const qs = new URLSearchParams(location.search);
     const initialISO = qs.get('c') || 'HRV';
     const initialRef = qs.get('ref') || '';
+
     const isoToName = { HRV:'Croatia', DEU:'Germany', USA:'United States', GBR:'United Kingdom', FRA:'France', ITA:'Italy', ESP:'Spain', POL:'Poland', IND:'India', BRA:'Brazil' };
 
     let chosen = { country_iso: initialISO, country_name: isoToName[initialISO] || initialISO, amount: 20, ref: initialRef };
@@ -177,10 +183,41 @@
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
-    map.on('click', openModal);
+
+    // ----- Load world GEOJSON, enable hover + click-to-donate -----
+    // CSP: connect-src must allow https://cdn.jsdelivr.net
+    const WORLD_GEOJSON = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
+
+    function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.gu_a3 || p.postal || ''; }
+    function getName(p){ return p.NAME_EN || p.ADMIN || p.name || p.NAME_LONG || p.SOVEREIGNT || ''; }
+
+    fetch(WORLD_GEOJSON).then(r=>r.json()).then(geo=>{
+      const layer = L.geoJSON(geo, {
+        style: ()=>({ color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.08 }),
+        onEachFeature: (feature, lyr)=>{
+          const iso = getISO3(feature.properties);
+          const name = getName(feature.properties) || iso || 'Unknown';
+          lyr.bindTooltip(name, {sticky:true, direction:'auto', opacity:0.9});
+
+          lyr.on({
+            mouseover: (e)=> e.target.setStyle({fillOpacity:0.28, weight:1.2}),
+            mouseout:  (e)=> layer.resetStyle(e.target),
+            click: ()=>{
+              chosen.country_iso = iso || chosen.country_iso;
+              chosen.country_name = name || chosen.country_name;
+              modalCountry.textContent = chosen.country_name;
+              // sync select if possible
+              const opt = Array.from(countrySelect.options).find(o=>o.value.startsWith((iso||'---')+'|'));
+              if(opt) countrySelect.value = opt.value;
+              openModal();
+            }
+          });
+        }
+      }).addTo(map);
+    }).catch(()=> console.warn('World geojson failed to load. Check CSP connect-src for cdn.jsdelivr.net'));
 
     // ----- UI -----
-    document.getElementById('openDonate').addEventListener('click', openModal);
+    openDonateBtn.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
 
     document.querySelectorAll('.amt-btn').forEach(btn=>{
