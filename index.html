@@ -10,12 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] },
-          colors: { ink:{900:'#0b1020'} }
-        }
-      }
+      theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] }, colors: { ink:{900:'#0b1020'} } } }
     }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -100,7 +95,7 @@
               <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
             </div>
             <ul id="todayList" class="mt-4 space-y-4">
-              <li class="text-slate-400 text-sm">Loading live stats…</li>
+              <li class="text-slate-400 text-sm">Stats temporarily unavailable.</li>
             </ul>
             <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
           </div>
@@ -159,80 +154,65 @@
     const payNow = document.getElementById('payNow');
     const modalCountry = document.getElementById('modalCountry');
     const countrySelect = document.getElementById('countrySelect');
-    const todayList = document.getElementById('todayList');
     const mapStatus = document.getElementById('mapStatus');
 
-    const qs = new URLSearchParams(location.search);
-    const initialISO = qs.get('c') || 'HRV';
-    const initialRef = qs.get('ref') || '';
-
-    let chosen = { country_iso: initialISO, country_name: 'Croatia', amount: 20, ref: initialRef };
+    let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
     function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
     function closeModal(){ modal.classList.add('hidden'); }
 
-    // Leaflet map
+    // Map
     const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
+    map.createPane('countries'); map.getPane('countries').style.zIndex = 650;
 
-    // Dedicated pane for countries (on top)
-    map.createPane('countries');
-    map.getPane('countries').style.zIndex = 650;
-    map.getPane('countries').style.pointerEvents = 'auto';
-
-    // GeoJSON (two CDNs)
-    const SRC_A = 'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
-    const SRC_B = 'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json';
+    // Robust sources (ako jedan padne, idu drugi)
+    const SOURCES = [
+      'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
+      'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
+      'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
+    ];
 
     const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.10 };
     const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
 
-    function getISO3(p){ return p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || ''; }
-    function getName(p){ return p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || ''; }
+    const isoFrom = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
+    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
 
-    async function loadWorld(){
-      try {
-        const r1 = await fetch(SRC_A, { cache:'reload' });
-        if (r1.ok) return r1.json();
-        const r2 = await fetch(SRC_B, { cache:'reload' });
-        return r2.json();
-      } catch {
-        const r2 = await fetch(SRC_B, { cache:'reload' });
-        return r2.json();
+    async function fetchAny(urls){
+      let lastErr;
+      for (const u of urls){
+        try { const r = await fetch(u, { cache:'no-store' }); if(!r.ok) throw new Error(r.status); return await r.json(); }
+        catch(e){ lastErr = e; }
       }
+      throw lastErr || new Error('All sources failed');
     }
 
-    loadWorld().then(geo=>{
+    fetchAny(SOURCES).then(geo=>{
       mapStatus.textContent = 'World ready ✓';
       const layer = L.geoJSON(geo, {
-        pane: 'countries',
+        pane:'countries',
         style: () => baseStyle,
         onEachFeature: (f, lyr) => {
-          const iso = getISO3(f.properties);
-          const name = getName(f.properties) || iso || 'Unknown';
+          const iso = isoFrom(f.properties);
+          const name = nameFrom(f.properties);
           lyr.bindTooltip(name, { sticky:true, opacity:0.95 });
 
           lyr.on({
-            mouseover: (e) => { e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-            mouseout:  (e) => { layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
-            click:     (e) => {
+            mouseover: (e)=>{ e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
+            mouseout:  (e)=>{ layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
+            click:     (e)=>{
               chosen.country_iso = iso || chosen.country_iso;
               chosen.country_name = name || chosen.country_name;
               modalCountry.textContent = chosen.country_name;
 
-              // sync select
-              const val = `${iso}|${name}`;
-              let opt = Array.from(countrySelect.options).find(o => o.value.startsWith(iso + '|'));
-              if (!opt && iso && name) {
-                opt = document.createElement('option');
-                opt.value = val; opt.textContent = `${name} (${iso})`;
-                countrySelect.appendChild(opt);
-              }
-              if (opt) countrySelect.value = opt.value;
+              const val = `${chosen.country_iso}|${chosen.country_name}`;
+              let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(chosen.country_iso + '|'));
+              if (!opt) { opt = new Option(`${chosen.country_name} (${chosen.country_iso})`, val); countrySelect.add(opt); }
+              countrySelect.value = val;
 
-              const b = e.target.getBounds();
-              if (b && b.isValid()) map.fitBounds(b, { maxZoom: 4, padding:[20,20] });
+              const b = e.target.getBounds(); if (b && b.isValid()) map.fitBounds(b, { maxZoom:4, padding:[20,20] });
               openModal();
             }
           });
@@ -240,13 +220,12 @@
       }).addTo(map);
     }).catch(()=>{
       mapStatus.textContent = 'World failed to load';
-      map.on('click', openModal);
+      map.on('click', openModal); // minimalni fallback
     });
 
     // UI
     document.getElementById('openDonate')?.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
-
     document.querySelectorAll('.amt-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         chosen.amount = parseInt(btn.dataset.amt,10);
@@ -258,11 +237,9 @@
       const v = parseInt(document.getElementById('otherAmt').value,10);
       if(v>0) chosen.amount = v;
     });
-
     countrySelect.addEventListener('change', ()=>{
       const [iso,name] = countrySelect.value.split('|');
-      chosen.country_iso = iso; chosen.country_name = name;
-      modalCountry.textContent = name;
+      chosen.country_iso = iso; chosen.country_name = name; modalCountry.textContent = name;
     });
     countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
@@ -275,35 +252,9 @@
         });
         if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
         if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
-        const { url } = await res.json();
-        if (url) location.href = url; else alert('No checkout URL returned.');
+        const { url } = await res.json(); if (url) location.href = url; else alert('No checkout URL returned.');
       } catch { alert('Network error.'); }
     });
-
-    // Today’s heat
-    async function loadStats(){
-      try {
-        const res = await fetch('/.netlify/functions/stats', { cache:'no-store' });
-        if (!res.ok) throw 0;
-        const data = await res.json();
-        if (!Array.isArray(data) || !data.length) {
-          todayList.innerHTML = `<li class="text-slate-400 text-sm">No data yet — be the first to light up your country.</li>`;
-          return;
-        }
-        data.sort((a,b)=> (b.donors_24h - a.donors_24h) || (parseFloat(b.total_eur)-parseFloat(a.total_eur)));
-        todayList.innerHTML = data.slice(0,5).map(row=>{
-          const name = row.name || row.iso || '—';
-          return `<li class="flex items-center justify-between">
-            <div class="flex items-center gap-3"><span class="font-semibold">${name}</span></div>
-            <div class="text-blue-300">€${row.total_eur}</div>
-          </li>`;
-        }).join('');
-      } catch {
-        todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats temporarily unavailable.</li>`;
-      }
-    }
-    loadStats();
-    setInterval(loadStats, 20000);
   </script>
 </body>
 </html>
