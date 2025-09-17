@@ -19,6 +19,7 @@ exports.handler = async (event) => {
         country_iso: "ZZZ",
         country_name: "Debugland",
         amount_eur: 1,
+        amount_cents: 100,
         currency: "EUR",
         ref: "diag",
         email: null,
