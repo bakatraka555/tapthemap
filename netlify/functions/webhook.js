@@ -8,9 +8,7 @@ const supa = () =>
   });
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   const key    = process.env.STRIPE_SECRET_KEY;
@@ -18,7 +16,6 @@ exports.handler = async (event) => {
 
   const stripe = Stripe(key);
 
-  // Netlify: raw body (može doći base64)
   const sig = event.headers["stripe-signature"];
   const rawBody = event.isBase64Encoded
     ? Buffer.from(event.body, "base64").toString("utf8")
@@ -32,21 +29,23 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: `Signature error: ${e.message}` };
   }
 
-  console.log("Stripe event:", evt.type);
-
   const upsert = async (rec) => {
     try {
       const { error } = await supa().from("payments").insert([rec]);
       if (error) throw error;
-      console.log("Inserted payments row:", rec.stripe_session_id || rec.ref || "n/a");
+      console.log("Inserted payments row:", rec.stripe_pi);
     } catch (e) {
       console.error("Supabase insert error:", e.message, rec);
     }
   };
 
-  // 1) Idealno: checkout.session.completed (ima sav metadata)
   if (evt.type === "checkout.session.completed") {
     const s = evt.data.object;
+    const piId =
+      typeof s.payment_intent === "string"
+        ? s.payment_intent
+        : s.payment_intent?.id || null;
+
     const rec = {
       country_iso:       s.metadata?.country_iso || "UNK",
       country_name:      s.metadata?.country_name || "Unknown",
@@ -54,12 +53,12 @@ exports.handler = async (event) => {
       currency:          (s.currency || "eur").toUpperCase(),
       ref:               s.metadata?.ref || null,
       email:             s.customer_details?.email || null,
-      stripe_session_id: s.id
+      stripe_session_id: s.id,
+      stripe_pi:         piId || `sess_${s.id}`
     };
     await upsert(rec);
   }
 
-  // 2) Fallback: payment_intent.succeeded (ako ga slučajno šalješ; koristimo metadata s PI)
   if (evt.type === "payment_intent.succeeded") {
     const pi = evt.data.object;
     const md = pi.metadata || {};
@@ -70,7 +69,8 @@ exports.handler = async (event) => {
       currency:          (pi.currency || "eur").toUpperCase(),
       ref:               md.ref || null,
       email:             null,
-      stripe_session_id: md.session_id || `pi_${pi.id}` // nešto jedinstveno
+      stripe_session_id: md.session_id || `pi_${pi.id}`,
+      stripe_pi:         pi.id
     };
     await upsert(rec);
   }
