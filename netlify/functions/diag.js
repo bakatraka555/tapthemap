@@ -1,5 +1,11 @@
 // GET /.netlify/functions/diag?token=YOUR_TOKEN  → testni upis u payments
 const { createClient } = require("@supabase/supabase-js");
+const crypto = require("crypto");
+
+function h(s) {
+  const salt = process.env.REF_HASH_SALT || "fallback-salt";
+  return crypto.createHash("sha256").update(`${s}|${salt}`).digest("hex");
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return { statusCode: 405, body: "Method Not Allowed" };
@@ -12,6 +18,7 @@ exports.handler = async (event) => {
     auth: { persistSession: false }
   });
 
+  const ts = Date.now();
   try {
     const { data, error } = await supa
       .from("payments")
@@ -23,8 +30,9 @@ exports.handler = async (event) => {
         currency: "EUR",
         ref: "diag",
         email: null,
-        stripe_session_id: `diag_${Date.now()}`,
-        stripe_pi: `diagpi_${Date.now()}`
+        stripe_session_id: `diag_${ts}`,
+        stripe_pi: `diagpi_${ts}`,
+        donor_hash: h(`diag_${ts}`)
       }])
       .select()
       .single();
