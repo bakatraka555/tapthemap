@@ -17,6 +17,8 @@ exports.handler = async (event) => {
   if (!secret || !key) return { statusCode: 503, body: "Webhook not configured" };
 
   const stripe = Stripe(key);
+
+  // Netlify: raw body (može doći base64)
   const sig = event.headers["stripe-signature"];
   const rawBody = event.isBase64Encoded
     ? Buffer.from(event.body, "base64").toString("utf8")
@@ -30,27 +32,47 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: `Signature error: ${e.message}` };
   }
 
-  // Zanimaju nas završene Checkout sesije
-  if (evt.type === "checkout.session.completed") {
-    const s = evt.data.object;
+  console.log("Stripe event:", evt.type);
 
-    const rec = {
-      country_iso:        s.metadata?.country_iso || "UNK",
-      country_name:       s.metadata?.country_name || "Unknown",
-      amount_eur:         (s.amount_total || 0) / 100,
-      currency:           (s.currency || "eur").toUpperCase(),
-      ref:                s.metadata?.ref || null,
-      email:              s.customer_details?.email || null,
-      stripe_session_id:  s.id
-    };
-
+  const upsert = async (rec) => {
     try {
       const { error } = await supa().from("payments").insert([rec]);
       if (error) throw error;
+      console.log("Inserted payments row:", rec.stripe_session_id || rec.ref || "n/a");
     } catch (e) {
-      console.error("Supabase insert error:", e.message);
-      // vraćamo 200 da Stripe ne ponavlja unedogled
+      console.error("Supabase insert error:", e.message, rec);
     }
+  };
+
+  // 1) Idealno: checkout.session.completed (ima sav metadata)
+  if (evt.type === "checkout.session.completed") {
+    const s = evt.data.object;
+    const rec = {
+      country_iso:       s.metadata?.country_iso || "UNK",
+      country_name:      s.metadata?.country_name || "Unknown",
+      amount_eur:        (s.amount_total || 0) / 100,
+      currency:          (s.currency || "eur").toUpperCase(),
+      ref:               s.metadata?.ref || null,
+      email:             s.customer_details?.email || null,
+      stripe_session_id: s.id
+    };
+    await upsert(rec);
+  }
+
+  // 2) Fallback: payment_intent.succeeded (ako ga slučajno šalješ; koristimo metadata s PI)
+  if (evt.type === "payment_intent.succeeded") {
+    const pi = evt.data.object;
+    const md = pi.metadata || {};
+    const rec = {
+      country_iso:       (md.country_iso || "UNK").toUpperCase(),
+      country_name:      md.country_name || "Unknown",
+      amount_eur:        (pi.amount_received || pi.amount || 0) / 100,
+      currency:          (pi.currency || "eur").toUpperCase(),
+      ref:               md.ref || null,
+      email:             null,
+      stripe_session_id: md.session_id || `pi_${pi.id}` // nešto jedinstveno
+    };
+    await upsert(rec);
   }
 
   return { statusCode: 200, body: "ok" };
