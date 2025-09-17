@@ -39,17 +39,22 @@ exports.handler = async (event) => {
     }
   };
 
+  // Checkout session done — ima amount_total (u centima)
   if (evt.type === "checkout.session.completed") {
     const s = evt.data.object;
+
     const piId =
       typeof s.payment_intent === "string"
         ? s.payment_intent
         : s.payment_intent?.id || null;
 
+    const amount_cents = s.amount_total || 0;
+
     const rec = {
       country_iso:       s.metadata?.country_iso || "UNK",
       country_name:      s.metadata?.country_name || "Unknown",
-      amount_eur:        (s.amount_total || 0) / 100,
+      amount_eur:        (amount_cents / 100),
+      amount_cents:      amount_cents,
       currency:          (s.currency || "eur").toUpperCase(),
       ref:               s.metadata?.ref || null,
       email:             s.customer_details?.email || null,
@@ -59,13 +64,17 @@ exports.handler = async (event) => {
     await upsert(rec);
   }
 
+  // Fallback ako šalješ i payment_intent.succeeded
   if (evt.type === "payment_intent.succeeded") {
     const pi = evt.data.object;
     const md = pi.metadata || {};
+    const amount_cents = pi.amount_received || pi.amount || 0;
+
     const rec = {
       country_iso:       (md.country_iso || "UNK").toUpperCase(),
       country_name:      md.country_name || "Unknown",
-      amount_eur:        (pi.amount_received || pi.amount || 0) / 100,
+      amount_eur:        (amount_cents / 100),
+      amount_cents:      amount_cents,
       currency:          (pi.currency || "eur").toUpperCase(),
       ref:               md.ref || null,
       email:             null,
