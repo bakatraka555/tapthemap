@@ -29,6 +29,7 @@
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
     .badge{font-size:.75rem;color:#a3e635}
+    .mini{font-variant-numeric: tabular-nums}
   </style>
 </head>
 <body class="bg-ink-900 text-white antialiased">
@@ -95,7 +96,7 @@
               <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
             </div>
             <ul id="todayList" class="mt-4 space-y-4">
-              <li class="text-slate-400 text-sm">Stats temporarily unavailable.</li>
+              <li class="text-slate-400 text-sm">Fetching stats…</li>
             </ul>
             <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
           </div>
@@ -110,6 +111,7 @@
     </section>
   </main>
 
+  <!-- Donate modal -->
   <div id="donateModal" class="fixed inset-0 z-40 hidden">
     <div class="absolute inset-0 bg-black/60"></div>
     <div class="relative z-10 max-w-2xl mx-auto mt-24">
@@ -147,7 +149,11 @@
   </div>
 
   <script>
-    // State
+    // ---------- Helpers ----------
+    const euro = (n)=> '€' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
+
+    // ---------- State ----------
     const modal = document.getElementById('donateModal');
     const openDonateBtn = document.getElementById('openDonate');
     const closeBtn = document.getElementById('closeModal');
@@ -155,30 +161,44 @@
     const modalCountry = document.getElementById('modalCountry');
     const countrySelect = document.getElementById('countrySelect');
     const mapStatus = document.getElementById('mapStatus');
+    const todayList = document.getElementById('todayList');
 
     let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
+
     function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
     function closeModal(){ modal.classList.add('hidden'); }
 
-    // Map
+    // ---------- Map ----------
     const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
     map.createPane('countries'); map.getPane('countries').style.zIndex = 650;
 
-    // Robust sources (ako jedan padne, idu drugi)
+    // Fallback izvori za GeoJSON
     const SOURCES = [
       'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
       'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
       'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
     ];
+    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
+    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
 
     const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.10 };
     const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
 
-    const isoFrom = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
-    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
+    // Dinamičke boje po iznosu
+    const layersByIso = new Map();   // ISO3 -> Leaflet layer
+    let totalsByIso = {};            // ISO3 -> total_eur
+    let maxTotal = 0;
+
+    const colorScale = (value) => {
+      if (!maxTotal || !value) return baseStyle;
+      const t = clamp(value / maxTotal, 0, 1);
+      // linearno: 0.1 → 0.55 opacity
+      const op = 0.10 + 0.45 * t;
+      return { ...baseStyle, fillOpacity: op };
+    };
 
     async function fetchAny(urls){
       let lastErr;
@@ -189,19 +209,36 @@
       throw lastErr || new Error('All sources failed');
     }
 
+    // Učitavanje svijeta + binding klikova
     fetchAny(SOURCES).then(geo=>{
       mapStatus.textContent = 'World ready ✓';
       const layer = L.geoJSON(geo, {
         pane:'countries',
-        style: () => baseStyle,
+        style: (f) => {
+          const iso = isoFrom(f.properties);
+          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+          return colorScale(total);
+        },
         onEachFeature: (f, lyr) => {
           const iso = isoFrom(f.properties);
           const name = nameFrom(f.properties);
-          lyr.bindTooltip(name, { sticky:true, opacity:0.95 });
+          layersByIso.set(iso, lyr);
+
+          const tip = ()=> {
+            const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+            return total > 0 ? `${name} · ${euro(total)}` : name;
+          };
+          lyr.bindTooltip(tip(), { sticky:true, opacity:0.95 });
 
           lyr.on({
-            mouseover: (e)=>{ e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-            mouseout:  (e)=>{ layer.resetStyle(e.target); map.getContainer().style.cursor=''; },
+            mouseover: (e)=>{
+              e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer';
+            },
+            mouseout:  (e)=>{
+              // vrati stil prema trenutnim totalima
+              const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+              e.target.setStyle(colorScale(t)); map.getContainer().style.cursor='';
+            },
             click:     (e)=>{
               chosen.country_iso = iso || chosen.country_iso;
               chosen.country_name = name || chosen.country_name;
@@ -218,12 +255,14 @@
           });
         }
       }).addTo(map);
+      // nakon što je karta spremna, povuci prve statistike
+      refreshStats(true);
     }).catch(()=>{
       mapStatus.textContent = 'World failed to load';
-      map.on('click', openModal); // minimalni fallback
+      map.on('click', openModal); // minimal fallback
     });
 
-    // UI
+    // ---------- UI ----------
     document.getElementById('openDonate')?.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
     document.querySelectorAll('.amt-btn').forEach(btn=>{
@@ -243,7 +282,7 @@
     });
     countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
-    // Checkout
+    // ---------- Checkout ----------
     payNow.addEventListener('click', async ()=>{
       try {
         const res = await fetch('/.netlify/functions/checkout', {
@@ -255,6 +294,91 @@
         const { url } = await res.json(); if (url) location.href = url; else alert('No checkout URL returned.');
       } catch { alert('Network error.'); }
     });
+
+    // ---------- Stats (polling + render) ----------
+    async function refreshStats(first = false){
+      try{
+        const r = await fetch('/.netlify/functions/stats', { cache: 'no-store' });
+        if(!r.ok){ throw new Error(await r.text()); }
+        const items = await r.json(); // [{ iso, name, total_eur, donors_24h, donors_7d }]
+        // mapiraj totals
+        totalsByIso = {};
+        let localMax = 0;
+        for(const it of items){
+          const iso = (it.iso || it.country_iso || '').toUpperCase();
+          const total = Number(it.total_eur || 0);
+          totalsByIso[iso] = total;
+          if (total > localMax) localMax = total;
+        }
+        maxTotal = localMax;
+
+        // osvježi stil svakog layera + tooltip
+        layersByIso.forEach((lyr, iso)=>{
+          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+          lyr.setStyle(colorScale(total));
+          const nm = (lyr.feature && lyr.feature.properties) ? (lyr.feature.properties.NAME_EN || lyr.feature.properties.ADMIN || 'Unknown') : iso;
+          const tip = total > 0 ? `${nm} · ${euro(total)}` : nm;
+          lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
+        });
+
+        // render “Today’s heat” (top 10 po donors_24h pa total)
+        renderToday(items);
+
+        if(first){
+          mapStatus.textContent = 'World & stats live ✓';
+        }
+      }catch(e){
+        console.error('Stats error', e);
+        todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats unavailable.</li>`;
+        if(first){ mapStatus.textContent = 'World ready (stats unavailable)'; }
+      } finally {
+        setTimeout(()=>refreshStats(false), 20000); // 20 s
+      }
+    }
+
+    function renderToday(items){
+      if(!Array.isArray(items) || items.length===0){
+        todayList.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
+        return;
+      }
+      const top = [...items]
+        .sort((a,b)=>{
+          const d = (b.donors_24h||0) - (a.donors_24h||0);
+          if (d!==0) return d;
+          return Number(b.total_eur||0) - Number(a.total_eur||0);
+        })
+        .slice(0,10);
+
+      todayList.innerHTML = top.map(it=>{
+        const iso = (it.iso || it.country_iso || '').toUpperCase();
+        const name = it.name || it.country_name || iso;
+        const donors = it.donors_24h || 0;
+        const total  = Number(it.total_eur || 0);
+        return `
+          <li class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
+              <div>
+                <div class="font-semibold">${name}</div>
+                <div class="text-xs text-slate-400 mini">${donors} donors · ${euro(total)} total</div>
+              </div>
+            </div>
+            <button class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" onclick="quickDonate('${iso}','${name.replace(/'/g,'&#39;')}')">Donate</button>
+          </li>
+        `;
+      }).join('');
+    }
+
+    window.quickDonate = (iso,name)=>{
+      chosen.country_iso = iso;
+      chosen.country_name = name;
+      modalCountry.textContent = name;
+      const val = `${iso}|${name}`;
+      let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(iso + '|'));
+      if (!opt) { opt = new Option(`${name} (${iso})`, val); countrySelect.add(opt); }
+      countrySelect.value = val;
+      openModal();
+    };
   </script>
 </body>
 </html>
