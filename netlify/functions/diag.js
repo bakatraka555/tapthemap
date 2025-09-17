@@ -22,7 +22,8 @@ exports.handler = async (event) => {
         currency: "EUR",
         ref: "diag",
         email: null,
-        stripe_session_id: `diag_${Date.now()}`
+        stripe_session_id: `diag_${Date.now()}`,
+        stripe_pi: `diagpi_${Date.now()}`
       }])
       .select()
       .single();
