@@ -8,49 +8,51 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
+    crossorigin
   />
   <style>
-    :root{--bg:#0b1221;--card:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--brand:#22c55e}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
-    header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px}
-    header h1{margin:0;font-size:24px}
-    .wrap{display:grid;grid-template-columns:1.1fr 360px;gap:18px;padding:0 18px 18px}
-    #map{height:78vh;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .panel{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    :root{--bg:#081226;--panel:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--brand:#22c55e}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
+    header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px}
+    header h1{margin:0;font-size:20px;font-weight:700}
+    header .sub{color:var(--muted);font-size:13px}
+    .shell{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:0 16px 16px}
+    .mapWrap{position:relative;min-height:72vh}
+    #map{position:absolute;inset:0;/* stabilno */}
+    .panel{background:var(--panel);border-radius:14px;padding:14px;position:sticky;top:12px;height:max-content}
     .row{display:flex;gap:10px;align-items:center;margin:10px 0}
-    select, input{background:#0b1328;border:1px solid #1f2a44;color:var(--text);padding:10px 12px;border-radius:10px;outline:none}
+    select,input{background:#0b1328;border:1px solid #1f2a44;color:var(--text);padding:10px 12px;border-radius:10px;outline:none}
     select:focus,input:focus{border-color:#3b82f6}
-    .btn{background:var(--brand);color:#04100a;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn{background:var(--brand);color:#04100a;border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
     .btn:disabled{opacity:.6;cursor:not-allowed}
     .chip{background:#0b1328;border:1px solid #1f2a44;border-radius:999px;padding:8px 12px;cursor:pointer}
     .chip.active{background:#1e293b;border-color:#3b82f6}
-    ul#heat{list-style:none;padding:0;margin:8px 0 0;max-height:50vh;overflow:auto}
+    ul#heat{list-style:none;margin:8px 0 0;padding:0;max-height:48vh;overflow:auto}
     ul#heat li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-    .leaflet-container{background:#0b1221}
+    .leaflet-container{background:#081226}
     .legend{position:absolute;right:10px;bottom:10px;z-index:5000;background:#0b1328;border:1px solid #1f2a44;color:#cbd5e1;border-radius:10px;padding:8px 10px;font-size:12px}
-    .muted{color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
   <header>
     <h1>Fill the map. Your country, your pride.</h1>
-    <div class="muted">Secure by Stripe • SSL • Anonymous option</div>
+    <div class="sub">Secure by Stripe • SSL • Anonymous option</div>
   </header>
 
-  <div class="wrap">
-    <div style="position:relative">
+  <div class="shell">
+    <div class="mapWrap">
       <div id="map"></div>
       <div class="legend">0 → <b>5k</b>+ EUR • click a country to donate</div>
     </div>
 
-    <div class="panel">
-      <h3 style="margin:0 0 8px">Donate</h3>
+    <aside class="panel">
+      <h3 style="margin:0 0 6px">Donate</h3>
       <div class="row">
         <label>Country</label>
         <select id="countrySelect" style="flex:1"></select>
       </div>
-
       <div class="row" id="amountRow">
         <span class="chip" data-amt="5">5 €</span>
         <span class="chip active" data-amt="20">20 €</span>
@@ -58,34 +60,41 @@
         <span class="chip" data-amt="100">100 €</span>
         <input id="otherAmt" type="number" min="1" step="1" placeholder="Other" style="width:110px" />
       </div>
-
       <div class="row">
         <input id="refHandle" type="text" placeholder="@handle (optional)" style="flex:1" />
         <button id="payBtn" class="btn">Pay now</button>
       </div>
 
-      <h3 style="margin:18px 0 8px">Today’s heat</h3>
+      <h3 style="margin:16px 0 6px">Today’s heat</h3>
       <ul id="heat"></ul>
-    </div>
+    </aside>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin></script>
+
   <script>
-    // ---------- Map ----------
-    const map = L.map('map', { zoomSnap: .1 }).setView([20, 12], 2.1);
+    // ---------- Map (stabilna inicijalizacija + fix za tiles) ----------
+    const map = L.map('map', { zoomSnap:.1, zoomControl:true, worldCopyJump:true })
+                  .setView([22, 12], 2.1);
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 6, minZoom: 2, attribution: '&copy; OpenStreetMap & CARTO'
+      maxZoom: 6, minZoom: 2,
+      attribution: '&copy; OpenStreetMap & CARTO'
     }).addTo(map);
 
-    const layersByIso = new Map();     // ISO -> Leaflet layer
-    const totalsByIso = {};            // ISO -> total_eur
+    // bitno: invalidiraj layout nakon što je grid posložen
+    setTimeout(()=>map.invalidateSize(), 50);
+    window.addEventListener('resize', ()=> map.invalidateSize());
+
+    // ---------- Geo & state ----------
+    const WORLD_URL = "https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson";
+    const layersByIso = new Map(); // ISO -> Leaflet layer
+    const totalsByIso = {};        // ISO -> total_eur (iz /stats)
     let currentIso = null, currentName = null;
 
-    // Styling by value
+    const countrySelect = document.getElementById('countrySelect');
+
     function styleByValue(v){
       const t = Number(v||0);
       let fillColor = "#1f2937";
@@ -97,34 +106,28 @@
     }
     function recolorMap(){
       layersByIso.forEach((layer, iso)=>{
-        const total = totalsByIso[iso]||0;
-        layer.setStyle(styleByValue(total));
+        layer.setStyle(styleByValue(totalsByIso[iso]||0));
       });
     }
 
-    // Load countries GeoJSON
-    const WORLD_URL = "https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson";
-
-    const countrySelect = document.getElementById('countrySelect');
+    // učitaj svijet
     fetch(WORLD_URL).then(r=>r.json()).then(geo=>{
-      // populate select
-      const opts = [];
+      // select
+      const list = [];
       geo.features.forEach(f=>{
         const iso = (f.properties.ISO_A3 || f.properties.ADM0_A3 || "").toUpperCase();
         const name = f.properties.ADMIN || f.properties.NAME || iso;
-        if(!iso || iso==="ATA") return; // skip Antarctica
-        opts.push({iso,name,feature:f});
+        if (!iso || iso==="ATA") return;
+        list.push({iso,name,feature:f});
       });
-      opts.sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'}));
-      for(const o of opts){
-        const el = document.createElement('option');
-        el.value = o.iso; el.textContent = `${o.name} (${o.iso})`;
-        countrySelect.appendChild(el);
+      list.sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'}));
+      for(const o of list){
+        const opt=document.createElement('option');
+        opt.value=o.iso; opt.textContent=`${o.name} (${o.iso})`;
+        countrySelect.appendChild(opt);
       }
-      // initial selection
-      currentIso = opts[0].iso; currentName = opts[0].name; countrySelect.value = currentIso;
+      currentIso=list[0].iso; currentName=list[0].name; countrySelect.value=currentIso;
 
-      // add layer
       L.geoJSON(geo, {
         onEachFeature: (f, layer)=>{
           const iso = (f.properties.ISO_A3 || f.properties.ADM0_A3 || "").toUpperCase();
@@ -132,49 +135,43 @@
           if(!iso) return;
           layersByIso.set(iso, layer);
           layer.setStyle(styleByValue(0));
-          layer.on('click', e=>{
-            currentIso = iso; currentName = name;
-            countrySelect.value = iso;
-            layer.bringToFront();
-            // small highlight
-            const orig = { ...layer.options };
-            layer.setStyle({ ...orig, weight:2, color:'#fff', fillOpacity:.85 });
-            setTimeout(()=>layer.setStyle(styleByValue(totalsByIso[iso]||0)), 550);
+          layer.on('click', ()=>{
+            currentIso=iso; currentName=name; countrySelect.value=iso;
+            const orig={...layer.options};
+            layer.setStyle({...orig, weight:2, color:'#fff', fillOpacity:.85});
+            setTimeout(()=>layer.setStyle(styleByValue(totalsByIso[iso]||0)), 600);
           });
-          layer.bindTooltip(`${name} (${iso})`, {sticky:true, direction:'center', className:'lbl'});
+          layer.bindTooltip(`${name} (${iso})`,{sticky:true,direction:'center',className:'lbl'});
         }
       }).addTo(map);
 
-      // kick first stats paint
       refreshStats(true);
     });
 
-    // sync dropdown -> state
     countrySelect.addEventListener('change', ()=>{
-      const iso = (countrySelect.value||"").toUpperCase();
-      currentIso = iso;
-      const lyr = layersByIso.get(iso);
-      currentName = (lyr && (lyr.feature.properties.ADMIN || lyr.feature.properties.NAME)) || iso;
+      const iso=(countrySelect.value||"").toUpperCase();
+      currentIso=iso;
+      const lyr=layersByIso.get(iso);
+      currentName=(lyr && (lyr.feature.properties.ADMIN||lyr.feature.properties.NAME))||iso;
     });
 
     // ---------- Stats & Heat ----------
     async function refreshStats(repaint=true){
       try{
-        const res = await fetch('/.netlify/functions/stats', {cache:'no-store'});
-        const arr = await res.json();
-        // rewrite totals
+        const res=await fetch('/.netlify/functions/stats',{cache:'no-store'});
+        const arr=await res.json();
+
+        // totals
         for(const k of Object.keys(totalsByIso)) delete totalsByIso[k];
-        arr.forEach(r => totalsByIso[(r.iso||"").toUpperCase()] = Number(r.total_eur||0));
-        if(repaint) recolorMap();
+        arr.forEach(r=> totalsByIso[(r.iso||"").toUpperCase()] = Number(r.total_eur||0));
+        if (repaint) recolorMap();
+
         // heat list
-        const ul = document.getElementById('heat');
-        ul.innerHTML = "";
+        const ul=document.getElementById('heat'); ul.innerHTML="";
         arr.slice(0,12).forEach(r=>{
-          const li = document.createElement('li');
-          const left = document.createElement('span');
-          left.textContent = `${r.name||r.iso}`;
-          const right = document.createElement('b');
-          right.textContent = `${Number(r.total_eur||0)} €`;
+          const li=document.createElement('li');
+          const left=document.createElement('span'); left.textContent=r.name||r.iso;
+          const right=document.createElement('b'); right.textContent=`${Number(r.total_eur||0)} €`;
           li.append(left,right); ul.appendChild(li);
         });
       }catch(e){ console.warn('Stats error:', e); }
@@ -182,84 +179,73 @@
     setInterval(()=>refreshStats(true), 20000);
 
     // ---------- Checkout ----------
-    const amountRow = document.getElementById('amountRow');
-    const otherAmt  = document.getElementById('otherAmt');
-    const payBtn    = document.getElementById('payBtn');
-    const refHandle = document.getElementById('refHandle');
+    const amountRow=document.getElementById('amountRow');
+    const otherAmt=document.getElementById('otherAmt');
+    const payBtn=document.getElementById('payBtn');
+    const refHandle=document.getElementById('refHandle');
 
-    amountRow.addEventListener('click', (e)=>{
-      const t = e.target.closest('.chip'); if(!t) return;
+    amountRow.addEventListener('click',e=>{
+      const t=e.target.closest('.chip'); if(!t) return;
       amountRow.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-      t.classList.add('active'); otherAmt.value = '';
+      t.classList.add('active'); otherAmt.value='';
     });
-    otherAmt.addEventListener('input', ()=> amountRow.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')) );
+    otherAmt.addEventListener('input',()=> amountRow.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')));
 
     function getChosenAmount(){
-      const active = amountRow.querySelector('.chip.active');
-      let v = active ? Number(active.dataset.amt) : 0;
+      const active=amountRow.querySelector('.chip.active');
+      let v=active? Number(active.dataset.amt):0;
       if(!v){
-        const n = Number(otherAmt.value||0);
-        if(Number.isFinite(n) && n>0) v = Math.round(n);
+        const n=Number(otherAmt.value||0);
+        if(Number.isFinite(n) && n>0) v=Math.round(n);
       }
       return Math.max(1, Math.min(100000, v||0));
     }
     function getRefHandle(){
-      const v = (refHandle.value||"").trim();
+      const v=(refHandle.value||"").trim();
       if(!v) return null;
       return v.replace(/^@/,'').replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,32);
     }
 
     async function startCheckout(){
       try{
-        if(!currentIso){
-          currentIso = (countrySelect.value||"").toUpperCase() || "UNK";
-          currentName = currentName || currentIso;
-        }
-        const amount = getChosenAmount();
+        if(!currentIso){ currentIso=(countrySelect.value||"").toUpperCase()||"UNK"; currentName=currentName||currentIso; }
+        const amount=getChosenAmount();
         if(!amount){ alert('Choose amount'); return; }
 
-        payBtn.disabled = true;
-        const res = await fetch('/.netlify/functions/checkout', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            country_iso: currentIso,
-            country_name: currentName,
-            amount,
-            ref: getRefHandle()
-          })
+        payBtn.disabled=true;
+        const res=await fetch('/.netlify/functions/checkout',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({country_iso:currentIso, country_name:currentName, amount, ref:getRefHandle()})
         });
-        const text = await res.text();
+        const text=await res.text();
         if(!res.ok){ alert(text||'Checkout error'); payBtn.disabled=false; return; }
-        const { url } = JSON.parse(text);
-        location.href = url;
+        const {url}=JSON.parse(text);
+        location.href=url;
       }catch(err){
         alert('Checkout error: '+(err?.message||'unknown'));
-      }finally{
-        setTimeout(()=>payBtn.disabled=false, 2000);
-      }
+      }finally{ setTimeout(()=>payBtn.disabled=false,1500); }
     }
-    payBtn.addEventListener('click', startCheckout);
+    document.getElementById('payBtn').addEventListener('click', startCheckout);
 
     // ---------- After-return flash & fast polling ----------
     (function afterReturn(){
-      const p = new URLSearchParams(location.search);
+      const p=new URLSearchParams(location.search);
       if(p.get('ok')==='1'){
-        const iso = (p.get('c')||'').toUpperCase();
+        const iso=(p.get('c')||'').toUpperCase();
         let tries=0;
-        const tick = async ()=>{
+        const tick=async ()=>{
           tries++;
           await refreshStats(false);
           if(iso && layersByIso.has(iso)){
-            const lyr = layersByIso.get(iso);
-            const orig = {...lyr.options};
+            const lyr=layersByIso.get(iso);
+            const orig={...lyr.options};
             lyr.setStyle({...orig, weight:2, color:'#fff', fillOpacity:.85});
-            setTimeout(()=>lyr.setStyle(styleByValue(totalsByIso[iso]||0)), 1200);
+            setTimeout(()=>lyr.setStyle(styleByValue(totalsByIso[iso]||0)), 1100);
           }
-          if(tries<25) setTimeout(tick, 2000); // ~50s
-          else recolorMap();
+          if(tries<25) setTimeout(tick, 2000); else recolorMap();
         };
         tick();
-        history.replaceState({}, '', location.pathname);
+        history.replaceState({},'',location.pathname);
       }
     })();
   </script>
