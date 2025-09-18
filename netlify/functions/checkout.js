@@ -1,26 +1,68 @@
-import Stripe from "stripe";
-export const handler = async (event) => {
-  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-  if (!process.env.STRIPE_SECRET_KEY) return { statusCode: 503, body: "Stripe not configured" };
+// /.netlify/functions/checkout
+// Kreira Stripe Checkout Session (TEST ili LIVE prema STRIPE_SECRET_KEY)
+// ENV: STRIPE_SECRET_KEY, SITE_BASE_URL
+const Stripe = require("stripe");
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+exports.handler = async (event) => {
   try {
-    const { country_iso, country_name, amount, ref } = JSON.parse(event.body || "{}");
-    if (!country_iso || !country_name || !amount) return { statusCode: 400, body: "Missing fields" };
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: "Method Not Allowed" };
+    }
 
-    const unitAmount = Math.max(1, Math.round(Number(amount) * 100));
+    // ---- ENV check
+    const sk = process.env.STRIPE_SECRET_KEY || "";
+    const siteBase = (process.env.SITE_BASE_URL || "").replace(/\/+$/, ""); // bez završnog /
+    if (!sk || !sk.startsWith("sk_")) {
+      // 503 = “not configured” -> frontend će prikazati user-friendly poruku
+      return { statusCode: 503, body: "Stripe not configured (missing STRIPE_SECRET_KEY)" };
+    }
+    if (!siteBase || !/^https:\/\/.+/i.test(siteBase)) {
+      return { statusCode: 500, body: "SITE_BASE_URL missing or invalid (must be https://…)" };
+    }
+
+    const stripe = new Stripe(sk, { apiVersion: "2025-08-27.basil" });
+
+    // ---- Body
+    let body = {};
+    try { body = JSON.parse(event.body || "{}"); } catch {}
+    const iso  = ((body.country_iso || "").toString().toUpperCase()).slice(0,3) || "UNK";
+    const name = (body.country_name || iso).toString().slice(0,80);
+    const ref  = (body.ref || "").toString().replace(/[^a-zA-Z0-9_.-]/g,"").slice(0,32);
+    let amount = parseInt(body.amount, 10);
+
+    if (!Number.isFinite(amount)) amount = 0;
+    amount = Math.max(1, Math.min(100000, amount)); // 1..100000 EUR
+    const amountCents = amount * 100;
+
+    // ---- Session create
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card", "link"],
-      line_items: [{ price_data: { currency: "eur", unit_amount: unitAmount, product_data: { name: `TapTheMap · ${country_name}` } }, quantity: 1 }],
-      success_url: `${process.env.SITE_BASE_URL}/?status=success`,
-      cancel_url: `${process.env.SITE_BASE_URL}/?status=cancel`,
-      metadata: { country_iso, country_name, amount_cents: String(unitAmount), ref: ref || "" }
+      allow_promotion_codes: false,
+      line_items: [{
+        price_data: {
+          currency: "eur",
+          unit_amount: amountCents,
+          product_data: {
+            name: `TapTheMap — ${name} (${iso})`,
+            description: ref ? `Captain: @${ref}` : undefined
+          }
+        },
+        quantity: 1
+      }],
+      metadata: { country_iso: iso, country_name: name, ref },
+      success_url: `${siteBase}/?ok=1&c=${encodeURIComponent(iso)}`,
+      cancel_url: `${siteBase}/?canceled=1`
     });
 
-    return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: session.url }) };
-  } catch (e) {
-    console.error(e);
-    return { statusCode: 500, body: "Checkout error" };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ url: session.url })
+    };
+
+  } catch (err) {
+    // vrati jasan tekst u response da ga frontend prikaže
+    const msg = (err && err.message) ? err.message : "Unknown checkout error";
+    return { statusCode: 500, body: `Checkout error: ${msg}` };
   }
 };
