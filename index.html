@@ -3,15 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TapTheMap — Influencers Battle</title>
-  <meta name="description" content="Tap your country, back your ...ght up the map. Secure by Stripe · SSL · Anonymous possible." />
+  <title>TapTheMap — Fill the map</title>
+  <meta name="description" content="Tap your country, choose an amount, pay with Stripe. Lights up the global heatmap." />
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] }, colors: { ink:{900:'#0b1020'} } } }
-    }
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] } } } };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -28,19 +26,18 @@
     select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
-    .badge{font-size:.75rem;color:#a3e635}
     .mini{font-variant-numeric: tabular-nums}
   </style>
 </head>
-<body class="bg-ink-900 text-white antialiased">
+<body class="bg-[#0b1020] text-white antialiased">
   <header class="sticky top-0 z-30">
     <div class="mx-auto max-w-7xl px-6 pt-5">
       <div class="card px-5 py-4 flex items-center justify-between">
         <a href="/" class="text-xl md:text-2xl font-bold tracking-tight">tapthemap.world</a>
         <nav class="flex items-center gap-3 text-sm text-slate-300">
           <a href="#how" class="hover:text-white">How it works</a>
-          <a href="#leaders" class="hover:text-white">Leaders</a>
-          <a href="#join" class="hover:text-white">Join</a>
+          <a href="/.netlify/functions/stats" target="_blank" class="hover:text-white">/stats</a>
+          <a href="/.netlify/functions/leaders?by=countries&window=7d" target="_blank" class="hover:text-white">/leaders</a>
         </nav>
       </div>
     </div>
@@ -52,18 +49,11 @@
         <div>
           <div class="mb-6">
             <h1 class="text-3xl md:text-5xl font-bold leading-tight">Fill the map. Your country, your pride.</h1>
-            <p class="mt-4 text-slate-300 max-w-2xl">
-              Tap your country and choose 5 / 20 / 50 / 100 € or “Other”.
-              Every contribution lights up your land.
-              <span class="text-slate-200">Secure by Stripe · SSL · Anonymous option.</span>
-            </p>
+            <p class="mt-4 text-slate-300 max-w-2xl">Tap a country and pick 5 / 20 / 50 / 100 € or “Other”. Secure by Stripe. Anonymous option.</p>
             <div class="mt-5 flex items-center gap-3 text-slate-300 text-sm">
-              <span class="inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Live</span>
-              </span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>Live</span></span>
               <span class="opacity-70">·</span>
-              <span>World heat updates every 20 s</span>
+              <span>Heat updates every 20 s</span>
             </div>
           </div>
 
@@ -71,9 +61,7 @@
             <div class="card p-4">
               <div class="flex flex-wrap items-center gap-3">
                 <label for="countrySelect" class="text-sm opacity-80">Country</label>
-                <select id="countrySelect" class="rounded-lg px-3 py-2">
-                  <option value="HRV|Croatia">Croatia (HRV)</option>
-                </select>
+                <select id="countrySelect" class="rounded-lg px-3 py-2 min-w-[220px]"></select>
                 <div class="flex items-center gap-2 ml-auto">
                   <button data-amt="5" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€5</button>
                   <button data-amt="20" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€20</button>
@@ -83,33 +71,33 @@
                     <span class="opacity-70">Other</span>
                     <input id="amtInput" type="number" min="1" max="5000" value="20" class="w-24 rounded-lg px-3 py-1.5 bg-white/5 border border-white/10" />
                   </div>
-                  <button id="openModal" class="ml-2 bg-emerald-400 text-black font-semibold px-4 py-2 rounded-xl">
-                    Donate
-                  </button>
+                  <button id="openModal" class="ml-2 bg-emerald-400 text-black font-semibold px-4 py-2 rounded-xl">Donate</button>
                 </div>
               </div>
             </div>
 
+            <div class="hidden sm:block"></div>
+          </div>
+
           <div id="map" class="card overflow-hidden relative z-0"></div>
-          <div id="mapStatus" class="mt-2 badge">Loading world…</div>
+          <div id="mapStatus" class="mt-2 text-xs text-emerald-300">Loading world…</div>
         </div>
 
         <aside class="lg:sticky lg:top-28">
           <div class="card p-5">
             <div class="flex items-center justify-between">
               <h2 class="text-xl font-semibold">🔥 Today’s heat</h2>
-              <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
+              <a href="/.netlify/functions/leaders?by=countries&window=7d" target="_blank" class="text-sm text-slate-300 hover:text-white">Leaders API →</a>
             </div>
             <ul id="todayList" class="mt-4 space-y-4">
               <li class="text-slate-400 text-sm">Fetching stats…</li>
             </ul>
-            <div class="mt-3 text-xs opacity-70"><a href="/.netlify/functions/leaders?by=countries&window=7d" target="_blank" class="underline">Open Leaders API</a></div>
-            <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
+            <div class="mt-5 text-sm text-slate-300">Test mode: use <code>4242 4242 4242 4242</code></div>
           </div>
 
           <div class="card p-5 mt-6">
             <h3 class="text-lg font-semibold">Become a Captain</h3>
-            <p class="text-slate-300 mt-2">Bring your community to the map. Apply with your email and public handle — we’ll reach out.</p>
+            <p class="text-slate-300 mt-2">Bring your community to the map. Apply with your email and public handle.</p>
             <form id="joinForm" class="mt-3 space-y-2">
               <input name="email" type="email" placeholder="you@example.com" required class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
               <input name="handle" placeholder="your-handle" required class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
@@ -132,7 +120,6 @@
           <li>Pay securely with Stripe (card or Link). We store minimal info.</li>
           <li>Within seconds, the map lights up and the sidebar updates.</li>
         </ol>
-        <p class="mt-4 text-sm text-slate-400">Stripe Test: use card <code>4242 4242 4242 4242</code>.</p>
       </div>
     </section>
   </main>
@@ -188,10 +175,16 @@
     let totalsByIso = {}; let maxTotal = 0;
     let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
 
-    // Capture referral from URL (?r=handle)
+    // Capture referral from URL (?r=handle) + thank-you toast
     const __qs = new URLSearchParams(location.search);
     const __ref = (__qs.get('r') || '').replace(/[^a-z0-9_\-\.]/gi, '').slice(0, 64);
-    if (__ref) { chosen.ref = __ref; }
+    if (__ref) chosen.ref = __ref;
+    if (__qs.get('ok') === '1') {
+      const el = document.createElement('div');
+      el.textContent = 'Hvala! Uplata je prošla.';
+      Object.assign(el.style, { position:'fixed', right:'16px', bottom:'16px', background:'#101725', color:'#cfe2ff', border:'1px solid #24314f', padding:'10px 12px', borderRadius:'10px', zIndex:9999 });
+      document.body.appendChild(el); setTimeout(()=> el.remove(), 3000);
+    }
 
     function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
     function closeModal(){ modal.classList.add('hidden'); }
@@ -211,19 +204,23 @@
     L.tileLayer('https://cartodb-basemaps-b.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap, © Carto' }).addTo(map);
 
     const layersByIso = new Map();
-    const hoverStyle = { weight:1.5, color:'#cbd5e1', fillOpacity:0.85 };
-    const colorScale = (total)=>{
-      // log scale → 0..10000+ EUR
-      const steps = ['#0b172a','#0f2141','#12305f','#15407c','#18509a','#1a60b8','#1d70d6','#2488ff','#4fa0ff','#8fd0ff'];
-      const v = Math.log10((total||0)+1); const idx = Math.min(steps.length-1, Math.floor(v*(steps.length-1)));
-      return { color:'#0f172a', weight:0.6, fillColor:steps[idx], fillOpacity:0.75 };
-    };
+    const baseStyle = { color:'#0f172a', weight:0.6, fillColor:'#0b172a', fillOpacity:0.75 };
+    const hoverStyle = { ...baseStyle, weight:1.5, color:'#cbd5e1', fillOpacity:0.85 };
+    const palette = ['#0b172a','#0f2141','#12305f','#15407c','#18509a','#1a60b8','#1d70d6','#2488ff','#4fa0ff','#8fd0ff'];
+    const colorScale = (total)=>{ const v = Math.log10((total||0)+1); const idx = Math.min(palette.length-1, Math.floor(v*(palette.length-1))); return { ...baseStyle, fillColor: palette[idx] }; };
 
     fetch('https://unpkg.com/geojson-world@3.0.0/countries.geo.json')
       .then(r=>r.json())
       .then(gj=>{
+        // populate select
+        const opts = [];
+        (gj.features||[]).forEach(f=>{ const iso = isoFrom(f.properties); const name = nameFrom(f.properties); if(iso && name){ opts.push([iso,name]); }});
+        opts.sort((a,b)=> a[1].localeCompare(b[1]));
+        countrySelect.innerHTML = opts.map(([iso,name])=> `<option value="${iso}|${name}">${name} (${iso})</option>`).join('');
+        countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
+
         const g = L.geoJSON(gj, {
-          style: f=> colorScale(0),
+          style: ()=> ({ ...baseStyle }),
           onEachFeature: (f, lyr) => {
             const iso = isoFrom(f.properties);
             const name = nameFrom(f.properties);
@@ -236,22 +233,14 @@
             lyr.bindTooltip(tip(), { sticky:true, opacity:0.95 });
 
             lyr.on({
-              mouseover: (e)=>{
-                e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer';
-              },
-              mouseout:  (e)=>{
-                // vrati stil prema trenutnim totalima
-                const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-                e.target.setStyle(colorScale(t)); map.getContainer().style.cursor='';
-              },
+              mouseover: (e)=>{ e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
+              mouseout:  (e)=>{ const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0; e.target.setStyle(colorScale(t)); map.getContainer().style.cursor=''; },
               click:     (e)=>{
                 chosen.country_iso = iso || chosen.country_iso;
                 chosen.country_name = name || chosen.country_name;
                 modalCountry.textContent = chosen.country_name;
 
                 const val = `${chosen.country_iso}|${chosen.country_name}`;
-                let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(chosen.country_iso + '|'));
-                if (!opt) { opt = new Option(`${chosen.country_name} (${chosen.country_iso})`, val); countrySelect.add(opt); }
                 countrySelect.value = val;
 
                 const b = e.target.getBounds(); if (b && b.isValid()) map.fitBounds(b, { maxZoom:4, padding:[20,20] });
@@ -260,24 +249,20 @@
             });
           }
         }).addTo(map);
-        // nakon što je karta spremna, povuci prve statistike
         refreshStats(true);
       });
 
-    // promjena države iz selecta
+    // change via select
     countrySelect.addEventListener('change', (e)=>{
       const [iso, name] = (e.target.value || '').split('|');
       chosen.country_iso = iso; chosen.country_name = name; modalCountry.textContent = name;
     });
-    countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
     // ---------- Checkout ----------
     payNow.addEventListener('click', async ()=>{
       try {
-        const res = await fetch('/.netlify/functions/checkout', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(chosen)
-        });
+        chosen.amount = clampAmt(+amtModal.value || +amtInput.value || 20);
+        const res = await fetch('/.netlify/functions/checkout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(chosen) });
         if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
         if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
         const { url } = await res.json(); if (url) location.href = url; else alert('No checkout URL returned.');
@@ -290,9 +275,8 @@
         const r = await fetch('/.netlify/functions/stats', { cache: 'no-store' });
         if(!r.ok){ throw new Error(await r.text()); }
         const items = await r.json(); // [{ iso, name, total_eur, donors_24h, donors_7d }]
-        // mapiraj totals
-        totalsByIso = {};
-        let localMax = 0;
+
+        totalsByIso = {}; let localMax = 0;
         for(const it of items){
           const iso = (it.iso || it.country_iso || '').toUpperCase();
           const total = Number(it.total_eur || 0);
@@ -301,7 +285,7 @@
         }
         maxTotal = localMax;
 
-        // oboji poligone po totalu
+        // color polygons by total
         layersByIso.forEach((lyr, iso)=>{
           const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
           lyr.setStyle(colorScale(total));
@@ -310,24 +294,20 @@
           lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
         });
 
-        // render “Today’s heat” (top 10 po donors_24h pa total)
         renderToday(items);
-
-        if(first){
-          mapStatus.textContent = 'World & stats live ✓';
-        }
+        if(first){ mapStatus.textContent = 'World & stats live ✓'; }
       }catch(e){
         console.error('Stats error', e);
         todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats unavailable.</li>`;
         if(first){ mapStatus.textContent = 'World ready (stats unavailable)'; }
       } finally {
-        setTimeout(()=>refreshStats(false), 20000); // 20 s
+        setTimeout(()=>refreshStats(false), 20000);
       }
     }
 
     function renderToday(items){
       if(!Array.isArray(items) || items.length===0){
-        todayList.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
+        todayList.innerHTML = `<li class=\"text-slate-400 text-sm\">No activity yet. Be the first ✨</li>`;
         return;
       }
       const top = [...items]
@@ -355,20 +335,6 @@
             <div class="text-sm text-slate-300 mini">${euro(total)}</div>
           </li>`;
       }).join('');
-    }
-
-    // Thank-you toast after successful Stripe return
-    if (__qs.get('ok') === '1') {
-      const el = document.createElement('div');
-      el.textContent = 'Hvala! Uplata je prošla.';
-      Object.assign(el.style, {
-        position:'fixed', right:'16px', bottom:'16px',
-        background:'#101725', color:'#cfe2ff',
-        border:'1px solid #24314f', padding:'10px 12px',
-        borderRadius:'10px', zIndex:9999
-      });
-      document.body.appendChild(el);
-      setTimeout(()=> el.remove(), 3000);
     }
   </script>
 </body>
