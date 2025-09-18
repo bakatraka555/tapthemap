@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TapTheMap — Influencers Battle</title>
-  <meta name="description" content="Tap your country, back your ...ght up the map. Secure by Stripe · SSL · Anonymous possible." />
+  <meta name="description" content="Tap your country, back your captain, and light up the map. Secure by Stripe · SSL · Anonymous possible." />
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +23,7 @@
     html,body{height:100%}
     body{background:#0b1020;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     #map{height:62vh;min-height:420px}
-    .card{backdrop-filter:blur(8px);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
+    .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
     .leaflet-container{background:#0b1020}
     select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
@@ -37,10 +37,10 @@
     <div class="mx-auto max-w-7xl px-6 pt-5">
       <div class="card px-5 py-4 flex items-center justify-between">
         <a href="/" class="text-xl md:text-2xl font-bold tracking-tight">tapthemap.world</a>
-        <nav class="flex items-center gap-3 text-sm text-slate-300">
-          <a href="#how" class="hover:text-white">How it works</a>
+        <nav class="hidden md:flex items-center gap-8 text-slate-200/90">
           <a href="#leaders" class="hover:text-white">Leaders</a>
-          <a href="#join" class="hover:text-white">Join</a>
+          <a href="#about" class="hover:text-white">About</a>
+          <a href="#faq" class="hover:text-white">FAQ</a>
         </nav>
       </div>
     </div>
@@ -59,37 +59,31 @@
             </p>
             <div class="mt-5 flex items-center gap-3 text-slate-300 text-sm">
               <span class="inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Live</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live
               </span>
-              <span class="opacity-70">·</span>
-              <span>World heat updates every 20 s</span>
+              <span>·</span>
+              <span>Apple/Google Pay supported</span>
             </div>
           </div>
 
-          <div class="grid sm:grid-cols-[1fr_auto] gap-4 items-start">
-            <div class="card p-4">
-              <div class="flex flex-wrap items-center gap-3">
-                <label for="countrySelect" class="text-sm opacity-80">Country</label>
-                <select id="countrySelect" class="rounded-lg px-3 py-2">
-                  <option value="HRV|Croatia">Croatia (HRV)</option>
-                </select>
-                <div class="flex items-center gap-2 ml-auto">
-                  <button data-amt="5" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€5</button>
-                  <button data-amt="20" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€20</button>
-                  <button data-amt="50" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€50</button>
-                  <button data-amt="100" class="amt btn px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€100</button>
-                  <div class="flex items-center gap-2">
-                    <span class="opacity-70">Other</span>
-                    <input id="otherAmt" type="number" min="1" step="1" placeholder="20" aria-label="Other" class="w-24 bg-transparent outline-none text-slate-800" />
-                    <button id="otherBtn" class="text-blue-700 font-semibold">OK</button>
-                  </div>
-                  <button id="openModal" class="ml-2 bg-emerald-400 text-black font-semibold px-4 py-2 rounded-xl">
-                    Donate
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 mb-3">
+            <label for="countrySelect" class="text-sm text-slate-300">Country:</label>
+            <select id="countrySelect" class="rounded-xl px-3 py-2 text-sm focus:outline-none">
+              <option value="HRV|Croatia">Croatia (HRV)</option>
+              <option value="DEU|Germany">Germany (DEU)</option>
+              <option value="USA|United States">United States (USA)</option>
+              <option value="GBR|United Kingdom">United Kingdom (GBR)</option>
+              <option value="FRA|France">France (FRA)</option>
+              <option value="ITA|Italy">Italy (ITA)</option>
+              <option value="ESP|Spain">Spain (ESP)</option>
+              <option value="POL|Poland">Poland (POL)</option>
+              <option value="IND|India">India (IND)</option>
+              <option value="BRA|Brazil">Brazil (BRA)</option>
+            </select>
+            <button id="openDonate" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl">
+              Donate
+            </button>
+          </div>
 
           <div id="map" class="card overflow-hidden relative z-0"></div>
           <div id="mapStatus" class="mt-2 badge">Loading world…</div>
@@ -104,94 +98,80 @@
             <ul id="todayList" class="mt-4 space-y-4">
               <li class="text-slate-400 text-sm">Fetching stats…</li>
             </ul>
-            <div class="mt-3 text-xs opacity-70"><a href="/.netlify/functions/leaders?by=countries&window=7d" target="_blank" class="underline">Open Leaders API</a></div>
             <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
           </div>
 
           <div class="card p-5 mt-6">
             <h3 class="text-lg font-semibold">Become a Captain</h3>
-            <p class="text-slate-300 mt-2">Bring your community to the map. Apply with your email and public handle — we’ll reach out.</p>
-            <form id="joinForm" class="mt-3 space-y-2">
-              <input name="email" type="email" placeholder="you@example.com" required class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
-              <input name="handle" placeholder="your-handle" required class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
-              <input name="country_iso" placeholder="ISO-3 (optional)" class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
-              <textarea name="message" placeholder="Why you? (optional)" class="w-full rounded-lg px-3 py-2 bg-white/5 border border-white/10"></textarea>
-              <button class="bg-white text-black font-semibold px-4 py-2 rounded-xl">Apply</button>
-              <div id="joinMsg" class="text-sm text-slate-300"></div>
-            </form>
+            <p class="text-slate-300 mt-2">Apply and get your referral link. Weekly Captain = most unique donors.</p>
+            <a href="/join" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-semibold">Apply →</a>
           </div>
         </aside>
       </div>
     </section>
-
-    <section id="how" class="mx-auto max-w-7xl px-6 mt-12 mb-16">
-      <div class="card p-6">
-        <h2 class="text-2xl font-semibold mb-3">How it works</h2>
-        <ol class="list-decimal ml-5 space-y-2 text-slate-200">
-          <li>Tap the map to pick a country, or choose from the select.</li>
-          <li>Pick an amount (5/20/50/100) or type your own, then hit Donate.</li>
-          <li>Pay securely with Stripe (card or Link). We store minimal info.</li>
-          <li>Within seconds, the map lights up and the sidebar updates.</li>
-        </ol>
-        <p class="mt-4 text-sm text-slate-400">Stripe Test: use card <code>4242 4242 4242 4242</code>.</p>
-      </div>
-    </section>
   </main>
 
-  <!-- Modal -->
-  <div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-40">
-    <div class="card w-[560px] max-w-[94vw] p-5">
-      <div class="flex items-center justify-between">
-        <div class="text-lg font-semibold">Donate to <span id="modalCountry">Croatia</span></div>
-        <button id="closeModal" class="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10">Close</button>
-      </div>
-      <div class="mt-4 space-y-3">
-        <div class="flex items-center gap-2">
-          <span class="opacity-70">EUR</span>
-          <input id="amtModal" type="number" min="1" max="5000" value="20" class="w-32 rounded-lg px-3 py-2 bg-white/5 border border-white/10" />
-          <div class="ml-auto flex gap-2">
-            <button data-amt="5" class="amt2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€5</button>
-            <button data-amt="20" class="amt2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€20</button>
-            <button data-amt="50" class="amt2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€50</button>
-            <button data-amt="100" class="amt2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10">€100</button>
+  <!-- Donate modal -->
+  <div id="donateModal" class="fixed inset-0 z-40 hidden">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative z-10 max-w-2xl mx-auto mt-24">
+      <div class="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200">
+        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <div id="modalCountry" class="text-xl font-bold">Croatia</div>
+            <div class="text-sm text-slate-600">Choose amount</div>
+          </div>
+          <button id="closeModal" class="p-2 text-slate-500 hover:text-slate-800">✕</button>
+        </div>
+        <div class="p-6 grid md:grid-cols-[1fr_160px] gap-6">
+          <div>
+            <div class="flex flex-wrap gap-3">
+              <button data-amt="5" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">5 €</button>
+              <button data-amt="20" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">20 €</button>
+              <button data-amt="50" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">50 €</button>
+              <button data-amt="100" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">100 €</button>
+              <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2">
+                <input id="otherAmt" type="number" min="1" step="1" placeholder="Other" class="w-24 bg-transparent outline-none text-slate-800" />
+                <button id="otherBtn" class="text-blue-700 font-semibold">OK</button>
+              </div>
+            </div>
+            <div class="mt-4 text-sm text-slate-600">Private gift, no quid pro quo. We show @handles only with consent.</div>
+          </div>
+          <div>
+            <div class="rounded-xl border border-slate-200 p-3 grid place-items-center h-[150px] text-slate-500">
+              <div id="qrBox">QR will appear after creating the Checkout link</div>
+            </div>
+            <button id="payNow" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl">Pay now</button>
           </div>
         </div>
-        <button id="payNow" class="bg-emerald-400 text-black font-semibold px-4 py-2 rounded-xl">Pay with Stripe</button>
-        <div class="text-sm text-slate-400">Goes to Stripe Checkout. You can cancel anytime.</div>
       </div>
     </div>
   </div>
 
-  <footer class="mx-auto max-w-7xl px-6 pb-12">
-    <div class="mt-10 text-sm text-slate-400">© TapTheMap</div>
-  </footer>
-
   <script>
     // ---------- Helpers ----------
-    const euro = (x)=> new Intl.NumberFormat('en', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(x);
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const euro = (n)=> '€' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
 
-    // Leaflet helpers
-    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toUpperCase();
-    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME || p.name || 'Unknown');
-
-    // ---------- Elements ----------
-    const mapEl = document.getElementById('map');
-    const modal = document.getElementById('modal');
-    const modalCountry = document.getElementById('modalCountry');
-    const closeModalBtn = document.getElementById('closeModal');
-    const openModalBtn = document.getElementById('openModal');
+    // ---------- State ----------
+    const modal = document.getElementById('donateModal');
+    const openDonateBtn = document.getElementById('openDonate');
+    const closeBtn = document.getElementById('closeModal');
     const payNow = document.getElementById('payNow');
-    const amtInput = document.getElementById('otherAmt');
-    const amtModal = document.getElementById('amtModal');
+    const modalCountry = document.getElementById('modalCountry');
+    const countrySelect = document.getElementById('countrySelect');
     const mapStatus = document.getElementById('mapStatus');
     const todayList = document.getElementById('todayList');
-    const countrySelect = document.getElementById('countrySelect');
 
-    // ---------- Map init ----------
-    const map = L.map(mapEl, { worldCopyJump:true, minZoom:2, maxZoom:6, zoomControl:true }).setView([20, 0], 2);
-    L.tileLayer('https://cartodb-basemaps-b.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
-      attribution:'© OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
+    let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
+
+    function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
+    function closeModal(){ modal.classList.add('hidden'); }
+
+    // ---------- Map ----------
+    const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
     map.createPane('countries'); map.getPane('countries').style.zIndex = 650;
 
@@ -201,10 +181,13 @@
       'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
       'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
     ];
+    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
+    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
 
-    // ---------- State ----------
-    const baseStyle = { color:'#0f172a', weight:0.6, fillColor:'#0b172a', fillOpacity:0.75 };
-    const hoverStyle = { ...baseStyle, weight:1.5, color:'#cbd5e1', fillOpacity:0.85 };
+    const baseStyle  = { color:'#4ade80', weight:0.7, fillColor:'#22d3ee', fillOpacity:0.10 };
+    const hoverStyle = { color:'#4ade80', weight:1.3, fillColor:'#22d3ee', fillOpacity:0.30 };
+
+    // Dinamičke boje po iznosu
     const layersByIso = new Map();   // ISO3 -> Leaflet layer
     let totalsByIso = {};            // ISO3 -> total_eur
     let maxTotal = 0;
@@ -234,51 +217,61 @@
         style: (f) => {
           const iso = isoFrom(f.properties);
           const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-          return { ...baseStyle, fillOpacity: colorScale(total).fillOpacity };
+          return colorScale(total);
         },
         onEachFeature: (f, lyr) => {
           const iso = isoFrom(f.properties);
           const name = nameFrom(f.properties);
           layersByIso.set(iso, lyr);
 
-          const tip = () => {
+          const tip = ()=> {
             const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
             return total > 0 ? `${name} · ${euro(total)}` : name;
           };
           lyr.bindTooltip(tip(), { sticky:true, opacity:0.95 });
 
           lyr.on({
-            mouseover: (e)=>{ e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-            mouseout:  (e)=>{ const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0; e.target.setStyle({ ...baseStyle, fillOpacity: colorScale(t).fillOpacity }); map.getContainer().style.cursor=''; },
+            mouseover: (e)=>{
+              e.target.setStyle(hoverStyle); e.target.bringToFront(); map.getContainer().style.cursor='pointer';
+            },
+            mouseout:  (e)=>{
+              // vrati stil prema trenutnim totalima
+              const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+              e.target.setStyle(colorScale(t)); map.getContainer().style.cursor='';
+            },
             click:     (e)=>{
-              chosen.country_iso = iso; chosen.country_name = name; modalCountry.textContent = name;
-              const b = e.target.getBounds(); if (b && b.isValid()) map.fitBounds(b, { maxZoom:4, padding:[20,20] });
-              // set select
-              const val = `${iso}|${name}`;
-              let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(iso + '|'));
-              if (!opt) { opt = new Option(`${name} (${iso})`, val); countrySelect.add(opt); }
+              chosen.country_iso = iso || chosen.country_iso;
+              chosen.country_name = name || chosen.country_name;
+              modalCountry.textContent = chosen.country_name;
+
+              const val = `${chosen.country_iso}|${chosen.country_name}`;
+              let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(chosen.country_iso + '|'));
+              if (!opt) { opt = new Option(`${chosen.country_name} (${chosen.country_iso})`, val); countrySelect.add(opt); }
               countrySelect.value = val;
+
+              const b = e.target.getBounds(); if (b && b.isValid()) map.fitBounds(b, { maxZoom:4, padding:[20,20] });
               openModal();
             }
           });
         }
       }).addTo(map);
+      // nakon što je karta spremna, povuci prve statistike
+      refreshStats(true);
     }).catch(()=>{
       mapStatus.textContent = 'World failed to load';
+      map.on('click', openModal); // minimal fallback
     });
 
-    // ---------- UI events ----------
-    function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
-    function closeModal(){ modal.classList.add('hidden'); }
-
-    closeModalBtn.addEventListener('click', closeModal);
-    openModalBtn.addEventListener('click', ()=>{ openModal(); });
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
-
-    // quick amounts → input
-    document.querySelectorAll('.amt').forEach(b=> b.addEventListener('click', ()=>{ document.getElementById('otherAmt').value = b.dataset.amt; }));
-    document.querySelectorAll('.amt2').forEach(b=> b.addEventListener('click', ()=>{ document.getElementById('amtModal').value = b.dataset.amt; }));
-
+    // ---------- UI ----------
+    document.getElementById('openDonate')?.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.querySelectorAll('.amt-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        chosen.amount = parseInt(btn.dataset.amt,10);
+        document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('ring','ring-offset-2'));
+        btn.classList.add('ring','ring-offset-2');
+      });
+    });
     document.getElementById('otherBtn').addEventListener('click', ()=>{
       const v = parseInt(document.getElementById('otherAmt').value,10);
       if(v>0) chosen.amount = v;
@@ -303,33 +296,43 @@
     });
 
     // ---------- Stats (polling + render) ----------
-    async function refreshStats(){
+    async function refreshStats(first = false){
       try{
         const r = await fetch('/.netlify/functions/stats', { cache: 'no-store' });
         if(!r.ok){ throw new Error(await r.text()); }
         const items = await r.json(); // [{ iso, name, total_eur, donors_24h, donors_7d }]
-        // map totals & max
-        totalsByIso = {}; maxTotal = 0;
+        // mapiraj totals
+        totalsByIso = {};
+        let localMax = 0;
         for(const it of items){
           const iso = (it.iso || it.country_iso || '').toUpperCase();
           const total = Number(it.total_eur || 0);
           totalsByIso[iso] = total;
-          if (total > maxTotal) maxTotal = total;
+          if (total > localMax) localMax = total;
         }
-        // repaint fills + tooltips
+        maxTotal = localMax;
+
+        // osvježi stil svakog layera + tooltip
         layersByIso.forEach((lyr, iso)=>{
           const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-          lyr.setStyle({ ...baseStyle, fillOpacity: colorScale(total).fillOpacity });
+          lyr.setStyle(colorScale(total));
           const nm = (lyr.feature && lyr.feature.properties) ? (lyr.feature.properties.NAME_EN || lyr.feature.properties.ADMIN || 'Unknown') : iso;
           const tip = total > 0 ? `${nm} · ${euro(total)}` : nm;
           lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
         });
-        // today list
+
+        // render “Today’s heat” (top 10 po donors_24h pa total)
         renderToday(items);
+
+        if(first){
+          mapStatus.textContent = 'World & stats live ✓';
+        }
       }catch(e){
+        console.error('Stats error', e);
         todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats unavailable.</li>`;
+        if(first){ mapStatus.textContent = 'World ready (stats unavailable)'; }
       } finally {
-        setTimeout(refreshStats, 20000);
+        setTimeout(()=>refreshStats(false), 20000); // 20 s
       }
     }
 
@@ -342,7 +345,7 @@
         .sort((a,b)=>{
           const d = (b.donors_24h||0) - (a.donors_24h||0);
           if (d!==0) return d;
-          return (Number(b.total_eur||0) - Number(a.total_eur||0));
+          return Number(b.total_eur||0) - Number(a.total_eur||0);
         })
         .slice(0,10);
 
@@ -354,39 +357,28 @@
         return `
           <li class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-300 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
+              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
               <div>
                 <div class="font-semibold">${name}</div>
                 <div class="text-xs text-slate-400 mini">${donors} donors · ${euro(total)} total</div>
               </div>
             </div>
-            <div class="text-sm text-slate-300 mini">${euro(total)}</div>
-          </li>`;
+            <button class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" onclick="quickDonate('${iso}','${name.replace(/'/g,'&#39;')}')">Donate</button>
+          </li>
+        `;
       }).join('');
     }
 
-    // ---------- Chosen & referral / thank-you (PATCH) ----------
-    let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' }
-
-    // Capture referral from URL (?r=handle) and show thank-you toast (?ok=1)
-    const __qs = new URLSearchParams(location.search);
-    const __ref = (__qs.get('r') || '').replace(/[^a-z0-9_\-\.]/gi, '').slice(0, 64);
-    if (__ref) chosen.ref = __ref;
-    if (__qs.get('ok') === '1') {
-      const el = document.createElement('div');
-      el.textContent = 'Hvala! Uplata je prošla.';
-      Object.assign(el.style, {
-        position:'fixed', right:'16px', bottom:'16px',
-        background:'#101725', color:'#cfe2ff',
-        border:'1px solid #24314f', padding:'10px 12px',
-        borderRadius:'10px', zIndex:9999
-      });
-      document.body.appendChild(el);
-      setTimeout(()=> el.remove(), 3000);
-    }
-
-    // start polling
-    refreshStats();
+    window.quickDonate = (iso,name)=>{
+      chosen.country_iso = iso;
+      chosen.country_name = name;
+      modalCountry.textContent = name;
+      const val = `${iso}|${name}`;
+      let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(iso + '|'));
+      if (!opt) { opt = new Option(`${name} (${iso})`, val); countrySelect.add(opt); }
+      countrySelect.value = val;
+      openModal();
+    };
   </script>
 </body>
 </html>
