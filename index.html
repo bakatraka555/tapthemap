@@ -4,22 +4,23 @@
   <meta charset="utf-8" />
   <title>tapthemap.world</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin
+  />
   <style>
     :root{--bg:#081226;--panel:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--brand:#22c55e}
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
-
     header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px}
     header h1{margin:0;font-size:20px;font-weight:700}
     header .sub{color:var(--muted);font-size:13px}
-
     .shell{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:0 16px 16px}
-    #map{height:78vh;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .mapWrap{position:relative;min-height:72vh}
+    #map{position:absolute;inset:0;/* stabilno */}
     .panel{background:var(--panel);border-radius:14px;padding:14px;position:sticky;top:12px;height:max-content}
     .row{display:flex;gap:10px;align-items:center;margin:10px 0}
     select,input{background:#0b1328;border:1px solid #1f2a44;color:var(--text);padding:10px 12px;border-radius:10px;outline:none}
@@ -31,7 +32,7 @@
     ul#heat{list-style:none;margin:8px 0 0;padding:0;max-height:48vh;overflow:auto}
     ul#heat li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
     .leaflet-container{background:#081226}
-    .legend{margin-top:8px;color:#cbd5e1;font-size:12px}
+    .legend{position:absolute;right:10px;bottom:10px;z-index:5000;background:#0b1328;border:1px solid #1f2a44;color:#cbd5e1;border-radius:10px;padding:8px 10px;font-size:12px}
   </style>
 </head>
 <body>
@@ -41,7 +42,7 @@
   </header>
 
   <div class="shell">
-    <div>
+    <div class="mapWrap">
       <div id="map"></div>
       <div class="legend">0 → <b>5k</b>+ EUR • click a country to donate</div>
     </div>
@@ -70,25 +71,23 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-          crossorigin></script>
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin></script>
 
   <script>
-    // ===== Map (bez apsolutnog pozicioniranja; nema “mozaika”) =====
-    const map = L.map('map', { zoomSnap:.1, zoomControl:true })
+    // ---------- Map (stabilna inicijalizacija + fix za tiles) ----------
+    const map = L.map('map', { zoomSnap:.1, zoomControl:true, worldCopyJump:true })
                   .setView([22, 12], 2.1);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 6, minZoom: 2,
-      attribution: '&copy; OpenStreetMap & CARTO',
-      crossOrigin: true
+      attribution: '&copy; OpenStreetMap & CARTO'
     }).addTo(map);
 
-    // sigurnosno – invalidiraj veličinu nakon rendera i na resize
-    requestAnimationFrame(()=>map.invalidateSize());
-    addEventListener('resize', ()=>map.invalidateSize());
+    // bitno: invalidiraj layout nakon što je grid posložen
+    setTimeout(()=>map.invalidateSize(), 50);
+    window.addEventListener('resize', ()=> map.invalidateSize());
 
-    // ===== Geo i stanje =====
+    // ---------- Geo & state ----------
     const WORLD_URL = "https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson";
     const layersByIso = new Map(); // ISO -> Leaflet layer
     const totalsByIso = {};        // ISO -> total_eur (iz /stats)
@@ -156,7 +155,7 @@
       currentName=(lyr && (lyr.feature.properties.ADMIN||lyr.feature.properties.NAME))||iso;
     });
 
-    // ===== Stats & Heat =====
+    // ---------- Stats & Heat ----------
     async function refreshStats(repaint=true){
       try{
         const res=await fetch('/.netlify/functions/stats',{cache:'no-store'});
@@ -179,7 +178,7 @@
     }
     setInterval(()=>refreshStats(true), 20000);
 
-    // ===== Checkout =====
+    // ---------- Checkout ----------
     const amountRow=document.getElementById('amountRow');
     const otherAmt=document.getElementById('otherAmt');
     const payBtn=document.getElementById('payBtn');
@@ -228,7 +227,7 @@
     }
     document.getElementById('payBtn').addEventListener('click', startCheckout);
 
-    // ===== After-return flash & fast polling =====
+    // ---------- After-return flash & fast polling ----------
     (function afterReturn(){
       const p=new URLSearchParams(location.search);
       if(p.get('ok')==='1'){
