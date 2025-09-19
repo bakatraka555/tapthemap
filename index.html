@@ -406,38 +406,34 @@
       }
     }
 
-    function renderToday(items){
-      if(!Array.isArray(items) || items.length===0){
-        todayList.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
-        return;
-      }
-      const top = [...items]
-        .sort((a,b)=>{
-          const d = (b.donors_24h||0) - (a.donors_24h||0);
-          if (d!==0) return d;
-          return Number(b.total_eur||0) - Number(a.total_eur||0);
-        })
-        .slice(0,10);
+function renderToday(items){
+  const ul = document.getElementById('todayList') || document.getElementById('heat');
+  if(!ul) return;
+  if(!Array.isArray(items) || items.length===0){
+    ul.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
+    return;
+  }
+  const top = [...items].sort((a,b)=> Number(b.total_eur||0)-Number(a.total_eur||0)).slice(0,10);
+  ul.innerHTML = top.map(it=>{
+    const iso = (it.iso || it.country_iso || '').toUpperCase();
+    const name = it.name || it.country_name || iso;
+    const total = Number(it.total_eur || 0);
+    const donors = Number(it.donors_24h || 0);
+    return `
+      <li class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
+          <div>
+            <div class="font-semibold">${name}</div>
+            <div class="text-xs text-slate-400 mini">${donors} donors (24h)</div>
+          </div>
+        </div>
+        <b>€${total.toFixed(0)}</b>
+      </li>
+    `;
+  }).join('');
+}
 
-      todayList.innerHTML = top.map(it=>{
-        const iso = (it.iso || it.country_iso || '').toUpperCase();
-        const name = it.name || it.country_name || iso;
-        const donors = it.donors_24h || 0;
-        const total  = Number(it.total_eur || 0);
-        return `
-          <li class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
-              <div>
-                <div class="font-semibold">${name}</div>
-                <div class="text-xs text-slate-400 mini">${donors} donors · €${total.toFixed(0)} total</div>
-              </div>
-            </div>
-            <button class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" onclick="quickDonate('${iso}','${name.replace(/'/g,'&#39;')}')">Donate</button>
-          </li>
-        `;
-      }).join('');
-    }
 
     // ---------- Captains (leaders by ref, 7d) ----------
     let captainsTimer = null;
@@ -489,3 +485,4 @@
   </script>
 </body>
 </html>
+
