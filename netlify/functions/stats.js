@@ -1,4 +1,5 @@
-// GET /.netlify/functions/stats  → agregati iz tablice payments
+// GET /.netlify/functions/stats
+// Agregira po zemlji: total_eur + donors_24h + donors_7d (ALL vrijeme)
 const { createClient } = require("@supabase/supabase-js");
 
 const supa = () =>
@@ -8,31 +9,49 @@ const supa = () =>
 
 exports.handler = async () => {
   try {
-    const since24 = new Date(Date.now() - 24*60*60*1000).toISOString();
-    const since7  = new Date(Date.now() - 7*24*60*60*1000).toISOString();
-
     const { data, error } = await supa()
       .from("payments")
-      .select("country_iso,country_name,amount_eur,created_at")
-      .limit(10000);
+      .select("country_iso,country_name,amount_eur,donor_hash,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50000);
 
     if (error) throw error;
 
-    const bucket = new Map();
-    for (const r of (data || [])) {
-      const iso  = r.country_iso || "UNK";
-      const name = r.country_name || iso;
-      if (!bucket.has(iso)) bucket.set(iso, { iso, name, total_eur: 0, donors_24h: 0, donors_7d: 0 });
-      const row = bucket.get(iso);
+    const by = new Map();
+    const now = Date.now();
+    const since24 = now - 24*60*60*1000;
+    const since7d = now - 7*24*60*60*1000;
 
-      row.total_eur += Number(r.amount_eur || 0);
-      if (r.created_at >= since24) row.donors_24h += 1;
-      if (r.created_at >= since7)  row.donors_7d  += 1;
+    for (const r of (data||[])) {
+      const iso = (r.country_iso || "UNK").toUpperCase().slice(0,3);
+      const name = r.country_name || iso;
+      const amt  = Number(r.amount_eur || 0);
+      const ts   = new Date(r.created_at).getTime();
+      const dh   = r.donor_hash || null;
+
+      if (!by.has(iso)) by.set(iso, {
+        iso, name, total_eur: 0,
+        donors24: new Set(), donors7: new Set()
+      });
+      const o = by.get(iso);
+      o.total_eur += amt;
+      if (ts >= since7d && dh) o.donors7.add(dh);
+      if (ts >= since24 && dh) o.donors24.add(dh);
     }
 
-    const out = Array.from(bucket.values())
-      .sort((a,b)=> b.total_eur - a.total_eur)
-      .map(r => ({ ...r, total_eur: r.total_eur.toFixed(0) }));
+    const out = Array.from(by.values()).map(o => ({
+      iso: o.iso,
+      name: o.name,
+      total_eur: Math.round(o.total_eur),
+      donors_24h: o.donors24.size,
+      donors_7d: o.donors7.size
+    }))
+    // default sortiranje za "Today’s heat": po donors_24h pa total
+    .sort((a,b)=>{
+      const d = (b.donors_24h||0) - (a.donors_24h||0);
+      if (d !== 0) return d;
+      return (b.total_eur||0) - (a.total_eur||0);
+    });
 
     return { statusCode: 200, body: JSON.stringify(out) };
   } catch (e) {
