@@ -20,6 +20,8 @@
     #map{height:62vh;min-height:420px}
     .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
     .leaflet-container{background:#0b1020}
+    /* mekši hover i jasnije punjenje država */
+    .leaflet-interactive{transition: fill .25s ease, fill-opacity .25s ease, stroke-width .15s ease;}
     select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
@@ -169,14 +171,10 @@
     const getParam = (k)=> new URLSearchParams(location.search).get(k);
     const sanitizeRef = (s)=> (s||"").toString().replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,32);
 
-    function hslToHex(h, s, l) {
-      s /= 100; l /= 100;
-      const k = n => (n + h/30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-      const toHex = x => Math.round(255 * x).toString(16).padStart(2, '0');
-      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
-    }
+    function hslToHex(h, s, l) { s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
+      const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+      const toHex=x=>Math.round(255*x).toString(16).padStart(2,'0');
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`; }
     function rampColor(t){ const hue = 195 - 195 * t; return hslToHex(hue, 85, 53); }
 
     // ---------- State ----------
@@ -254,12 +252,29 @@
     const layersByIso = new Map();
     let totalsByIso = {};
     let minPos = 0, maxPos = 0;
+    let geoReady = false;            // <- novo: znamo kad je GeoJSON gotov
+    let pendingRecolor = false;      // <- novo: ako stats dođu ranije
 
     function styleByValue(value){
-      if (!maxPos || !value) return { ...baseStroke, fillColor:'#0ea5e9', fillOpacity:0.10 };
+      // malo veća vidljivost punjenja
+      if (!maxPos || !value) return { ...baseStroke, fillColor:'#0ea5e9', fillOpacity:0.18 };
       const t = (value - minPos) / Math.max(1, (maxPos - minPos));
       const col = rampColor(clamp(t,0,1));
-      return { ...baseStroke, fillColor: col, fillOpacity: 0.55 };
+      return { ...baseStroke, fillColor: col, fillOpacity: 0.62 };
+    }
+
+    function applyTotalsToLayers(){
+      if (!geoReady || !layersByIso.size) { pendingRecolor = true; return; }
+      layersByIso.forEach((lyr, iso)=>{
+        const total = Number(totalsByIso[iso] || 0);
+        lyr.setStyle(styleByValue(total));
+        const nm = (lyr.feature && lyr.feature.properties)
+          ? (lyr.feature.properties.NAME_EN || lyr.feature.properties.ADMIN || 'Unknown')
+          : iso;
+        const tip = total > 0 ? `${nm} · €${total.toFixed(0)}` : nm;
+        lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
+      });
+      pendingRecolor = false;
     }
 
     async function fetchAny(urls){
@@ -277,7 +292,7 @@
         pane:'countries',
         style: (f) => {
           const iso = isoFrom(f.properties);
-          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
+          const total = Number(totalsByIso[iso] || 0);
           return styleByValue(total);
         },
         onEachFeature: (f, lyr) => {
@@ -286,14 +301,14 @@
           layersByIso.set(iso, lyr);
 
           const tip = ()=> {
-            const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-            return total > 0 ? `${name} · €${Number(total).toFixed(0)}` : name;
+            const total = Number(totalsByIso[iso] || 0);
+            return total > 0 ? `${name} · €${total.toFixed(0)}` : name;
           };
           lyr.bindTooltip(tip(), { sticky:true, opacity:0.95 });
 
           lyr.on({
             mouseover: (e)=>{ e.target.setStyle({ ...e.target.options, weight:1.3 }); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-            mouseout:  (e)=>{ const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0; e.target.setStyle(styleByValue(t)); map.getContainer().style.cursor=''; },
+            mouseout:  (e)=>{ const t = Number(totalsByIso[iso] || 0); e.target.setStyle(styleByValue(t)); map.getContainer().style.cursor=''; },
             click:     (e)=>{
               chosen.country_iso = iso || chosen.country_iso;
               chosen.country_name = name || chosen.country_name;
@@ -308,6 +323,9 @@
           });
         }
       }).addTo(map);
+
+      geoReady = true;
+      if (pendingRecolor) applyTotalsToLayers();  // ako su stats stigli prije
       refreshStats(true);
       refreshCaptains();
     }).catch(()=>{
@@ -356,11 +374,14 @@
         const r = await fetch('/.netlify/functions/stats', { cache: 'no-store' });
         if(!r.ok){ throw new Error(await r.text()); }
         const items = await r.json();
+
+        // mapiraj total po ISO + min/max za rampu
         totalsByIso = {};
         const vals = [];
         for (const it of (items||[])){
           const iso = (it.iso || it.country_iso || '').toUpperCase();
           const total = Number(it.total_eur || 0);
+          if (!iso) continue;
           totalsByIso[iso] = total;
           if (total > 0) vals.push(total);
         }
@@ -370,13 +391,8 @@
         if (vals.length) { legendLow().textContent = euro(minPos); legendHigh().textContent = euro(maxPos); }
         else { legendLow().textContent = 'Low'; legendHigh().textContent = 'High'; }
 
-        layersByIso.forEach((lyr, iso)=>{
-          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-          lyr.setStyle(styleByValue(total));
-          const nm = (lyr.feature && lyr.feature.properties) ? (lyr.feature.properties.NAME_EN || lyr.feature.properties.ADMIN || 'Unknown') : iso;
-          const tip = total > 0 ? `${nm} · €${Number(total).toFixed(0)}` : nm;
-          lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
-        });
+        // oboji čim su slojevi spremni
+        applyTotalsToLayers();
 
         renderToday(items);
         if(first){ mapStatus.textContent = 'World & stats live ✓'; }
@@ -456,7 +472,7 @@
         captainsList.innerHTML = `<li class="text-slate-400 text-sm">Leaders unavailable.</li>`;
       } finally {
         clearTimeout(captainsTimer);
-        captainsTimer = setTimeout(refreshCaptains, 30000); // 30 s
+        captainsTimer = setTimeout(refreshCaptains, 30000);
       }
     }
 
