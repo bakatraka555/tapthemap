@@ -171,11 +171,10 @@ const Legend=L.Control.extend({
 new Legend({position:'bottomleft'}).addTo(map);
 const lgLow=()=>document.getElementById('lgLow');const lgHigh=()=>document.getElementById('lgHigh');
 
-/* GeoJSON izvori s ISO_A3 */
+/* GeoJSON SOURCES (CORS OK) */
 const SOURCES=[
- 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
  'https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson',
- 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json' // fallback (ima id=ISO3 u većini slučajeva)
+ 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
 ];
 
 function isoFromProps(p){
@@ -201,14 +200,21 @@ function applyTotalsToLayers(){
     const nm=nameFromProps(lyr.feature.properties);
     lyr.bindTooltip(tot>0?`${nm} · €${tot.toFixed(0)}`:nm,{sticky:true,opacity:.95});
   });
-  // debug: koje ISO iz stats ne postoje u geojsonu
   const missing=[];Object.keys(totalsByIso).forEach(i=>{if(!layersByIso.has(i)) missing.push(i);});
   if(missing.length) console.warn('Stats ISO w/out polygon:', missing.join(', '));
   pendingRecolor=false;
 }
 
 async function fetchAny(urls){
-  let err;for(const u of urls){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json();}catch(e){err=e}}
+  let err;
+  for(const u of urls){
+    try{
+      const r=await fetch(u,{cache:'no-store',mode:'cors'});
+      if(!r.ok) throw new Error(r.status+' '+u);
+      console.log('Loaded countries source:', u);
+      return await r.json();
+    }catch(e){err=e}
+  }
   throw err||new Error('All sources failed');
 }
 
@@ -239,7 +245,7 @@ fetchAny(SOURCES).then(geo=>{
   refreshStats(true); refreshCaptains();
 }).catch(()=>{mapStatus.textContent='World failed to load';});
 
-/* ===== Modal & iznosi (delegirano) ===== */
+/* ===== Modal & amounts (delegated) ===== */
 const modal=document.getElementById('donateModal');
 const openDonateBtn=document.getElementById('openDonate');
 const closeBtn=document.getElementById('closeModal');
@@ -252,7 +258,7 @@ openDonateBtn?.addEventListener('click',openModal);
 closeBtn?.addEventListener('click',closeModal);
 countrySelect.addEventListener('change',()=>{const [iso,name]=countrySelect.value.split('|');chosen.country_iso=iso;chosen.country_name=name;modalCountry.textContent=name;});
 
-// delegirani klik na gumbe s iznosima
+// delegated clicks for amount buttons
 document.addEventListener('click',(e)=>{
   const b=e.target.closest('.amt-btn');
   if(b){ e.preventDefault();
@@ -264,18 +270,27 @@ document.addEventListener('click',(e)=>{
     if(v>0){ chosen.amount=v; document.querySelectorAll('.amt-btn').forEach(x=>x.classList.remove('active')); }
   }
 });
-
-// inicijalno aktiviraj 20
-(function(){ const def=document.querySelector('.amt-btn[data-amt="20"]'); if(def) def.classList.add('active'); })();
+// default active = 20
+(function(){ const def=document.querySelector('.amt-btn[data-amt="20"]'); if(def){ def.classList.add('active'); chosen.amount=20; }})();
 
 /* ===== Checkout ===== */
 payNow.addEventListener('click',async ()=>{
-  const active=document.querySelector('.amt-btn.active'); if(active) chosen.amount=Number(active.dataset.amt)||chosen.amount;
-  const alt=parseInt(document.getElementById('otherAmt').value,10); if(!active && alt>0) chosen.amount=alt;
+  const active=document.querySelector('.amt-btn.active');
+  if(active) chosen.amount=Number(active.dataset.amt)||chosen.amount;
+  const alt=parseInt(document.getElementById('otherAmt').value,10);
+  if(!active && alt>0) chosen.amount=alt;
   if(!chosen.amount||chosen.amount<1){alert('Choose an amount.');return;}
   try{
-    const res=await fetch('/.netlify/functions/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({country_iso:chosen.country_iso,country_name:chosen.country_name,amount:Number(chosen.amount),ref:chosen.ref||''})});
+    const payload={
+      country_iso:  chosen.country_iso,
+      country_name: chosen.country_name,
+      amount_eur:   Number(chosen.amount), // << ključ koji tvoj backend očekuje
+      amount:       Number(chosen.amount), // << šaljemo i ovo, za svaki slučaj
+      ref:          chosen.ref || ''
+    };
+    const res=await fetch('/.netlify/functions/checkout',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
     if(res.status===503){alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.');return;}
     if(!res.ok){alert('Checkout error: '+await res.text());return;}
     const {url}=await res.json(); if(url) location.href=url; else alert('No checkout URL returned.');
@@ -292,7 +307,8 @@ async function refreshStats(first=false){
     totalsByIso={}; const vals=[];
     for(const it of (items||[])){ const iso=(it.iso||it.country_iso||'').toUpperCase(); const tot=Number(it.total_eur||0); if(!iso) continue; totalsByIso[iso]=tot; if(tot>0) vals.push(tot); }
     minPos=vals.length?Math.min(...vals):0; maxPos=vals.length?Math.max(...vals):0;
-    if(vals.length){lgLow().textContent=euro(minPos);lgHigh().textContent=euro(maxPos);} else {lgLow().textContent='Low';lgHigh().textContent='High';}
+    if(vals.length){document.getElementById('lgLow').textContent=euro(minPos);document.getElementById('lgHigh').textContent=euro(maxPos);}
+    else {document.getElementById('lgLow').textContent='Low';document.getElementById('lgHigh').textContent='High';}
     applyTotalsToLayers(); renderToday(items);
     if(first) mapStatus.textContent='World & stats live ✓';
   }catch(e){
@@ -323,7 +339,7 @@ async function refreshCaptains(){
       <div><div class="font-semibold">@${it.ref}</div><div class="text-xs text-slate-400">${it.donors_unique} unique · €${Number(it.total_eur||0).toFixed(0)}</div></div></div>
       <a class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" href="/?r=${encodeURIComponent(it.ref)}">Support</a></li>`).join('')
       : `<li class="text-slate-400 text-sm">No captains yet. Share your link (?r=yourhandle).</li>`;
-  }catch(e){console.error(e);captainsList.innerHTML=`<li class="text-slate-400 text-sm">Leaders unavailable.</li>`;}
+  }catch(e){console.error('Leaders error',e);captainsList.innerHTML=`<li class="text-slate-400 text-sm">Leaders unavailable.</li>`;}
   finally{clearTimeout(capTimer);capTimer=setTimeout(refreshCaptains,30000);}
 }
 </script>
