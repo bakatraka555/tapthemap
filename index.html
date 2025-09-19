@@ -20,7 +20,6 @@
     #map{height:62vh;min-height:420px}
     .card{backdrop-filter:blur(8px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px}
     .leaflet-container{background:#0b1020}
-    /* mekši hover i jasnije punjenje država */
     .leaflet-interactive{transition: fill .25s ease, fill-opacity .25s ease, stroke-width .15s ease;}
     select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
@@ -32,6 +31,7 @@
       background: linear-gradient(90deg,#38bdf8 0%, #22c55e 33%, #f59e0b 66%, #ef4444 100%);}
     .legend .scale{display:flex;justify-content:space-between}
     .legend .label{opacity:.9}
+    .amt-btn.active{outline:2px solid #fff; outline-offset:2px}
   </style>
 </head>
 <body class="bg-ink-900 text-white antialiased">
@@ -165,36 +165,27 @@
   </div>
 
   <script>
-    // ---------- Helpers ----------
+    /* ---------- Helpers ---------- */
     const euro = (n)=> '€' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
     const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
     const getParam = (k)=> new URLSearchParams(location.search).get(k);
     const sanitizeRef = (s)=> (s||"").toString().replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,32);
 
+    // lijepa plava→zelena→žuta→crvena
     function hslToHex(h, s, l) { s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
       const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
       const toHex=x=>Math.round(255*x).toString(16).padStart(2,'0');
       return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`; }
     function rampColor(t){ const hue = 195 - 195 * t; return hslToHex(hue, 85, 53); }
 
-    // ---------- State ----------
-    const modal = document.getElementById('donateModal');
-    const openDonateBtn = document.getElementById('openDonate');
-    const closeBtn = document.getElementById('closeModal');
-    const payNow = document.getElementById('payNow');
-    const modalCountry = document.getElementById('modalCountry');
-    const countrySelect = document.getElementById('countrySelect');
-    const mapStatus = document.getElementById('mapStatus');
-    const todayList = document.getElementById('todayList');
+    /* ---------- Referral ---------- */
     const refBadge = document.getElementById('refBadge');
-    const refName = document.getElementById('refName');
+    const refName  = document.getElementById('refName');
     const refClear = document.getElementById('refClear');
-    const captainsList = document.getElementById('captainsList');
-    const myRefLink = document.getElementById('myRefLink');
+    const myRefLink= document.getElementById('myRefLink');
 
-    let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
+    const chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
 
-    // Referral capture
     (function initRef(){
       const fromUrl = sanitizeRef(getParam('r') || getParam('ref'));
       const fromStore = localStorage.getItem('ttm_ref') || '';
@@ -214,17 +205,17 @@
       });
     })();
 
-    function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
-    function closeModal(){ modal.classList.add('hidden'); }
-
-    // ---------- Map ----------
+    /* ---------- Map ---------- */
     const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
     }).addTo(map);
     map.createPane('countries'); map.getPane('countries').style.zIndex = 650;
 
-    // Legend
+    const mapStatus = document.getElementById('mapStatus');
+    const countrySelect = document.getElementById('countrySelect');
+    const modalCountry  = document.getElementById('modalCountry');
+
     const Legend = L.Control.extend({
       onAdd: function() {
         const div = L.DomUtil.create('div','legend card p-3');
@@ -245,18 +236,17 @@
       'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
       'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
     ];
-    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
+    // ISO i ime iz različitih geojsonova
+    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.WB_A3 || p.id || '').toString().toUpperCase().slice(0,3);
     const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
 
     const baseStroke = { color:'#94a3b8', weight:0.7 };
     const layersByIso = new Map();
     let totalsByIso = {};
     let minPos = 0, maxPos = 0;
-    let geoReady = false;            // <- novo: znamo kad je GeoJSON gotov
-    let pendingRecolor = false;      // <- novo: ako stats dođu ranije
+    let geoReady = false, pendingRecolor = false;
 
     function styleByValue(value){
-      // malo veća vidljivost punjenja
       if (!maxPos || !value) return { ...baseStroke, fillColor:'#0ea5e9', fillOpacity:0.18 };
       const t = (value - minPos) / Math.max(1, (maxPos - minPos));
       const col = rampColor(clamp(t,0,1));
@@ -275,6 +265,13 @@
         lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
       });
       pendingRecolor = false;
+
+      // debug: statsi koji nemaju poligon
+      const missing = [];
+      Object.keys(totalsByIso).forEach(iso=>{
+        if(!layersByIso.has(iso)) missing.push(iso);
+      });
+      if (missing.length) console.warn('Stats ISO w/out polygon:', missing.join(', '));
     }
 
     async function fetchAny(urls){
@@ -288,7 +285,7 @@
 
     fetchAny(SOURCES).then(geo=>{
       mapStatus.textContent = 'World ready ✓';
-      L.geoJSON(geo, {
+      window.worldLayer = L.geoJSON(geo, {
         pane:'countries',
         style: (f) => {
           const iso = isoFrom(f.properties);
@@ -325,7 +322,7 @@
       }).addTo(map);
 
       geoReady = true;
-      if (pendingRecolor) applyTotalsToLayers();  // ako su stats stigli prije
+      if (pendingRecolor) applyTotalsToLayers();
       refreshStats(true);
       refreshCaptains();
     }).catch(()=>{
@@ -333,40 +330,70 @@
       map.on('click', openModal);
     });
 
-    // ---------- UI ----------
+    /* ---------- UI: modal + iznosi ---------- */
+    const modal = document.getElementById('donateModal');
+    const openDonateBtn = document.getElementById('openDonate');
+    const closeBtn = document.getElementById('closeModal');
+    const payNow = document.getElementById('payNow');
+
+    function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent = chosen.country_name; }
+    function closeModal(){ modal.classList.add('hidden'); }
+
     document.getElementById('openDonate')?.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
-    document.querySelectorAll('.amt-btn').forEach(btn=>{
+
+    // odabir iznosa
+    const amtBtns = Array.from(document.querySelectorAll('.amt-btn'));
+    function setActiveAmount(v){
+      chosen.amount = Number(v)||5;
+      amtBtns.forEach(b=>b.classList.toggle('active', Number(b.dataset.amt)===chosen.amount));
+    }
+    amtBtns.forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        chosen.amount = parseInt(btn.dataset.amt,10);
-        document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('ring','ring-offset-2'));
-        btn.classList.add('ring','ring-offset-2');
+        setActiveAmount(btn.dataset.amt);
       });
     });
     document.getElementById('otherBtn').addEventListener('click', ()=>{
       const v = parseInt(document.getElementById('otherAmt').value,10);
-      if(v>0) chosen.amount = v;
+      if (v>0){ chosen.amount = v; amtBtns.forEach(b=>b.classList.remove('active')); }
     });
+    setActiveAmount(chosen.amount);
+
     countrySelect.addEventListener('change', ()=>{
       const [iso,name] = countrySelect.value.split('|');
       chosen.country_iso = iso; chosen.country_name = name; modalCountry.textContent = name;
     });
     countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
-    // ---------- Checkout ----------
+    /* ---------- Checkout ---------- */
     payNow.addEventListener('click', async ()=>{
+      // dodatna sigurnost: uzmi posljednju vrijednost iz UI-a ako postoji
+      const active = amtBtns.find(b=>b.classList.contains('active'));
+      if (active) chosen.amount = Number(active.dataset.amt) || chosen.amount;
+      const alt = parseInt(document.getElementById('otherAmt').value,10);
+      if (!active && alt>0) chosen.amount = alt;
+
+      if (!chosen.amount || chosen.amount<1) { alert('Choose an amount.'); return; }
+
       try {
+        const body = {
+          country_iso:  chosen.country_iso,
+          country_name: chosen.country_name,
+          amount:       Number(chosen.amount),
+          ref:          chosen.ref || ''
+        };
         const res = await fetch('/.netlify/functions/checkout', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(chosen) // uključuje chosen.ref
+          body: JSON.stringify(body)
         });
         if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
         if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
         const { url } = await res.json(); if (url) location.href = url; else alert('No checkout URL returned.');
-      } catch { alert('Network error.'); }
+      } catch (e) { console.error(e); alert('Network error.'); }
     });
 
-    // ---------- Stats (polling + render) ----------
+    /* ---------- Stats (poll + paint + Today’s heat Top-10) ---------- */
+    const todayList = document.getElementById('todayList');
     let totalsByIsoTimer = null;
 
     async function refreshStats(first = false){
@@ -375,7 +402,6 @@
         if(!r.ok){ throw new Error(await r.text()); }
         const items = await r.json();
 
-        // mapiraj total po ISO + min/max za rampu
         totalsByIso = {};
         const vals = [];
         for (const it of (items||[])){
@@ -391,10 +417,9 @@
         if (vals.length) { legendLow().textContent = euro(minPos); legendHigh().textContent = euro(maxPos); }
         else { legendLow().textContent = 'Low'; legendHigh().textContent = 'High'; }
 
-        // oboji čim su slojevi spremni
         applyTotalsToLayers();
-
         renderToday(items);
+
         if(first){ mapStatus.textContent = 'World & stats live ✓'; }
       }catch(e){
         console.error('Stats error', e);
@@ -406,36 +431,35 @@
       }
     }
 
-function renderToday(items){
-  const ul = document.getElementById('todayList') || document.getElementById('heat');
-  if(!ul) return;
-  if(!Array.isArray(items) || items.length===0){
-    ul.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
-    return;
-  }
-  const top = [...items].sort((a,b)=> Number(b.total_eur||0)-Number(a.total_eur||0)).slice(0,10);
-  ul.innerHTML = top.map(it=>{
-    const iso = (it.iso || it.country_iso || '').toUpperCase();
-    const name = it.name || it.country_name || iso;
-    const total = Number(it.total_eur || 0);
-    const donors = Number(it.donors_24h || 0);
-    return `
-      <li class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
-          <div>
-            <div class="font-semibold">${name}</div>
-            <div class="text-xs text-slate-400 mini">${donors} donors (24h)</div>
-          </div>
-        </div>
-        <b>€${total.toFixed(0)}</b>
-      </li>
-    `;
-  }).join('');
-}
+    function renderToday(items){
+      const ul = todayList;
+      if(!Array.isArray(items) || items.length===0){
+        ul.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
+        return;
+      }
+      const top = [...items].sort((a,b)=> Number(b.total_eur||0)-Number(a.total_eur||0)).slice(0,10);
+      ul.innerHTML = top.map(it=>{
+        const iso = (it.iso || it.country_iso || '').toUpperCase();
+        const name = it.name || it.country_name || iso;
+        const total = Number(it.total_eur || 0);
+        const donors = Number(it.donors_24h || 0);
+        return `
+          <li class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
+              <div>
+                <div class="font-semibold">${name}</div>
+                <div class="text-xs text-slate-400 mini">${donors} donors (24h)</div>
+              </div>
+            </div>
+            <b>€${total.toFixed(0)}</b>
+          </li>
+        `;
+      }).join('');
+    }
 
-
-    // ---------- Captains (leaders by ref, 7d) ----------
+    /* ---------- Captains (leaders by ref, 7d) ---------- */
+    const captainsList = document.getElementById('captainsList');
     let captainsTimer = null;
 
     async function refreshCaptains() {
@@ -465,13 +489,14 @@ function renderToday(items){
         }).join('');
       } catch (e) {
         console.error('Leaders error', e);
-        captainsList.innerHTML = `<li class="text-slate-400 text-sm">Leaders unavailable.</li>`;
+        captainsList.innerHTML = `<li class="text-slate-400 text-sm">Leaders unavailable.</li>`
       } finally {
         clearTimeout(captainsTimer);
         captainsTimer = setTimeout(refreshCaptains, 30000);
       }
     }
 
+    /* ---------- QuickDonate helper ---------- */
     window.quickDonate = (iso,name)=>{
       chosen.country_iso = iso;
       chosen.country_name = name;
@@ -485,4 +510,3 @@ function renderToday(items){
   </script>
 </body>
 </html>
-
