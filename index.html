@@ -473,3 +473,93 @@
   </script>
 </body>
 </html>
+<script>
+/* --- Amount selection: robust + sends exact value to checkout --- */
+(function () {
+  // Gumbi 5/20/50/100 – radi i ako koristiš data-amt ili data-amount
+  const amountBtns = [...document.querySelectorAll('.js-amount, .amt-btn')];
+  const otherInput = document.getElementById('otherAmt');
+  const otherOkBtn = document.getElementById('otherBtn');
+  const payBtn = document.getElementById('payNow');
+  const countrySel = document.getElementById('countrySelect');
+
+  let selectedAmount = 0;
+
+  function uiClear() {
+    amountBtns.forEach(b => b.classList.remove('active', 'bg-blue-700'));
+    otherWrap?.classList?.remove('active');
+  }
+  function uiMark(btn) {
+    if (!btn) return;
+    btn.classList.add('active', 'bg-blue-700');
+  }
+  function setAmount(val, btnToMark) {
+    selectedAmount = Number(val) || 0;
+    uiClear();
+    uiMark(btnToMark);
+    if (otherInput) otherInput.value = '';
+    updatePayCta();
+  }
+  function updatePayCta() {
+    if (payBtn) payBtn.textContent = selectedAmount > 0 ? `Pay €${selectedAmount}` : 'Pay now';
+  }
+
+  // Klik na 5/20/50/100
+  amountBtns.forEach(btn => {
+    const v = btn.dataset.amount || btn.dataset.amt || btn.getAttribute('data-amt') || btn.getAttribute('data-amount');
+    btn.addEventListener('click', () => setAmount(v, btn), { passive: true });
+  });
+
+  // “Other → OK”
+  const otherWrap = document.getElementById('otherWrap');
+  otherOkBtn?.addEventListener('click', () => {
+    const v = parseFloat(otherInput?.value ?? '');
+    if (!isFinite(v) || v <= 0) return alert('Enter a valid amount.');
+    uiClear();
+    otherWrap?.classList?.add('active');
+    selectedAmount = Math.round(v);
+    updatePayCta();
+  });
+
+  // Country select (ako nemaš chosen objekt)
+  function currentCountry() {
+    if (window.chosen?.country_iso && window.chosen?.country_name) {
+      return { iso: window.chosen.country_iso, name: window.chosen.country_name, ref: window.chosen.ref || '' };
+    }
+    const [iso, name] = (countrySel?.value || 'HRV|Croatia').split('|');
+    return { iso, name, ref: (window.chosen?.ref || '') };
+  }
+
+  // Pay now – uvijek šalje točan iznos!
+  payBtn?.addEventListener('click', async () => {
+    if (selectedAmount <= 0) return alert('Choose amount first.');
+
+    const { iso, name, ref } = currentCountry();
+
+    try {
+      const r = await fetch('/.netlify/functions/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country_iso: iso,
+          country_name: name,
+          amount: selectedAmount,      // ⬅⬅ ključno: šaljemo stvarno odabrani iznos
+          ref: ref || ''
+        })
+      });
+
+      let out = {};
+      try { out = await r.json(); } catch {}
+      if (!r.ok) return alert('Checkout error: ' + (out.error || r.statusText));
+      if (out.url) location.href = out.url; else alert('Checkout error.');
+    } catch (e) {
+      console.error(e);
+      alert('Network error.');
+    }
+  });
+
+  // Inicijalni tekst gumba
+  updatePayCta();
+})();
+</script>
+
