@@ -5,23 +5,23 @@ const { createClient } = require("@supabase/supabase-js");
 
 const supa = () =>
   createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
+    auth: { persistSession: false },
   });
 
+// normalizator imena -> ISO3
 const MAP = {
-  // već postojeći + proširenja
-  "croatia": "HRV",
-  "libya": "LBY",
-  "algeria": "DZA",
-  "russia": "RUS",
+  croatia: "HRV",
+  libya: "LBY",
+  algeria: "DZA",
+  russia: "RUS",
   "russian federation": "RUS",
-  "usa": "USA",
+  usa: "USA",
   "united states": "USA",
   "united states of america": "USA",
-  // NOVO:
+  // novo
   "saudi arabia": "SAU",
   "kingdom of saudi arabia": "SAU",
-  "ksa": "SAU",
+  ksa: "SAU",
 };
 
 const isoFromName = (name) => {
@@ -33,7 +33,7 @@ const isoFromName = (name) => {
 const normalizeISO = (iso, name) => {
   let z = (iso || "").toUpperCase().slice(0, 3);
   if (!/^[A-Z]{3}$/.test(z)) z = "";
-  // ako je HRV a ime NIJE Croatia – pokušaj iz imena
+  // ako je HRV i ime NIJE Croatia, pokušaj iz imena
   if (!z || (z === "HRV" && name && name.trim() !== "Croatia")) {
     const guess = isoFromName(name);
     if (guess) z = guess;
@@ -41,8 +41,8 @@ const normalizeISO = (iso, name) => {
   return z || "UNK";
 };
 
-const donorHash = (email, salt) =>
-  crypto.createHash("sha256").update(`${salt}::${(email || "").toLowerCase().trim()}`).digest("hex");
+const donorHash = (idLike, salt) =>
+  crypto.createHash("sha256").update(`${salt}::${(idLike || "").toLowerCase().trim()}`).digest("hex");
 
 exports.handler = async (event) => {
   try {
@@ -56,6 +56,7 @@ exports.handler = async (event) => {
     try {
       evt = stripe.webhooks.constructEvent(event.body, sig, whsec);
     } catch (err) {
+      console.warn("WEBHOOK signature error:", err.message);
       return { statusCode: 400, body: `Signature error: ${err.message}` };
     }
 
@@ -63,31 +64,59 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: "ignored" };
     }
 
-    const session = evt.data.object;
+    const session = evt.data.object; // checkout.session.*
     const meta = session.metadata || {};
+
     const amountCents = Number(session.amount_total || 0);
+    if (!amountCents || amountCents < 100) {
+      console.warn("WEBHOOK: zero/low amount_total, skip", { amountCents });
+      return { statusCode: 200, body: "skip: amount_total" };
+    }
     const amount_eur = Math.round(amountCents / 100);
+
+    // Preferiraj e-mail, a ako ga nema, upotrijebi customer ili session id
     const email = session.customer_details?.email || session.customer_email || "";
+    const pseudoId = email || session.customer || session.id || "";
     const salt = process.env.REF_HASH_SALT || "tapthemap_default_salt";
 
-    const name = meta.country_name || meta.name || "";
-    const iso = normalizeISO(meta.country_iso, name);
+    const country_name = meta.country_name || meta.name || "";
+    const country_iso = normalizeISO(meta.country_iso, country_name);
+
+    if (country_iso === "UNK") {
+      console.warn("WEBHOOK: missing/unknown ISO, skip", { meta, country_name, country_iso });
+      return { statusCode: 200, body: "skip: unknown iso" };
+    }
 
     const row = {
       created_at: new Date().toISOString(),
-      country_iso: iso,
-      country_name: name || iso,
+      country_iso,
+      country_name: country_name || country_iso,
       amount_eur,
       ref: meta.ref || null,
-      donor_hash: donorHash(email, salt),
-      stripe_pi: (session.payment_intent || session.id || "").toString()
+      donor_hash: donorHash(pseudoId, salt),
+      stripe_pi: String(session.payment_intent || session.id || ""),
     };
 
-    const { error } = await supa().from("payments").insert([row]);
-    if (error) return { statusCode: 500, body: `supabase error: ${error.message}` };
+    // Idempotentno: unique constraint na payments.stripe_pi
+    // -> upsert ignorira duplikate
+    const { error } = await supa()
+      .from("payments")
+      .upsert(row, { onConflict: "stripe_pi", ignoreDuplicates: true });
+
+    if (error) {
+      console.error("WEBHOOK supabase error:", error.message);
+      return { statusCode: 500, body: `supabase error: ${error.message}` };
+    }
+
+    console.info("WEBHOOK inserted", {
+      iso: row.country_iso,
+      eur: row.amount_eur,
+      pi: row.stripe_pi,
+    });
 
     return { statusCode: 200, body: "ok" };
   } catch (e) {
+    console.error("WEBHOOK fatal error:", e.message);
     return { statusCode: 500, body: `webhook error: ${e.message}` };
   }
 };
