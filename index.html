@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TapTheMap — Influencers Battle</title>
   <meta name="description" content="Tap your country, back your captain, and light up the map. Secure by Stripe · SSL · Anonymous option." />
+  <!-- Tailwind CDN je ok za sada; za produkciju prebaci na CLI/PostCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] }, colors: { ink:{900:'#0b1020'} } } }
-    }
-  </script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui']},colors:{ink:{900:'#0b1020'}}}}}</script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -23,465 +20,323 @@
     select{color:#fff!important;background-color:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important}
     select:focus{outline:none;border-color:rgba(255,255,255,.35)!important}
     select option{color:#fff;background:#0b1020}
-    .badge{font-size:.75rem;color:#a3e635}
-    .mini{font-variant-numeric: tabular-nums}
+    .mini{font-variant-numeric:tabular-nums}
     .legend{font-size:.85rem;color:#e2e8f0}
     .legend .bar{height:10px;border-radius:6px;border:1px solid rgba(255,255,255,.25);margin:8px 0;
-      background: linear-gradient(90deg,#38bdf8 0%, #22c55e 33%, #f59e0b 66%, #ef4444 100%); }
+      background:linear-gradient(90deg,#38bdf8 0%,#22c55e 33%,#f59e0b 66%,#ef4444 100%);}
     .legend .scale{display:flex;justify-content:space-between}
-    .legend .label{opacity:.9}
-    /* selected amount look */
-    .amt-selected{outline:2px solid #22c55e; outline-offset:2px}
+    .amt-selected{outline:2px solid #22c55e;outline-offset:2px}
+    .flag{width:22px;height:16px;object-fit:cover;border-radius:3px;border:1px solid rgba(255,255,255,.25)}
   </style>
 </head>
 <body class="bg-ink-900 text-white antialiased">
-  <header class="sticky top-0 z-30">
-    <div class="mx-auto max-w-7xl px-6 pt-5">
-      <div class="card px-5 py-4 flex items-center justify-between">
-        <a href="/" class="text-xl md:text-2xl font-bold tracking-tight">tapthemap.world</a>
-        <nav class="hidden md:flex items-center gap-8 text-slate-200/90">
-          <a href="#leaders" class="hover:text-white">Leaders</a>
-          <a href="#about" class="hover:text-white">About</a>
-          <a href="#faq" class="hover:text-white">FAQ</a>
-        </nav>
-        <div id="refBadge" class="hidden md:flex items-center gap-2 text-sm">
-          <span class="px-2.5 py-1 rounded-full bg-emerald-700/40 border border-emerald-400/40">
-            Supporting <b id="refName">@ref</b>
-          </span>
-          <button id="refClear" class="text-slate-300 hover:text-white underline">Clear</button>
-        </div>
+<header class="sticky top-0 z-30">
+  <div class="mx-auto max-w-7xl px-6 pt-5">
+    <div class="card px-5 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl md:text-2xl font-bold tracking-tight">tapthemap.world</a>
+      <nav class="hidden md:flex items-center gap-8 text-slate-200/90">
+        <a href="#leaders" class="hover:text-white">Leaders</a>
+        <a href="#about" class="hover:text-white">About</a>
+        <a href="#faq" class="hover:text-white">FAQ</a>
+      </nav>
+      <div id="refBadge" class="hidden md:flex items-center gap-2 text-sm">
+        <span class="px-2.5 py-1 rounded-full bg-emerald-700/40 border border-emerald-400/40">
+          Supporting <b id="refName"></b>
+        </span>
+        <button id="refClear" class="text-slate-300 hover:text-white underline">Clear</button>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <section class="mx-auto max-w-7xl px-6">
-      <div class="grid lg:grid-cols-[1fr_380px] gap-6 mt-10">
-        <div>
-          <div class="mb-6">
-            <h1 class="text-3xl md:text-5xl font-bold leading-tight">Fill the map. Your country, your pride.</h1>
-            <p class="mt-4 text-slate-300 max-w-2xl">
-              Tap your country and choose 5 / 20 / 50 / 100 € or “Other”.
-              Every contribution lights up your land.
-              <span class="text-slate-200">Secure by Stripe · SSL · Anonymous option.</span>
-            </p>
-            <div class="mt-5 flex items-center gap-3 text-slate-300 text-sm">
-              <span class="inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live
-              </span>
-              <span>·</span>
-              <span>Apple/Google Pay supported</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 mb-3">
-            <label for="countrySelect" class="text-sm text-slate-300">Country:</label>
-            <select id="countrySelect" class="rounded-xl px-3 py-2 text-sm focus:outline-none">
-              <option value="HRV|Croatia">Croatia (HRV)</option>
-              <option value="DEU|Germany">Germany (DEU)</option>
-              <option value="USA|United States">United States (USA)</option>
-              <option value="GBR|United Kingdom">United Kingdom (GBR)</option>
-              <option value="FRA|France">France (FRA)</option>
-              <option value="ITA|Italy">Italy (ITA)</option>
-              <option value="ESP|Spain">Spain (ESP)</option>
-              <option value="POL|Poland">Poland (POL)</option>
-              <option value="IND|India">India (IND)</option>
-              <option value="BRA|Brazil">Brazil (BRA)</option>
-            </select>
-            <button id="openDonate" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl">
-              Donate
-            </button>
-          </div>
-
-          <div id="map" class="card overflow-hidden relative z-0"></div>
-          <div id="mapStatus" class="mt-2 badge">Loading world…</div>
+<main>
+<section class="mx-auto max-w-7xl px-6">
+  <div class="grid lg:grid-cols-[1fr_380px] gap-6 mt-10">
+    <div>
+      <div class="mb-6">
+        <h1 class="text-3xl md:text-5xl font-bold leading-tight">Fill the map. Your country, your pride.</h1>
+        <p class="mt-4 text-slate-300 max-w-2xl">
+          Tap your country and choose 5 / 20 / 50 / 100 € or “Other”.
+          Every contribution lights up your land.
+          <span class="text-slate-200">Secure by Stripe · SSL · Anonymous option.</span>
+        </p>
+        <div class="mt-5 flex items-center gap-3 text-slate-300 text-sm">
+          <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live</span>
+          <span>·</span><span>Apple/Google Pay supported</span>
         </div>
-
-        <aside class="lg:sticky lg:top-28">
-          <div class="card p-5">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-semibold">🔥 Today’s heat</h2>
-              <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
-            </div>
-            <ul id="todayList" class="mt-4 space-y-4">
-              <li class="text-slate-400 text-sm">Fetching stats…</li>
-            </ul>
-            <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
-          </div>
-
-          <div class="card p-5 mt-6" id="captainsCard">
-            <h3 class="text-lg font-semibold">Top Captains (7d)</h3>
-            <ul id="captainsList" class="mt-4 space-y-3">
-              <li class="text-slate-400 text-sm">Loading…</li>
-            </ul>
-            <div class="mt-4 text-sm text-slate-300">Share your link: <code id="myRefLink" class="break-all">add ?r=yourhandle</code></div>
-          </div>
-
-          <div class="card p-5 mt-6">
-            <h3 class="text-lg font-semibold">Become a Captain</h3>
-            <p class="text-slate-300 mt-2">Share your link with <code>?r=yourhandle</code>. Weekly Captain = most unique donors.</p>
-            <a href="/join" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-semibold">Apply →</a>
-          </div>
-        </aside>
       </div>
-    </section>
-  </main>
 
-  <!-- Donate modal -->
-  <div id="donateModal" class="fixed inset-0 z-40 hidden">
-    <div class="absolute inset-0 bg-black/60"></div>
-    <div class="relative z-10 max-w-2xl mx-auto mt-24">
-      <div class="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200">
-        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <div id="modalCountry" class="text-xl font-bold">Croatia</div>
-            <div class="text-sm text-slate-600">Choose amount</div>
-          </div>
-          <button id="closeModal" class="p-2 text-slate-500 hover:text-slate-800">✕</button>
+      <div class="flex items-center gap-3 mb-3">
+        <label for="countrySelect" class="text-sm text-slate-300">Country:</label>
+        <select id="countrySelect" class="rounded-xl px-3 py-2 text-sm focus:outline-none">
+          <option value="HRV|Croatia">Croatia (HRV)</option>
+          <option value="DEU|Germany">Germany (DEU)</option>
+          <option value="USA|United States">United States (USA)</option>
+          <option value="GBR|United Kingdom">United Kingdom (GBR)</option>
+          <option value="FRA|France">France (FRA)</option>
+          <option value="ITA|Italy">Italy (ITA)</option>
+          <option value="ESP|Spain">Spain (ESP)</option>
+          <option value="POL|Poland">Poland (POL)</option>
+          <option value="IND|India">India (IND)</option>
+          <option value="BRA|Brazil">Brazil (BRA)</option>
+        </select>
+        <button id="openDonate" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl">Donate</button>
+      </div>
+
+      <div id="map" class="card overflow-hidden relative z-0"></div>
+      <div id="mapStatus" class="mt-2 text-lime-300/90 text-sm">Loading world…</div>
+    </div>
+
+    <aside class="lg:sticky lg:top-28">
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold">🔥 Today’s heat</h2>
+          <a href="#leaders" class="text-sm text-slate-300 hover:text-white">Leaders →</a>
         </div>
-        <div class="p-6 grid md:grid-cols-[1fr_160px] gap-6">
-          <div>
-            <div class="flex flex-wrap gap-3">
-              <!-- svi imaju data-amt; JS im dodaje/miče .amt-selected -->
-              <button data-amt="5"   class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">5 €</button>
-              <button data-amt="20"  class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">20 €</button>
-              <button data-amt="50"  class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">50 €</button>
-              <button data-amt="100" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">100 €</button>
-              <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2">
-                <input id="otherAmt" type="number" min="1" step="1" placeholder="Other" class="w-24 bg-transparent outline-none text-slate-800" />
-                <button id="otherBtn" class="text-blue-700 font-semibold">OK</button>
-              </div>
+        <ul id="todayList" class="mt-4 space-y-4">
+          <li class="text-slate-400 text-sm">Fetching stats…</li>
+        </ul>
+        <div class="mt-5 text-sm text-slate-300">We display @handles only with consent. Anonymous is possible.</div>
+      </div>
+
+      <div class="card p-5 mt-6" id="captainsCard">
+        <h3 class="text-lg font-semibold">Top Captains (7d)</h3>
+        <ul id="captainsList" class="mt-4 space-y-3">
+          <li class="text-slate-400 text-sm">Loading…</li>
+        </ul>
+        <div class="mt-4 text-sm text-slate-300">Share your link: <code id="myRefLink" class="break-all">add ?r=yourhandle</code></div>
+      </div>
+
+      <div class="card p-5 mt-6">
+        <h3 class="text-lg font-semibold">Become a Captain</h3>
+        <p class="text-slate-300 mt-2">Share your link with <code>?r=yourhandle</code>. Weekly Captain = most unique donors.</p>
+        <a href="/join" class="mt-3 inline-flex items-center bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-semibold">Apply →</a>
+      </div>
+    </aside>
+  </div>
+</section>
+</main>
+
+<!-- Donate modal -->
+<div id="donateModal" class="fixed inset-0 z-40 hidden">
+  <div class="absolute inset-0 bg-black/60"></div>
+  <div class="relative z-10 max-w-2xl mx-auto mt-24">
+    <div class="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200">
+      <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <div id="modalCountry" class="text-xl font-bold">Croatia</div>
+          <div class="text-sm text-slate-600">Choose amount</div>
+        </div>
+        <button id="closeModal" class="p-2 text-slate-500 hover:text-slate-800">✕</button>
+      </div>
+      <div class="p-6 grid md:grid-cols-[1fr_160px] gap-6">
+        <div>
+          <div class="flex flex-wrap gap-3">
+            <button data-amt="5"   class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">5 €</button>
+            <button data-amt="20"  class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">20 €</button>
+            <button data-amt="50"  class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">50 €</button>
+            <button data-amt="100" class="amt-btn bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl">100 €</button>
+            <div class="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2">
+              <input id="otherAmt" type="number" min="1" step="1" placeholder="Other" class="w-24 bg-transparent outline-none text-slate-800" />
+              <button id="otherBtn" class="text-blue-700 font-semibold">OK</button>
             </div>
-            <div class="mt-4 text-sm text-slate-600">Private gift, no quid pro quo. We show @handles only with consent.</div>
           </div>
-          <div>
-            <div class="rounded-xl border border-slate-200 p-3 grid place-items-center h-[150px] text-slate-500">
-              <div id="qrBox">QR will appear after creating the Checkout link</div>
-            </div>
-            <button id="payNow" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl">Pay now</button>
+          <div class="mt-4 text-sm text-slate-600">Private gift, no quid pro quo. We show @handles only with consent.</div>
+        </div>
+        <div>
+          <div class="rounded-xl border border-slate-200 p-3 grid place-items-center h-[150px] text-slate-500">
+            <div id="qrBox">QR will appear after creating the Checkout link</div>
           </div>
+          <button id="payNow" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl">Pay now</button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // ---------- Helpers ----------
-    const euro = (n)=> '€' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
-    const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
-    const getParam = (k)=> new URLSearchParams(location.search).get(k);
-    const sanitizeRef = (s)=> (s||"").toString().replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,32);
+<script>
+/* ---------- helpers ---------- */
+const euro = (n)=> '€' + Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+const getParam=(k)=>new URLSearchParams(location.search).get(k);
+const sanitizeRef=(s)=>(s||"").toString().replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,32);
 
-    function hslToHex(h, s, l) {
-      s /= 100; l /= 100;
-      const k = n => (n + h/30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-      const toHex = x => Math.round(255 * x).toString(16).padStart(2, '0');
-      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
-    }
-    function rampColor(t){ const hue = 195 - 195 * t; return hslToHex(hue, 85, 53); }
+/* ISO3→ISO2 mapa za zastave (pokriće za TOP zemlje; ostale dohvaćamo iz geojsona ako ima ISO_A2) */
+const ISO3_TO_2_PRIME = {
+  HRV:'HR', DEU:'DE', USA:'US', GBR:'GB', FRA:'FR', ITA:'IT', ESP:'ES', POL:'PL', IND:'IN', BRA:'BR'
+};
+const flagUrl=(iso2)=>`https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
 
-    // ---------- State ----------
-    const modal = document.getElementById('donateModal');
-    const openDonateBtn = document.getElementById('openDonate');
-    const closeBtn = document.getElementById('closeModal');
-    const payNow = document.getElementById('payNow');
-    const modalCountry = document.getElementById('modalCountry');
-    const countrySelect = document.getElementById('countrySelect');
-    const mapStatus = document.getElementById('mapStatus');
-    const todayList = document.getElementById('todayList');
-    const refBadge = document.getElementById('refBadge');
-    const refName = document.getElementById('refName');
-    const refClear = document.getElementById('refClear');
-    const captainsList = document.getElementById('captainsList');
-    const myRefLink = document.getElementById('myRefLink');
+/* ---------- state ---------- */
+const modal = document.getElementById('donateModal');
+const openDonateBtn=document.getElementById('openDonate');
+const closeBtn=document.getElementById('closeModal');
+const payNow=document.getElementById('payNow');
+const modalCountry=document.getElementById('modalCountry');
+const countrySelect=document.getElementById('countrySelect');
+const mapStatus=document.getElementById('mapStatus');
+const todayList=document.getElementById('todayList');
+const refBadge=document.getElementById('refBadge');
+const refName=document.getElementById('refName');
+const refClear=document.getElementById('refClear');
+const captainsList=document.getElementById('captainsList');
+const myRefLink=document.getElementById('myRefLink');
 
-    // default 20€
-    let chosen = { country_iso:'HRV', country_name:'Croatia', amount:20, ref:'' };
+let chosen={country_iso:'HRV',country_name:'Croatia',amount:20,ref:''};
 
-    // Referral capture
-    (function initRef(){
-      const fromUrl = sanitizeRef(getParam('r') || getParam('ref'));
-      const fromStore = localStorage.getItem('ttm_ref') || '';
-      const ref = fromUrl || fromStore;
-      if (ref) {
-        chosen.ref = ref;
-        localStorage.setItem('ttm_ref', ref);
-        refName.textContent = '@' + ref;
-        refBadge.classList.remove('hidden');
-        myRefLink.textContent = `${location.origin}?r=${ref}`;
-      } else {
-        myRefLink.textContent = `${location.origin}?r=yourhandle`;
-      }
-      refClear.addEventListener('click', ()=> {
-        localStorage.removeItem('ttm_ref'); chosen.ref=''; refBadge.classList.add('hidden');
-        myRefLink.textContent = `${location.origin}?r=yourhandle`;
+/* ref capture – samo ako postoji ?r= */
+(function initRef(){
+  const ref = sanitizeRef(getParam('r')||getParam('ref'));
+  if(ref){
+    chosen.ref=ref; localStorage.setItem('ttm_ref',ref);
+    refName.textContent='@'+ref; refBadge.classList.remove('hidden');
+    myRefLink.textContent=`${location.origin}?r=${ref}`;
+  }else{
+    refBadge.classList.add('hidden'); myRefLink.textContent=`${location.origin}?r=yourhandle`;
+  }
+  refClear.addEventListener('click',()=>{ localStorage.removeItem('ttm_ref'); chosen.ref=''; refBadge.classList.add('hidden'); myRefLink.textContent=`${location.origin}?r=yourhandle`; });
+})();
+
+/* amount vizualno */
+const setSelected=(btn)=>{document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('amt-selected')); if(btn)btn.classList.add('amt-selected');};
+document.querySelectorAll('.amt-btn').forEach(btn=>btn.addEventListener('click',()=>{chosen.amount=Number(btn.dataset.amt);setSelected(btn);} ));
+document.getElementById('otherBtn').addEventListener('click',()=>{const v=parseInt(document.getElementById('otherAmt').value,10);if(v>0){chosen.amount=v;setSelected(null);}});
+
+/* modal */
+function openModal(){ modal.classList.remove('hidden'); modalCountry.textContent=chosen.country_name;
+  const current=Array.from(document.querySelectorAll('.amt-btn')).find(b=>Number(b.dataset.amt)===Number(chosen.amount)); setSelected(current);
+}
+function closeModal(){ modal.classList.add('hidden'); }
+openDonateBtn.addEventListener('click',openModal); closeBtn.addEventListener('click',closeModal);
+
+countrySelect.addEventListener('change',()=>{const [iso,name]=countrySelect.value.split('|'); chosen.country_iso=iso; chosen.country_name=name; modalCountry.textContent=name;});
+countrySelect.value=`${chosen.country_iso}|${chosen.country_name}`;
+
+/* ---------- mapa ---------- */
+const map=L.map('map',{zoomControl:false,worldCopyJump:true,tap:false}).setView([20,0],2);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap & CARTO',detectRetina:true,maxZoom:6,minZoom:2}).addTo(map);
+map.createPane('countries'); map.getPane('countries').style.zIndex=650;
+
+const Legend=L.Control.extend({onAdd:function(){const d=L.DomUtil.create('div','legend card p-3');d.innerHTML=`<div class="font-semibold">Intensity (donations)</div><div class="bar"></div><div class="scale mini"><span id="legendLow">Low</span><span id="legendHigh">High</span></div>`;return d;}});
+new Legend({position:'bottomleft'}).addTo(map);
+const legendLow=()=>document.getElementById('legendLow'); const legendHigh=()=>document.getElementById('legendHigh');
+
+const GEO_SOURCES=[
+  'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
+  'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
+  'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
+];
+const iso3=(p)=>(p.ADM0_A3||p.ISO_A3||p.iso_a3||p.A3||p.SOV_A3||p.id||'').toString().toUpperCase().slice(0,3);
+const iso2=(p)=>(p.ISO_A2||p.iso_a2||'').toString().toUpperCase().slice(0,2);
+const nameFrom=(p)=>(p.NAME_EN||p.ADMIN||p.NAME_LONG||p.SOVEREIGNT||p.name||'Unknown');
+
+const baseStroke={color:'#94a3b8',weight:.7};
+const layersByIso=new Map();
+let totalsByIso={}; let minPos=0,maxPos=0;
+function hslToHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12;const a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));const toHex=x=>Math.round(255*x).toString(16).padStart(2,'0');return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;}
+function styleByValue(v){if(!maxPos||!v)return {...baseStroke,fillColor:'#0ea5e9',fillOpacity:.10};const t=(v-minPos)/Math.max(1,(maxPos-minPos));const col=hslToHex(195-195*Math.max(0,Math.min(1,t)),85,53);return {...baseStroke,fillColor:col,fillOpacity:.55};}
+async function fetchAny(list){let e;for(const u of list){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json();}catch(err){e=err}}throw e||new Error('All sources failed');}
+
+let ISO3_TO_2 = {...ISO3_TO_2_PRIME};
+fetchAny(GEO_SOURCES).then(geo=>{
+  mapStatus.textContent='World ready ✓';
+  L.geoJSON(geo,{pane:'countries',style:f=>{const id=iso3(f.properties);const tot=totalsByIso[id]?Number(totalsByIso[id]):0;return styleByValue(tot);},
+    onEachFeature:(f,lyr)=>{
+      const id=iso3(f.properties); const nm=nameFrom(f.properties); const a2=iso2(f.properties);
+      if(a2 && !ISO3_TO_2[id]) ISO3_TO_2[id]=a2;
+      layersByIso.set(id,lyr);
+      const tip=()=>{const t=totalsByIso[id]?Number(totalsByIso[id]):0;return t>0?`${nm} · €${Number(t).toFixed(0)}`:nm;};
+      lyr.bindTooltip(tip(),{sticky:true,opacity:.95});
+      lyr.on({
+        mouseover:(e)=>{e.target.setStyle({...e.target.options,weight:1.3});e.target.bringToFront();map.getContainer().style.cursor='pointer';},
+        mouseout:(e)=>{const t=totalsByIso[id]?Number(totalsByIso[id]):0;e.target.setStyle(styleByValue(t));map.getContainer().style.cursor='';},
+        click:(e)=>{chosen.country_iso=id;chosen.country_name=nm;modalCountry.textContent=nm;
+          const val=`${id}|${nm}`;let opt=Array.from(countrySelect.options).find(o=>o.value.startsWith(id+'|'));if(!opt){opt=new Option(`${nm} (${id})`,val);countrySelect.add(opt);}countrySelect.value=val;
+          const b=e.target.getBounds();if(b&&b.isValid())map.fitBounds(b,{maxZoom:4,padding:[20,20]}); openModal();
+        }
       });
-    })();
-
-    const setSelected = (btn)=>{
-      document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('amt-selected'));
-      if (btn) btn.classList.add('amt-selected');
-    };
-
-    function openModal(){
-      modal.classList.remove('hidden');
-      modalCountry.textContent = chosen.country_name;
-      // vizualno označi trenutno izabran iznos
-      const current = Array.from(document.querySelectorAll('.amt-btn'))
-        .find(b=> Number(b.dataset.amt) === Number(chosen.amount));
-      setSelected(current);
     }
-    function closeModal(){ modal.classList.add('hidden'); }
+  }).addTo(map);
+  refreshStats(true); refreshCaptains();
+}).catch(()=>{mapStatus.textContent='World failed to load';});
 
-    // ---------- Map ----------
-    const map = L.map('map', { zoomControl:false, worldCopyJump:true, tap:false }).setView([20,0], 2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution:'&copy; OpenStreetMap & CARTO', detectRetina:true, maxZoom:6, minZoom:2
-    }).addTo(map);
-    map.createPane('countries'); map.getPane('countries').style.zIndex = 650;
+/* ---------- checkout ---------- */
+payNow.addEventListener('click',async ()=>{
+  try{
+    const payload={country_iso:chosen.country_iso,country_name:chosen.country_name,amount_eur:Number(chosen.amount||5),ref:chosen.ref||'',handle:''};
+    const res=await fetch('/.netlify/functions/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(res.status===503){alert('Payments not configured (STRIPE keys).');return;}
+    if(!res.ok){const t=await res.text();alert('Checkout error: '+t);return;}
+    const {url}=await res.json(); if(url) location.href=url; else alert('No checkout URL returned.');
+  }catch{alert('Network error.');}
+});
 
-    const Legend = L.Control.extend({
-      onAdd: function() {
-        const div = L.DomUtil.create('div','legend card p-3');
-        div.innerHTML = `
-          <div class="label font-semibold">Intensity (donations)</div>
-          <div class="bar"></div>
-          <div class="scale mini"><span id="legendLow">Low</span><span id="legendHigh">High</span></div>
-        `;
-        return div;
-      }, onRemove: function(){}
-    });
-    const legend = new Legend({ position: 'bottomleft' }).addTo(map);
-    const legendLow = ()=> document.getElementById('legendLow');
-    const legendHigh = ()=> document.getElementById('legendHigh');
+/* ---------- stats & leaders ---------- */
+let totalsTimer=null;
+async function refreshStats(first=false){
+  try{
+    const r=await fetch('/.netlify/functions/stats',{cache:'no-store'}); if(!r.ok) throw new Error(await r.text());
+    const items=await r.json();
+    totalsByIso={}; const vals=[];
+    for(const it of (items||[])){const id=(it.iso||it.country_iso||'').toUpperCase();const tot=Number(it.total_eur||0);totalsByIso[id]=tot;if(tot>0)vals.push(tot);}
+    minPos=vals.length?Math.min(...vals):0; maxPos=vals.length?Math.max(...vals):0;
+    if(vals.length){legendLow().textContent=euro(minPos);legendHigh().textContent=euro(maxPos);}else{legendLow().textContent='Low';legendHigh().textContent='High';}
 
-    const SOURCES = [
-      'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
-      'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
-      'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
-    ];
-    const isoFrom  = (p) => (p.ADM0_A3 || p.ISO_A3 || p.iso_a3 || p.A3 || p.SOV_A3 || p.id || '').toString().toUpperCase().slice(0,3);
-    const nameFrom = (p) => (p.NAME_EN || p.ADMIN || p.NAME_LONG || p.SOVEREIGNT || p.name || 'Unknown');
-
-    const baseStroke = { color:'#94a3b8', weight:0.7 };
-    const layersByIso = new Map();
-    let totalsByIso = {};
-    let minPos = 0, maxPos = 0;
-
-    function styleByValue(value){
-      if (!maxPos || !value) return { ...baseStroke, fillColor:'#0ea5e9', fillOpacity:0.10 };
-      const t = (value - minPos) / Math.max(1, (maxPos - minPos));
-      const hue = 195 - 195 * Math.max(0, Math.min(1, t));
-      const col = hslToHex(hue, 85, 53);
-      return { ...baseStroke, fillColor: col, fillOpacity: 0.55 };
-    }
-
-    async function fetchAny(urls){
-      let lastErr;
-      for (const u of urls){
-        try { const r = await fetch(u, { cache:'no-store' }); if(!r.ok) throw new Error(r.status); return await r.json(); }
-        catch(e){ lastErr = e; }
-      }
-      throw lastErr || new Error('All sources failed');
-    }
-
-    fetchAny(SOURCES).then(geo=>{
-      mapStatus.textContent = 'World ready ✓';
-      L.geoJSON(geo, {
-        pane:'countries',
-        style: (f) => {
-          const iso = isoFrom(f.properties);
-          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-          return styleByValue(total);
-        },
-        onEachFeature: (f, lyr) => {
-          const iso = isoFrom(f.properties);
-          const name = nameFrom(f.properties);
-          layersByIso.set(iso, lyr);
-          const tip = ()=> {
-            const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-            return total > 0 ? `${name} · €${Number(total).toFixed(0)}` : name;
-          };
-          lyr.bindTooltip(tip(), { sticky:true, opacity:0.95 });
-          lyr.on({
-            mouseover: (e)=>{ e.target.setStyle({ ...e.target.options, weight:1.3 }); e.target.bringToFront(); map.getContainer().style.cursor='pointer'; },
-            mouseout:  (e)=>{ const t = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0; e.target.setStyle(styleByValue(t)); map.getContainer().style.cursor=''; },
-            click:     (e)=>{
-              chosen.country_iso = iso || chosen.country_iso;
-              chosen.country_name = name || chosen.country_name;
-              modalCountry.textContent = chosen.country_name;
-              const val = `${chosen.country_iso}|${chosen.country_name}`;
-              let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(chosen.country_iso + '|'));
-              if (!opt) { opt = new Option(`${chosen.country_name} (${chosen.country_iso})`, val); countrySelect.add(opt); }
-              countrySelect.value = val;
-              const b = e.target.getBounds(); if (b && b.isValid()) map.fitBounds(b, { maxZoom:4, padding:[20,20] });
-              openModal();
-            }
-          });
-        }
-      }).addTo(map);
-      refreshStats(true);
-      refreshCaptains();
-    }).catch(()=>{ mapStatus.textContent = 'World failed to load'; map.on('click', openModal); });
-
-    // ---------- UI ----------
-    document.getElementById('openDonate')?.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-
-    // amount gumbi
-    document.querySelectorAll('.amt-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        chosen.amount = Number(btn.dataset.amt);
-        setSelected(btn);
-      });
-    });
-    // “Other → OK”
-    document.getElementById('otherBtn').addEventListener('click', ()=>{
-      const v = parseInt(document.getElementById('otherAmt').value,10);
-      if(v>0){ chosen.amount = v; setSelected(null); }
+    layersByIso.forEach((lyr,id)=>{const tot=totalsByIso[id]?Number(totalsByIso[id]):0;lyr.setStyle(styleByValue(tot));
+      const nm=(lyr.feature&&lyr.feature.properties)?(lyr.feature.properties.NAME_EN||lyr.feature.properties.ADMIN||'Unknown'):id;
+      lyr.bindTooltip(tot>0?`${nm} · €${Number(tot).toFixed(0)}`:nm,{sticky:true,opacity:.95});
     });
 
-    countrySelect.addEventListener('change', ()=>{
-      const [iso,name] = countrySelect.value.split('|');
-      chosen.country_iso = iso; chosen.country_name = name; modalCountry.textContent = name;
-    });
-    countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
+    renderToday(items);
+    if(first) mapStatus.textContent='World & stats live ✓';
+  }catch(e){
+    todayList.innerHTML=`<li class="text-slate-400 text-sm">Stats unavailable.</li>`;
+    if(first) mapStatus.textContent='World ready (stats unavailable)';
+  }finally{ clearTimeout(totalsTimer); totalsTimer=setTimeout(()=>refreshStats(false),20000); }
+}
 
-    // ---------- Checkout ----------
-    payNow.addEventListener('click', async ()=>{
-      try {
-        const payload = { ...chosen, amount: Number(chosen.amount) };
-        const res = await fetch('/.netlify/functions/checkout', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-        if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
-        if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
-        const { url } = await res.json(); if (url) location.href = url; else alert('No checkout URL returned.');
-      } catch { alert('Network error.'); }
-    });
+function renderToday(items){
+  if(!Array.isArray(items)||!items.length){ todayList.innerHTML=`<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`; return; }
+  const top=[...items].sort((a,b)=>{const d=(b.donors_24h||0)-(a.donors_24h||0); if(d!==0)return d; return Number(b.total_eur||0)-Number(a.total_eur||0)}).slice(0,10);
+  todayList.innerHTML=top.map(it=>{
+    const id=(it.iso||it.country_iso||'').toUpperCase(); const name=it.name||it.country_name||id;
+    const donors=it.donors_24h||0; const total=Number(it.total_eur||0);
+    const a2=ISO3_TO_2[id]; const flag=a2?`<img class="flag" src="${flagUrl(a2)}" alt="${a2}">`:`<span class="w-8 h-8 rounded-full bg-emerald-600/25 border border-emerald-400/40 grid place-items-center text-sm">${id}</span>`;
+    return `<li class="flex items-center justify-between">
+      <div class="flex items-center gap-3">${flag}
+        <div><div class="font-semibold">${name}</div>
+        <div class="text-xs text-slate-400 mini">${donors} donors · €${total.toFixed(0)} total</div></div>
+      </div>
+      <button class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" onclick="quickDonate('${id}','${name.replace(/'/g,'&#39;')}')">Donate</button>
+    </li>`;
+  }).join('');
+}
 
-    // ---------- Stats ----------
-    let totalsByIsoTimer = null;
+/* leaders (ostavljeno kao prije) */
+let capTimer=null;
+async function refreshCaptains(){
+  try{
+    const r=await fetch('/.netlify/functions/leaders?window=7d&limit=10',{cache:'no-store'}); if(!r.ok) throw new Error(await r.text());
+    const json=await r.json(); const list=json.by_ref||[];
+    if(!list.length){ captainsList.innerHTML=`<li class="text-slate-400 text-sm">No captains yet. Share your link (?r=yourhandle).</li>`; return; }
+    captainsList.innerHTML=list.map((it,idx)=>{const countries=(it.countries||[]).slice(0,3).join(', ')+(it.countries.length>3?'…':'');
+      return `<li class="flex items-center justify-between">
+        <div class="flex items-center gap-3"><span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${idx+1}</span>
+          <div><div class="font-semibold">@${it.ref}</div><div class="text-xs text-slate-400 mini">${it.donors_unique} unique · €${Number(it.total_eur||0).toFixed(0)} · ${countries}</div></div>
+        </div>
+        <a class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" href="/?r=${encodeURIComponent(it.ref)}">Support</a>
+      </li>`;
+    }).join('');
+  }catch{ captainsList.innerHTML=`<li class="text-slate-400 text-sm">Leaders unavailable.</li>`; }
+  finally{ clearTimeout(capTimer); capTimer=setTimeout(refreshCaptains,30000); }
+}
 
-    async function refreshStats(first = false){
-      try{
-        const r = await fetch('/.netlify/functions/stats', { cache: 'no-store' });
-        if(!r.ok){ throw new Error(await r.text()); }
-        const items = await r.json();
-        totalsByIso = {};
-        const vals = [];
-        for (const it of (items||[])){
-          const iso = (it.iso || it.country_iso || '').toUpperCase();
-          const total = Number(it.total_eur || 0);
-          totalsByIso[iso] = total;
-          if (total > 0) vals.push(total);
-        }
-        minPos = vals.length ? Math.min(...vals) : 0;
-        maxPos = vals.length ? Math.max(...vals) : 0;
-
-        if (vals.length) { legendLow().textContent = euro(minPos); legendHigh().textContent = euro(maxPos); }
-        else { legendLow().textContent = 'Low'; legendHigh().textContent = 'High'; }
-
-        layersByIso.forEach((lyr, iso)=>{
-          const total = totalsByIso[iso] ? Number(totalsByIso[iso]) : 0;
-          lyr.setStyle(styleByValue(total));
-          const nm = (lyr.feature && lyr.feature.properties) ? (lyr.feature.properties.NAME_EN || lyr.feature.properties.ADMIN || 'Unknown') : iso;
-          const tip = total > 0 ? `${nm} · €${Number(total).toFixed(0)}` : nm;
-          lyr.bindTooltip(tip, { sticky:true, opacity:0.95 });
-        });
-
-        renderToday(items);
-        if(first){ mapStatus.textContent = 'World & stats live ✓'; }
-      }catch(e){
-        todayList.innerHTML = `<li class="text-slate-400 text-sm">Stats unavailable.</li>`;
-        if(first){ mapStatus.textContent = 'World ready (stats unavailable)'; }
-      } finally {
-        clearTimeout(totalsByIsoTimer);
-        totalsByIsoTimer = setTimeout(()=>refreshStats(false), 20000);
-      }
-    }
-
-    function renderToday(items){
-      if(!Array.isArray(items) || items.length===0){
-        todayList.innerHTML = `<li class="text-slate-400 text-sm">No activity yet. Be the first ✨</li>`;
-        return;
-      }
-      const top = [...items]
-        .sort((a,b)=>{
-          const d = (b.donors_24h||0) - (a.donors_24h||0);
-          if (d!==0) return d;
-          return Number(b.total_eur||0) - Number(a.total_eur||0);
-        })
-        .slice(0,10);
-
-      todayList.innerHTML = top.map(it=>{
-        const iso = (it.iso || it.country_iso || '').toUpperCase();
-        const name = it.name || it.country_name || iso;
-        const donors = it.donors_24h || 0;
-        const total  = Number(it.total_eur || 0);
-        return `
-          <li class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${iso}</span>
-              <div>
-                <div class="font-semibold">${name}</div>
-                <div class="text-xs text-slate-400 mini">${donors} donors · €${total.toFixed(0)} total</div>
-              </div>
-            </div>
-            <button class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" onclick="quickDonate('${iso}','${name.replace(/'/g,'&#39;')}')">Donate</button>
-          </li>
-        `;
-      }).join('');
-    }
-
-    // ---------- Captains ----------
-    let captainsTimer = null;
-    async function refreshCaptains() {
-      try {
-        const r = await fetch('/.netlify/functions/leaders?window=7d&limit=10', { cache: 'no-store' });
-        if (!r.ok) throw new Error(await r.text());
-        const json = await r.json();
-        const list = json.by_ref || [];
-        if (!list.length) {
-          captainsList.innerHTML = `<li class="text-slate-400 text-sm">No captains yet. Share your link (?r=yourhandle).</li>`;
-          return;
-        }
-        captainsList.innerHTML = list.map((it, idx)=> {
-          const countries = (it.countries||[]).slice(0,3).join(', ') + (it.countries.length>3?'…':'');
-          return `
-            <li class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="inline-flex w-8 h-8 rounded-full bg-emerald-600/25 items-center justify-center border border-emerald-400/40 text-sm">${idx+1}</span>
-                <div>
-                  <div class="font-semibold">@${it.ref}</div>
-                  <div class="text-xs text-slate-400 mini">${it.donors_unique} unique · €${Number(it.total_eur||0).toFixed(0)} · ${countries}</div>
-                </div>
-              </div>
-              <a class="text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500" href="/?r=${encodeURIComponent(it.ref)}">Support</a>
-            </li>
-          `;
-        }).join('');
-      } catch {
-        captainsList.innerHTML = `<li class="text-slate-400 text-sm">Leaders unavailable.</li>`;
-      } finally {
-        clearTimeout(captainsTimer);
-        captainsTimer = setTimeout(refreshCaptains, 30000);
-      }
-    }
-
-    window.quickDonate = (iso,name)=>{
-      chosen.country_iso = iso;
-      chosen.country_name = name;
-      modalCountry.textContent = name;
-      const val = `${iso}|${name}`;
-      let opt = Array.from(countrySelect.options).find(o=>o.value.startsWith(iso + '|'));
-      if (!opt) { opt = new Option(`${name} (${iso})`, val); countrySelect.add(opt); }
-      countrySelect.value = val;
-      openModal();
-    };
-  </script>
+window.quickDonate=(iso,name)=>{ chosen.country_iso=iso; chosen.country_name=name; modalCountry.textContent=name;
+  const val=`${iso}|${name}`; let opt=Array.from(countrySelect.options).find(o=>o.value.startsWith(iso+'|')); if(!opt){opt=new Option(`${name} (${iso})`,val); countrySelect.add(opt);} countrySelect.value=val; openModal();
+};
+</script>
 </body>
 </html>
+
+
+
