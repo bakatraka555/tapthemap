@@ -1,106 +1,98 @@
-// GET /.netlify/functions/stats
-// Agregira po zemlji: total_eur + donors_24h + donors_7d
+// /.netlify/functions/stats
 const { createClient } = require("@supabase/supabase-js");
 
 const supa = () =>
-  createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_PUBLIC, {
-    auth: { persistSession: false },
+  createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false }
   });
-
-/** Minimalna normalizacija ISO koda prema imenu države
- *  - spašava stare zapise gdje je ostao HRV, a name je druga država
- *  - ne utječe na nove zapise (webhook već šalje točan ISO)
- */
-const NAME_2_ISO = {
-  "croatia": "HRV",
-  "kazakhstan": "KAZ",
-  "saudi arabia": "SAU",
-  "kingdom of saudi arabia": "SAU",
-  "ksa": "SAU",
-  "libya": "LBY",
-  "algeria": "DZA",
-  "russia": "RUS",
-  "russian federation": "RUS",
-  "united states": "USA",
-  "united states of america": "USA",
-  "usa": "USA",
-};
-
-function normalizeISO(iso, name) {
-  let z = (iso || "").toUpperCase().slice(0, 3);
-  const validIso = /^[A-Z]{3}$/;
-
-  // ako ISO nije valjan ili je ostao HRV, a ime NIJE Croatia → probaj iz imena
-  if (!validIso.test(z) || (z === "HRV" && name && name.trim() !== "Croatia")) {
-    const guess = NAME_2_ISO[(name || "").trim().toLowerCase()];
-    if (guess) z = guess;
-  }
-  return validIso.test(z) ? z : "UNK";
-}
 
 exports.handler = async () => {
   try {
-    const { data, error } = await supa()
+    const db = supa();
+
+    // 1) Pokušaj dohvatiti sve države (ako postoji tablica countries)
+    let countriesMap = {};
+    {
+      const { data: countries, error } = await db
+        .from("countries")
+        .select("iso3,name");
+      if (!error && countries) {
+        for (const c of countries) {
+          if (c.iso3) countriesMap[c.iso3.toUpperCase()] = c.name;
+        }
+      }
+    }
+
+    // 2) Dohvati uplate (zadnjih 90 dana – promijeni po želji)
+    const since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: pays, error: pErr } = await db
       .from("payments")
       .select("country_iso,country_name,amount_eur,donor_hash,created_at")
-      .order("created_at", { ascending: false })
-      .limit(50000);
+      .gte("created_at", since90d)
+      .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (pErr) {
+      return { statusCode: 500, body: `supabase error: ${pErr.message}` };
+    }
 
-    const by = new Map();
+    // 3) Agregacija u JS-u (radi i bez countries tablice)
     const now = Date.now();
-    const since24 = now - 24 * 60 * 60 * 1000;
-    const since7d = now - 7 * 24 * 60 * 60 * 1000;
+    const DAY = 24 * 60 * 60 * 1000;
 
-    for (const r of data || []) {
-      // normaliziraj ISO ako je stariji zapis imao krivo (npr. HRV+Kazakhstan)
-      const iso = normalizeISO(r.country_iso, r.country_name);
-      const name = r.country_name || iso;
-      const amt = Number(r.amount_eur || 0);
-      if (!Number.isFinite(amt) || amt <= 0) continue;
+    const byIso = new Map(); // iso -> { sum, set24, set7, name }
 
-      const ts = new Date(r.created_at).getTime();
-      const dh = r.donor_hash || null;
+    for (const p of pays || []) {
+      const iso = (p.country_iso || "").toUpperCase() || "UNK";
+      const name =
+        countriesMap[iso] ||
+        p.country_name ||
+        iso;
 
-      if (!by.has(iso)) {
-        by.set(iso, {
-          iso,
+      if (!byIso.has(iso)) {
+        byIso.set(iso, {
           name,
-          total_eur: 0,
+          sum: 0,
           donors24: new Set(),
           donors7: new Set(),
         });
       }
-      const o = by.get(iso);
-      o.total_eur += amt;
-      if (dh) {
-        if (ts >= since7d) o.donors7.add(dh);
-        if (ts >= since24) o.donors24.add(dh);
+      const bucket = byIso.get(iso);
+      const amt = Number(p.amount_eur || 0);
+      bucket.sum += amt;
+
+      const t = new Date(p.created_at).getTime();
+      const dh = (p.donor_hash || "").trim();
+
+      if (now - t <= DAY) {
+        if (dh) bucket.donors24.add(dh);
+      }
+      if (now - t <= 7 * DAY) {
+        if (dh) bucket.donors7.add(dh);
       }
     }
 
-    const out = Array.from(by.values())
-      .map((o) => ({
-        iso: o.iso,
-        name: o.name,
-        total_eur: Math.round(o.total_eur),
-        donors_24h: o.donors24.size,
-        donors_7d: o.donors7.size,
-      }))
-      // "Today's heat": prvo po donors_24h pa po totalu
-      .sort((a, b) => {
-        const d = (b.donors_24h || 0) - (a.donors_24h || 0);
-        if (d !== 0) return d;
-        return (b.total_eur || 0) - (a.total_eur || 0);
+    // 4) U izlaz
+    const out = [];
+    for (const [iso, v] of byIso.entries()) {
+      if (v.sum <= 0) continue;
+      out.push({
+        iso,
+        name: v.name,
+        total_eur: Math.round(v.sum),
+        donors_24h: v.donors24.size,
+        donors_7d: v.donors7.size,
       });
+    }
+
+    // Sortiraj po iznosu pa po 7d donorima
+    out.sort((a, b) => (b.total_eur - a.total_eur) || (b.donors_7d - a.donors_7d));
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      headers: { "content-type": "application/json; charset=utf-8" },
       body: JSON.stringify(out),
     };
   } catch (e) {
-    return { statusCode: 500, body: `Stats error: ${e.message}` };
+    return { statusCode: 500, body: `stats error: ${e.message}` };
   }
 };
