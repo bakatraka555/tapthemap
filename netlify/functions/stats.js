@@ -1,65 +1,60 @@
-import { createClient } from '@supabase/supabase-js';
+// GET /.netlify/functions/stats
+// Agregira po zemlji: total_eur + donors_24h + donors_7d (ALL vrijeme)
+const { createClient } = require("@supabase/supabase-js");
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_PUBLIC);
+const supa = () =>
+  createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_PUBLIC, {
+    auth: { persistSession: false }
+  });
 
-function isoDateOnly(d=new Date()) {
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth()+1).padStart(2,'0');
-  const day = String(d.getUTCDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
+exports.handler = async () => {
+  try {
+    const { data, error } = await supa()
+      .from("payments")
+      .select("country_iso,country_name,amount_eur,donor_hash,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50000);
 
-export const handler = async () => {
-  const today = isoDateOnly(new Date());
-  console.log('Stats request for date:', today);
-  
-  const { data, error } = await supabase
-    .from('payments')
-    .select('country_iso, country_name, amount_cents, donor_hash, created_at')
-    .gte('created_at', `${today}T00:00:00+00`);
+    if (error) throw error;
 
-  if (error) {
-    console.error('Supabase error:', error);
-    return { statusCode: 500, body: error.message };
-  }
+    const by = new Map();
+    const now = Date.now();
+    const since24 = now - 24*60*60*1000;
+    const since7d = now - 7*24*60*60*1000;
 
-  console.log('Raw data from Supabase:', data);
+    for (const r of (data||[])) {
+      const iso = (r.country_iso || "UNK").toUpperCase().slice(0,3);
+      const name = r.country_name || iso;
+      const amt  = Number(r.amount_eur || 0);
+      const ts   = new Date(r.created_at).getTime();
+      const dh   = r.donor_hash || null;
 
-  // Group by country
-  const byCountry = {};
-  for (const row of data || []) {
-    const iso = row.country_iso || 'UNK';
-    if (!byCountry[iso]) {
-      byCountry[iso] = {
-        iso: iso,
-        country_iso: iso,
-        country_name: row.country_name || iso,
-        total_cents: 0,
-        donors: new Set()
-      };
+      if (!by.has(iso)) by.set(iso, {
+        iso, name, total_eur: 0,
+        donors24: new Set(), donors7: new Set()
+      });
+      const o = by.get(iso);
+      o.total_eur += amt;
+      if (ts >= since7d && dh) o.donors7.add(dh);
+      if (ts >= since24 && dh) o.donors24.add(dh);
     }
-    byCountry[iso].total_cents += row.amount_cents || 0;
-    if (row.donor_hash) {
-      byCountry[iso].donors.add(row.donor_hash);
-    }
+
+    const out = Array.from(by.values()).map(o => ({
+      iso: o.iso,
+      name: o.name,
+      total_eur: Math.round(o.total_eur),
+      donors_24h: o.donors24.size,
+      donors_7d: o.donors7.size
+    }))
+    // default sortiranje za "Today’s heat": po donors_24h pa total
+    .sort((a,b)=>{
+      const d = (b.donors_24h||0) - (a.donors_24h||0);
+      if (d !== 0) return d;
+      return (b.total_eur||0) - (a.total_eur||0);
+    });
+
+    return { statusCode: 200, body: JSON.stringify(out) };
+  } catch (e) {
+    return { statusCode: 500, body: `Stats error: ${e.message}` };
   }
-
-  console.log('Grouped by country:', byCountry);
-
-  // Convert to array format expected by frontend
-  const items = Object.values(byCountry).map(country => ({
-    iso: country.iso,
-    country_iso: country.country_iso,
-    country_name: country.country_name,
-    total_eur: country.total_cents / 100,
-    donors_24h: country.donors.size
-  }));
-
-  console.log('Final items:', items);
-
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(items)
-  };
 };
