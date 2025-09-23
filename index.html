@@ -335,12 +335,36 @@
     });
     countrySelect.value = `${chosen.country_iso}|${chosen.country_name}`;
 
-    // ---------- Checkout ----------
+     // ---------- Checkout ----------
     payNow.addEventListener('click', async ()=>{
+      // Debug: log chosen values
+      console.log('Chosen values:', chosen);
+      
+      // Validate required fields
+      if (!chosen.country_iso || !chosen.country_name) {
+        alert('Please select a country from the map first.');
+        return;
+      }
+      
+      if (!chosen.amount || chosen.amount < 1) {
+        alert('Please select an amount.');
+        return;
+      }
+      
       try {
+        const payload = {
+          amount_cents: Math.round(chosen.amount * 100),
+          country_iso: chosen.country_iso,
+          country_name: chosen.country_name,
+          ref: chosen.ref || '',
+          email: null
+        };
+        
+        console.log('Sending payload:', payload);
+        
         const res = await fetch('/.netlify/functions/checkout', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(chosen) // uključuje chosen.ref
+          body: JSON.stringify(payload)
         });
         if (res.status === 503) { alert('Payments are not configured yet. Add STRIPE keys in Netlify ENV.'); return; }
         if (!res.ok) { const t = await res.text(); alert('Checkout error: ' + t); return; }
@@ -473,3 +497,4 @@
   </script>
 </body>
 </html>
+
