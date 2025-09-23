@@ -1,60 +1,87 @@
-import Stripe from 'stripe';
+// netlify/functions/checkout.js
+const Stripe = require("stripe");
 
-export const handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
+exports.handler = async (event) => {
   try {
-    const body = JSON.parse(event.body || '{}');
-    console.log('Checkout received:', body);
-    
-    const {
-      amount_cents,
-      country_iso,
-      country_name,
-      ref,
-      email
-    } = body;
-
-    console.log('Parsed values:', { amount_cents, country_iso, country_name, ref, email });
-
-    if (!amount_cents || amount_cents < 100) {
-      console.log('Amount validation failed:', { amount_cents, min: 100 });
-      return { statusCode: 400, body: `amount_cents must be >= 100, received: ${amount_cents}` };
+    // (opcionalno) preflight
+    if (event.httpMethod === "OPTIONS") {
+      return {
+        statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST,OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        },
+        body: ""
+      };
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const successUrl = `${process.env.SITE_BASE_URL || ''}/?success=true`;
-    const cancelUrl  = `${process.env.SITE_BASE_URL || ''}/?canceled=true`;
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: "Method Not Allowed" };
+    }
+
+    // 1) Sigurno parsiranje bodyja
+    let body = {};
+    try {
+      body = typeof event.body === "string" ? JSON.parse(event.body || "{}") : (event.body || {});
+    } catch (e) {
+      return { statusCode: 400, body: "Invalid JSON" };
+    }
+
+    // 2) Polja iz bodyja
+    const country_iso = (body.country_iso || "").toString().toUpperCase().slice(0, 3);
+    const country_name = (body.country_name || "").toString().trim() || country_iso || "TapTheMap";
+    const ref    = (body.ref || "").toString().slice(0, 64);
+    const handle = (body.handle || "").toString().slice(0, 64);
+
+    // 3) UZMI IZNOS iz više mogućih ključeva: amount, amount_eur, amt, value
+    const candidates = [body.amount, body.amount_eur, body.amt, body.value];
+    let amountEur = 0;
+    for (const c of candidates) {
+      if (c === undefined || c === null) continue;
+      const n = Number(String(c).replace(/[^\d.]/g, "")); // prihvati "100", "100€", " 100 "
+      if (Number.isFinite(n) && n > 0) { amountEur = n; break; }
+    }
+    if (!amountEur) {
+      return { statusCode: 400, body: "Amount missing or invalid" };
+    }
+
+    // 4) Pretvori u cente (min 1 €)
+    const amountCents = Math.max(100, Math.round(amountEur * 100));
+
+    // 5) Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY /* , { apiVersion: '2024-06-20' } */);
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      customer_email: email || undefined,
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: { name: 'TapTheMap Donation' },
-          unit_amount: amount_cents
-        },
-        quantity: 1
-      }],
-      metadata: {
-        country_iso: country_iso || '',
-        country_name: country_name || '',
-        ref: ref || ''
-      }
+      mode: "payment",
+      payment_method_types: ["card", "link"], // možeš ostaviti samo "card" ako želiš
+      currency: "eur",
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            unit_amount: amountCents,
+            product_data: {
+              // prikaz samo imena države (bez ISO sufiksa)
+              name: country_name || country_iso || "TapTheMap",
+              metadata: { country_iso }
+            }
+          },
+          quantity: 1
+        }
+      ],
+      success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?paid=1`,
+      cancel_url:  `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?cancel=1`,
+      metadata: { country_iso, country_name, ref, handle, amount_eur: String(amountEur) }
     });
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ id: session.id, url: session.url })
     };
-  } catch (err) {
-    console.error(err);
-    return { statusCode: 500, body: err.message || 'Internal Error' };
+  } catch (e) {
+    console.error("Checkout error:", e);
+    return { statusCode: 500, body: `Checkout error: ${e.message}` };
   }
 };
