@@ -16,6 +16,9 @@ exports.handler = async () => {
       .limit(50000);
 
     if (error) throw error;
+    
+    console.log('Stats: Raw data from Supabase:', data?.length, 'records');
+    console.log('Stats: Latest 3 records:', data?.slice(0, 3));
 
     const by = new Map();
     const now = Date.now();
@@ -76,13 +79,14 @@ exports.handler = async () => {
       donors_24h: o.donors24.size,
       donors_7d: o.donors7.size
     }))
-    // default sortiranje za "Today’s heat": po donors_24h pa total
+    // default sortiranje za "Today's heat": po donors_24h pa total
     .sort((a,b)=>{
       const d = (b.donors_24h||0) - (a.donors_24h||0);
       if (d !== 0) return d;
       return (b.total_eur||0) - (a.total_eur||0);
     });
 
+    console.log('Stats: Final output:', out);
     return { statusCode: 200, body: JSON.stringify(out) };
   } catch (e) {
     return { statusCode: 500, body: `Stats error: ${e.message}` };
