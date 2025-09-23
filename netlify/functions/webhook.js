@@ -248,7 +248,7 @@ exports.handler = async (event) => {
 
     const amountCents = Number(session.amount_total || 0);
     if (!amountCents || amountCents < 100) {
-      console.warn("WEBHOOK: zero/low amount_total, skip", { amountCents });
+      console.warn("WEBHOOK: zero/low amount_total, skip", JSON.stringify({ amountCents }));
       return { statusCode: 200, body: "skip: amount_total" };
     }
     const amount_eur = Math.round(amountCents / 100);
@@ -261,10 +261,10 @@ exports.handler = async (event) => {
     const country_name = meta.country_name || meta.name || "";
     const country_iso = normalizeISO(meta.country_iso, country_name);
     
-    console.log('WEBHOOK metadata:', { meta, country_name, country_iso });
+    console.log('WEBHOOK metadata:', JSON.stringify({ meta, country_name, country_iso }));
 
     if (country_iso === "UNK") {
-      console.warn("WEBHOOK: missing/unknown ISO, skip", { meta, country_name, country_iso });
+      console.warn("WEBHOOK: missing/unknown ISO, skip", JSON.stringify({ meta, country_name, country_iso }));
       return { statusCode: 200, body: "skip: unknown iso" };
     }
 
@@ -289,11 +289,11 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: `supabase error: ${error.message}` };
     }
 
-    console.info("WEBHOOK inserted", {
+    console.info("WEBHOOK inserted", JSON.stringify({
       iso: row.country_iso,
       eur: row.amount_eur,
       pi: row.stripe_pi,
-    });
+    }));
 
     return { statusCode: 200, body: "ok" };
   } catch (e) {
