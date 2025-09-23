@@ -11,7 +11,7 @@ exports.handler = async () => {
   try {
     const { data, error } = await supa()
       .from("payments")
-      .select("country_iso,country_name,amount_eur,donor_hash,created_at")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(50000);
 
