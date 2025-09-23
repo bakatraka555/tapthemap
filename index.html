@@ -364,7 +364,8 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            amount_cents: this.selectedAmount * 100,
+                            amount: this.selectedAmount,
+                            amount_eur: this.selectedAmount,
                             country_iso: this.selectedCountry.code,
                             country_name: this.selectedCountry.name,
                             ref: referral || '',
