@@ -22,9 +22,39 @@ exports.handler = async () => {
     const since24 = now - 24*60*60*1000;
     const since7d = now - 7*24*60*60*1000;
 
+    // Mapping ISO kodova na pravilne nazive
+    const countryNames = {
+      'HRV': 'Croatia', 'DEU': 'Germany', 'FRA': 'France', 'ITA': 'Italy', 'ESP': 'Spain', 'POL': 'Poland',
+      'GBR': 'United Kingdom', 'USA': 'United States', 'CAN': 'Canada', 'MEX': 'Mexico', 'BRA': 'Brazil',
+      'ARG': 'Argentina', 'CHL': 'Chile', 'COL': 'Colombia', 'PER': 'Peru', 'VEN': 'Venezuela',
+      'CHN': 'China', 'JPN': 'Japan', 'IND': 'India', 'PAK': 'Pakistan', 'BGD': 'Bangladesh',
+      'IDN': 'Indonesia', 'PHL': 'Philippines', 'VNM': 'Vietnam', 'THA': 'Thailand', 'MYS': 'Malaysia',
+      'SGP': 'Singapore', 'KOR': 'South Korea', 'PRK': 'North Korea', 'MNG': 'Mongolia',
+      'KAZ': 'Kazakhstan', 'UZB': 'Uzbekistan', 'KGZ': 'Kyrgyzstan', 'TJK': 'Tajikistan',
+      'TKM': 'Turkmenistan', 'AFG': 'Afghanistan', 'IRN': 'Iran', 'IRQ': 'Iraq', 'SYR': 'Syria',
+      'LBN': 'Lebanon', 'JOR': 'Jordan', 'ISR': 'Israel', 'SAU': 'Saudi Arabia', 'YEM': 'Yemen',
+      'OMN': 'Oman', 'ARE': 'United Arab Emirates', 'QAT': 'Qatar', 'KWT': 'Kuwait', 'BHR': 'Bahrain',
+      'EGY': 'Egypt', 'LBY': 'Libya', 'TUN': 'Tunisia', 'DZA': 'Algeria', 'MAR': 'Morocco',
+      'SDN': 'Sudan', 'SSD': 'South Sudan', 'ETH': 'Ethiopia', 'ERI': 'Eritrea', 'DJI': 'Djibouti',
+      'SOM': 'Somalia', 'KEN': 'Kenya', 'UGA': 'Uganda', 'TZA': 'Tanzania', 'RWA': 'Rwanda',
+      'BDI': 'Burundi', 'COD': 'Democratic Republic of the Congo', 'COG': 'Republic of the Congo',
+      'CAF': 'Central African Republic', 'TCD': 'Chad', 'CMR': 'Cameroon', 'NGA': 'Nigeria',
+      'NER': 'Niger', 'MLI': 'Mali', 'BFA': 'Burkina Faso', 'SEN': 'Senegal', 'MRT': 'Mauritania',
+      'GMB': 'Gambia', 'GNB': 'Guinea-Bissau', 'GIN': 'Guinea', 'SLE': 'Sierra Leone',
+      'LBR': 'Liberia', 'CIV': 'Ivory Coast', 'GHA': 'Ghana', 'TGO': 'Togo', 'BEN': 'Benin',
+      'GNQ': 'Equatorial Guinea', 'GAB': 'Gabon', 'STP': 'Sao Tome and Principe', 'AGO': 'Angola',
+      'ZMB': 'Zambia', 'ZWE': 'Zimbabwe', 'BWA': 'Botswana', 'NAM': 'Namibia', 'LSO': 'Lesotho',
+      'SWZ': 'Swaziland', 'ZAF': 'South Africa', 'MDG': 'Madagascar', 'MUS': 'Mauritius',
+      'SYC': 'Seychelles', 'COM': 'Comoros', 'MWI': 'Malawi', 'MOZ': 'Mozambique',
+      'AUS': 'Australia', 'NZL': 'New Zealand', 'FJI': 'Fiji', 'PNG': 'Papua New Guinea',
+      'SLB': 'Solomon Islands', 'VUT': 'Vanuatu', 'NCL': 'New Caledonia', 'WSM': 'Samoa',
+      'TON': 'Tonga', 'KIR': 'Kiribati', 'TUV': 'Tuvalu', 'NRU': 'Nauru', 'MHL': 'Marshall Islands',
+      'FSM': 'Micronesia', 'PLW': 'Palau'
+    };
+
     for (const r of (data||[])) {
       const iso = (r.country_iso || "UNK").toUpperCase().slice(0,3);
-      const name = r.country_name || iso;
+      const name = countryNames[iso] || r.country_name || iso; // Koristi mapping umesto baze
       const amt  = Number(r.amount_eur || 0);
       const ts   = new Date(r.created_at).getTime();
       const dh   = r.donor_hash || null;
