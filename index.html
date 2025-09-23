@@ -409,9 +409,9 @@
                 try {
                     // Try multiple sources
                     const sources = [
-                        'https://cdn.jsdelivr.net/npm/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
-                        'https://unpkg.com/@geo-maps/countries-land-10m@1.0.1/countries-land-10m.geo.json',
-                        'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
+                        './countries.geojson',
+                        'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson',
+                        'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
                     ];
                     
                     let geoData = null;
