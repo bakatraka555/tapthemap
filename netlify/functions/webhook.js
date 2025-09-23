@@ -259,6 +259,7 @@ exports.handler = async (event) => {
       country_iso,
       country_name: country_name || country_iso,
       amount_eur,
+      amount_cents: amountCents,
       ref: meta.ref || null,
       donor_hash: donorHash(pseudoId, salt),
       stripe_pi: String(session.payment_intent || session.id || ""),
