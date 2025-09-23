@@ -1,10 +1,18 @@
 {
   "name": "tapthemap",
   "private": true,
-  "version": "1.0.0",
-  "engines": { "node": ">=18" },
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step'",
+    "lint": "echo 'Add your linter'"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "stripe": "^16.6.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.33.0"
   }
 }
