@@ -1,4 +1,3 @@
-// /.netlify/functions/webhook
 const Stripe = require("stripe");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
@@ -8,9 +7,7 @@ const supa = () =>
     auth: { persistSession: false },
   });
 
-// normalizator imena -> ISO3
 const MAP = {
-  // Evropa
   croatia: "HRV",
   germany: "DEU",
   france: "FRA",
@@ -58,8 +55,6 @@ const MAP = {
   luxembourg: "LUX",
   malta: "MLT",
   cyprus: "CYP",
-  
-  // Amerika
   usa: "USA",
   "united states": "USA",
   "united states of america": "USA",
@@ -79,15 +74,13 @@ const MAP = {
   honduras: "HND",
   "el salvador": "SLV",
   nicaragua: "NIC",
-  costa rica: "CRI",
+  "costa rica": "CRI",
   panama: "PAN",
   cuba: "CUB",
   jamaica: "JAM",
   haiti: "HTI",
   "dominican republic": "DOM",
-  puerto rico: "PRI",
-  
-  // Azija
+  "puerto rico": "PRI",
   china: "CHN",
   japan: "JPN",
   india: "IND",
@@ -124,13 +117,10 @@ const MAP = {
   qatar: "QAT",
   kuwait: "KWT",
   bahrain: "BHR",
-  sri lanka: "LKA",
+  "sri lanka": "LKA",
   nepal: "NPL",
   bhutan: "BTN",
-  bangladesh: "BGD",
   maldives: "MDV",
-  
-  // Afrika
   egypt: "EGY",
   libya: "LBY",
   tunisia: "TUN",
@@ -184,8 +174,6 @@ const MAP = {
   comoros: "COM",
   malawi: "MWI",
   mozambique: "MOZ",
-  
-  // Okeanija
   australia: "AUS",
   "new zealand": "NZL",
   fiji: "FJI",
@@ -210,9 +198,8 @@ const isoFromName = (name) => {
 };
 
 const normalizeISO = (iso, name) => {
-  let z = (iso || "").toUpperCase().slice(0, 3);
+  let z = (iso || "").toUpperCase().slice(0,3);
   if (!/^[A-Z]{3}$/.test(z)) z = "";
-  // ako je HRV i ime NIJE Croatia, pokušaj iz imena
   if (!z || (z === "HRV" && name && name.trim() !== "Croatia")) {
     const guess = isoFromName(name);
     if (guess) z = guess;
@@ -243,7 +230,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: "ignored" };
     }
 
-    const session = evt.data.object; // checkout.session.*
+    const session = evt.data.object;
     const meta = session.metadata || {};
 
     const amountCents = Number(session.amount_total || 0);
@@ -253,7 +240,6 @@ exports.handler = async (event) => {
     }
     const amount_eur = Math.round(amountCents / 100);
 
-    // Preferiraj e-mail, a ako ga nema, upotrijebi customer ili session id
     const email = session.customer_details?.email || session.customer_email || "";
     const pseudoId = email || session.customer || session.id || "";
     const salt = process.env.REF_HASH_SALT || "tapthemap_default_salt";
@@ -261,7 +247,7 @@ exports.handler = async (event) => {
     const country_name = meta.country_name || meta.name || "";
     const country_iso = normalizeISO(meta.country_iso, country_name);
     
-    console.log('WEBHOOK metadata:', JSON.stringify({ meta, country_name, country_iso }));
+    console.log("WEBHOOK metadata:", JSON.stringify({ meta, country_name, country_iso }));
 
     if (country_iso === "UNK") {
       console.warn("WEBHOOK: missing/unknown ISO, skip", JSON.stringify({ meta, country_name, country_iso }));
@@ -278,8 +264,6 @@ exports.handler = async (event) => {
       stripe_pi: String(session.payment_intent || session.id || ""),
     };
 
-    // Idempotentno: unique constraint na payments.stripe_pi
-    // -> upsert ignorira duplikate
     const { error } = await supa()
       .from("payments")
       .upsert(row, { onConflict: "stripe_pi", ignoreDuplicates: true });
