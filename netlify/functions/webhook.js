@@ -221,7 +221,7 @@ const normalizeISO = (iso, name) => {
 };
 
 const donorHash = (idLike, salt) =>
-  crypto.createHash("sha256").update(`${salt}::${(idLike || "").toLowerCase().trim()}`).digest("hex");
+  crypto.createHash("sha256").update(salt + "::" + (idLike || "").toLowerCase().trim()).digest("hex");
 
 exports.handler = async (event) => {
   try {
@@ -236,7 +236,7 @@ exports.handler = async (event) => {
       evt = stripe.webhooks.constructEvent(event.body, sig, whsec);
     } catch (err) {
       console.warn("WEBHOOK signature error:", err.message);
-      return { statusCode: 400, body: `Signature error: ${err.message}` };
+      return { statusCode: 400, body: "Signature error: " + err.message };
     }
 
     if (evt.type !== "checkout.session.completed") {
@@ -286,7 +286,7 @@ exports.handler = async (event) => {
 
     if (error) {
       console.error("WEBHOOK supabase error:", error.message);
-      return { statusCode: 500, body: `supabase error: ${error.message}` };
+      return { statusCode: 500, body: "supabase error: " + error.message };
     }
 
     console.info("WEBHOOK inserted", JSON.stringify({
@@ -298,6 +298,6 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: "ok" };
   } catch (e) {
     console.error("WEBHOOK fatal error:", e.message);
-    return { statusCode: 500, body: `webhook error: ${e.message}` };
+    return { statusCode: 500, body: "webhook error: " + e.message };
   }
 };
