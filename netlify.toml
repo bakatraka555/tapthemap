@@ -1,20 +1,12 @@
 [build]
-  publish   = "."
+  command = "npm i"
+  publish = "."
   functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "18"
 
-[functions]
-  node_bundler = "esbuild"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    X-Content-Type-Options    = "nosniff"
-    Referrer-Policy           = "strict-origin-when-cross-origin"
-    Permissions-Policy        = "geolocation=(), microphone=(), camera=(), payment=(self)"
-    # + jsDelivr, unpkg i GitHub raw za GeoJSON; 'unsafe-inline' zbog inline skripte
-    Content-Security-Policy   = "default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://unpkg.com https://raw.githubusercontent.com; frame-src https://js.stripe.com https://checkout.stripe.com; frame-ancestors 'self'"
-
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
