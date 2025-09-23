@@ -495,7 +495,8 @@
             }
             
             getCountryCode(properties) {
-                return (properties.ADM0_A3 || properties.ISO_A3 || properties.iso_a3 || properties.A3 || '').toString().toUpperCase().slice(0, 3);
+                console.log('Country properties:', properties);
+                return (properties.ADM0_A3 || properties.ISO_A3 || properties.iso_a3 || properties.A3 || properties.ISO_A2 || properties.iso_a2 || '').toString().toUpperCase().slice(0, 3);
             }
             
             getCountryName(properties) {
