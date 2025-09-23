@@ -345,6 +345,11 @@
             }
             
             async processDonation() {
+                console.log('processDonation called:', {
+                    selectedCountry: this.selectedCountry,
+                    selectedAmount: this.selectedAmount
+                });
+                
                 if (!this.selectedCountry || !this.selectedAmount) {
                     alert('Please select a country and amount');
                     return;
@@ -478,11 +483,11 @@
                 
                 return {
                     fillColor: this.getHeatColor(heatValue),
-                    weight: 1,
-                    opacity: 1,
-                    color: '#94a3b8',
-                    dashArray: '3',
-                    fillOpacity: 0.6
+                    weight: 0.5,
+                    opacity: 0.8,
+                    color: '#64748b',
+                    dashArray: '',
+                    fillOpacity: 0.7
                 };
             }
             
