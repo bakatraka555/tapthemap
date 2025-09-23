@@ -380,6 +380,8 @@
                     
                     const data = await response.json();
                     if (data.url) {
+                        // Ažuriraj stats pre nego što odeš na Stripe
+                        await this.loadStats();
                         window.location.href = data.url;
                     } else {
                         throw new Error('No checkout URL returned');
@@ -675,6 +677,8 @@
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
                     this.updateMapColors();
+                    
+                    console.log('Stats loaded:', this.stats.countryData);
                     
                 } catch (error) {
                     console.error('Error loading stats:', error);
