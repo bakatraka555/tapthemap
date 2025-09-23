@@ -11,14 +11,19 @@ function isoDateOnly(d=new Date()) {
 
 export const handler = async () => {
   const today = isoDateOnly(new Date());
+  console.log('Stats request for date:', today);
+  
   const { data, error } = await supabase
     .from('payments')
     .select('country_iso, country_name, amount_cents, donor_hash, created_at')
     .gte('created_at', `${today}T00:00:00+00`);
 
   if (error) {
+    console.error('Supabase error:', error);
     return { statusCode: 500, body: error.message };
   }
+
+  console.log('Raw data from Supabase:', data);
 
   // Group by country
   const byCountry = {};
@@ -39,6 +44,8 @@ export const handler = async () => {
     }
   }
 
+  console.log('Grouped by country:', byCountry);
+
   // Convert to array format expected by frontend
   const items = Object.values(byCountry).map(country => ({
     iso: country.iso,
@@ -47,6 +54,8 @@ export const handler = async () => {
     total_eur: country.total_cents / 100,
     donors_24h: country.donors.size
   }));
+
+  console.log('Final items:', items);
 
   return {
     statusCode: 200,
