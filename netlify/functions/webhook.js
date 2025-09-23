@@ -260,6 +260,8 @@ exports.handler = async (event) => {
 
     const country_name = meta.country_name || meta.name || "";
     const country_iso = normalizeISO(meta.country_iso, country_name);
+    
+    console.log('WEBHOOK metadata:', { meta, country_name, country_iso });
 
     if (country_iso === "UNK") {
       console.warn("WEBHOOK: missing/unknown ISO, skip", { meta, country_name, country_iso });
