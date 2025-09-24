@@ -668,6 +668,7 @@
             }
             
             getCountryFlag(countryCode) {
+                console.log('getCountryFlag called with:', countryCode);
                 const flags = {
                     // Evropa
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
@@ -685,7 +686,7 @@
                     'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'SLV': '🇸🇻', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
                     'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'PRI': '🇵🇷',
                     'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾', 'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨',
-                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'SLV': '🇸🇻',
+                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿',
                     
                     // Azija
                     'CHN': '🇨🇳', 'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩',
@@ -695,7 +696,7 @@
                     'LBN': '🇱🇧', 'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲',
                     'ARE': '🇦🇪', 'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵',
                     'BTN': '🇧🇹', 'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱',
-                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'IDN': '🇮🇩',
+                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼',
                     
                     // Afrika
                     'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿', 'MAR': '🇲🇦', 'SDN': '🇸🇩',
@@ -706,17 +707,18 @@
                     'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭', 'TGO': '🇹🇬', 'BEN': '🇧🇯',
                     'GNQ': '🇬🇶', 'GAB': '🇬🇦', 'STP': '🇸🇹', 'AGO': '🇦🇴', 'ZMB': '🇿🇲', 'ZWE': '🇿🇼',
                     'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'ZAF': '🇿🇦', 'MDG': '🇲🇬',
-                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'ZAF': '🇿🇦',
-                    'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'MDG': '🇲🇬', 'REU': '🇷🇪',
-                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻', 'STP': '🇸🇹', 'GNQ': '🇬🇶', 'GAB': '🇬🇦',
+                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'REU': '🇷🇪',
+                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻',
                     
                     // Okeanija
                     'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧', 'VUT': '🇻🇺',
                     'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻', 'NRU': '🇳🇷',
                     'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺', 'TKL': '🇹🇰',
-                    'WLF': '🇼🇫', 'PYF': '🇵🇫', 'NCL': '🇳🇨', 'VUT': '🇻🇺', 'SLB': '🇸🇧', 'PNG': '🇵🇬'
+                    'WLF': '🇼🇫', 'PYF': '🇵🇫'
                 };
-                return flags[countryCode] || '🏳️';
+                const flag = flags[countryCode] || '🏳️';
+                console.log('Returning flag:', flag, 'for country:', countryCode);
+                return flag;
             }
             
             async loadStats() {
