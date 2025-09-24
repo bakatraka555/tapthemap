@@ -76,6 +76,15 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
+        .country-flag {
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", "EmojiSymbols";
+            font-size: 1.2em;
+            line-height: 1;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -304,7 +313,10 @@
                 
                 // Update UI
                 document.getElementById('selected-country').innerHTML = `
-                    <span class="text-lg">${this.getCountryFlag(country)} ${name}</span>
+                    <span class="text-lg">
+                        <span class="country-flag">${this.getCountryFlag(country)}</span>
+                        ${name}
+                    </span>
                 `;
                 
                 // Update button states
@@ -450,7 +462,7 @@
                             this.countryLayers.set(countryCode, layer);
                             
                             // Add tooltip
-                            layer.bindTooltip(`${this.getCountryFlag(countryCode)} ${countryName}`, {
+                            layer.bindTooltip(`<span class="country-flag">${this.getCountryFlag(countryCode)}</span> ${countryName}`, {
                                 sticky: true,
                                 opacity: 0.9
                             });
@@ -634,7 +646,18 @@
                     'Comoros': 'COM',
                     'Malawi': 'MWI',
                     'Mozambique': 'MOZ',
-                    'South Africa': 'ZAF'
+                    'South Africa': 'ZAF',
+                    
+                    // Dodatne države
+                    'Andorra': 'AND', 'San Marino': 'SMR', 'Vatican': 'VAT', 'Monaco': 'MCO', 'Liechtenstein': 'LIE',
+                    'Barbados': 'BRB', 'Trinidad and Tobago': 'TTO', 'Guyana': 'GUY', 'Suriname': 'SUR', 'Grenada': 'GRD',
+                    'Saint Vincent and the Grenadines': 'VCT', 'Antigua and Barbuda': 'ATG', 'Dominica': 'DMA',
+                    'Saint Kitts and Nevis': 'KNA', 'Saint Lucia': 'LCA', 'Belize': 'BLZ',
+                    'Laos': 'LAO', 'Cambodia': 'KHM', 'Brunei': 'BRN', 'East Timor': 'TLS', 'Macau': 'MAC',
+                    'Hong Kong': 'HKG', 'Taiwan': 'TWN',
+                    'Reunion': 'REU', 'Mayotte': 'MYT', 'Saint Helena': 'SHN', 'Cape Verde': 'CPV',
+                    'Cook Islands': 'COK', 'Niue': 'NIU', 'Tokelau': 'TKL', 'Wallis and Futuna': 'WLF',
+                    'French Polynesia': 'PYF'
                 };
                 
                 return countryMapping[name] || 'UNK';
@@ -654,13 +677,15 @@
                     'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
                     'ALB': '🇦🇱', 'XKX': '🇽🇰', 'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾',
                     'MDA': '🇲🇩', 'GEO': '🇬🇪', 'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪',
-                    'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾',
+                    'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
                     
                     // Amerika
                     'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷', 'CHL': '🇨🇱',
                     'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴', 'PRY': '🇵🇾',
                     'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'SLV': '🇸🇻', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
                     'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'PRI': '🇵🇷',
+                    'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾', 'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨',
+                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'SLV': '🇸🇻',
                     
                     // Azija
                     'CHN': '🇨🇳', 'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩',
@@ -669,7 +694,8 @@
                     'TJK': '🇹🇯', 'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾',
                     'LBN': '🇱🇧', 'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲',
                     'ARE': '🇦🇪', 'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵',
-                    'BTN': '🇧🇹', 'MDV': '🇲🇻',
+                    'BTN': '🇧🇹', 'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱',
+                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'IDN': '🇮🇩',
                     
                     // Afrika
                     'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿', 'MAR': '🇲🇦', 'SDN': '🇸🇩',
@@ -680,12 +706,15 @@
                     'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭', 'TGO': '🇹🇬', 'BEN': '🇧🇯',
                     'GNQ': '🇬🇶', 'GAB': '🇬🇦', 'STP': '🇸🇹', 'AGO': '🇦🇴', 'ZMB': '🇿🇲', 'ZWE': '🇿🇼',
                     'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'ZAF': '🇿🇦', 'MDG': '🇲🇬',
-                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿',
+                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'ZAF': '🇿🇦',
+                    'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'MDG': '🇲🇬', 'REU': '🇷🇪',
+                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻', 'STP': '🇸🇹', 'GNQ': '🇬🇶', 'GAB': '🇬🇦',
                     
                     // Okeanija
                     'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧', 'VUT': '🇻🇺',
                     'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻', 'NRU': '🇳🇷',
-                    'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼'
+                    'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺', 'TKL': '🇹🇰',
+                    'WLF': '🇼🇫', 'PYF': '🇵🇫', 'NCL': '🇳🇨', 'VUT': '🇻🇺', 'SLB': '🇸🇧', 'PNG': '🇵🇬'
                 };
                 return flags[countryCode] || '🏳️';
             }
@@ -746,7 +775,10 @@
                                 ${index + 1}
                             </div>
                             <div>
-                                <div class="font-semibold">${this.getCountryFlag(country.iso)} ${country.country_name || country.iso}</div>
+                                <div class="font-semibold">
+                                    <span class="country-flag">${this.getCountryFlag(country.iso)}</span>
+                                    ${country.country_name || country.iso}
+                                </div>
                                 <div class="text-xs text-gray-400">${country.donors_24h || 0} donors • €${(country.total_eur || 0).toFixed(0)}</div>
                             </div>
                         </div>
