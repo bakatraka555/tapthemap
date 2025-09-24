@@ -840,31 +840,7 @@
             }
             
             async getCountryFlag(countryCode) {
-                try {
-                    const flagUrl = `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
-                    const response = await fetch(flagUrl);
-                    if (response.ok) {
-                        return `<img src="${flagUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
-                    }
-                } catch (error) {
-                    // Use fallback
-                }
-                
-                try {
-                    const backupUrl = `https://countryflagsapi.com/png/${countryCode}`;
-                    const backupResponse = await fetch(backupUrl);
-                    if (backupResponse.ok) {
-                        return `<img src="${backupUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
-                    }
-                } catch (e) {
-                    // Use emoji fallback
-                }
-                
-                return '🏳️';
-            }
-            
-            getCountryFlagSync(countryCode) {
-                // Osnovne emoji zastavice za tooltip
+                // Koristi emoji zastavice direktno
                 const flags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
@@ -905,6 +881,10 @@
                 return flags[countryCode] || '🏳️';
             }
             
+            getCountryFlagSync(countryCode) {
+                return this.getCountryFlag(countryCode);
+            }
+            
             async loadStats() {
                 try {
                     const response = await fetch('/.netlify/functions/stats');
@@ -928,7 +908,7 @@
                     this.stats.totalDonors = totalDonors;
                     
                     this.updateStatsDisplay();
-                    await this.updateLeadersList(data);
+                    this.updateLeadersList(data);
                     this.updateMapColors();
                     
                 } catch (error) {
@@ -942,7 +922,7 @@
                 document.getElementById('total-donors').textContent = this.stats.totalDonors;
             }
             
-            async updateLeadersList(data) {
+            updateLeadersList(data) {
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -955,9 +935,9 @@
                     .slice(0, 5);
                 
                 
-                const promises = sortedData.map(async (country, index) => {
-                    const flag = await this.getCountryFlag(country.iso);
-                    const html = `
+                const htmlContent = sortedData.map((country, index) => {
+                    const flag = this.getCountryFlag(country.iso);
+                    return `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold">
@@ -976,11 +956,7 @@
                         </button>
                     </div>
                 `;
-                    return html;
-                });
-                
-                const finalHtml = await Promise.all(promises);
-                const htmlContent = finalHtml.join('');
+                }).join('');
                 
                 leadersList.innerHTML = htmlContent;
             }
