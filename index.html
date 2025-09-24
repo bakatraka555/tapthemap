@@ -84,6 +84,12 @@
             vertical-align: middle;
             margin-right: 0.25rem;
         }
+        
+        .country-flag svg {
+            width: 1.2em;
+            height: 0.9em;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -192,20 +198,6 @@
                     <h3 class="text-lg font-semibold mb-4 flex items-center">
                         🔥 Today's Leaders
                     </h3>
-                    <!-- Test zastavice -->
-                    <div class="mb-4 p-2 bg-gray-800 rounded">
-                        <div class="text-sm text-gray-400 mb-2">Test zastavice:</div>
-                        <div class="space-x-2 mb-2">
-                            <span class="country-flag">🇲🇽</span>
-                            <span class="country-flag">🇦🇷</span>
-                            <span class="country-flag">🇨🇳</span>
-                            <span class="country-flag">🇸🇦</span>
-                            <span class="country-flag">🇮🇳</span>
-                        </div>
-                        <div class="text-xs text-gray-500">
-                            Bez CSS klase: 🇲🇽 🇦🇷 🇨🇳 🇸🇦 🇮🇳
-                        </div>
-                    </div>
                     <div id="leaders-list" class="space-y-3">
                         <div class="text-center text-gray-400 py-4">Loading leaders...</div>
                     </div>
@@ -682,6 +674,26 @@
             
             getCountryFlag(countryCode) {
                 console.log('getCountryFlag called with:', countryCode);
+                
+                // SVG zastavice za Chrome kompatibilnost
+                const svgFlags = {
+                    'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
+                    'ARG': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#74acdf"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#74acdf"/></svg>',
+                    'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/></svg>',
+                    'SAU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#006c35"/></svg>',
+                    'IND': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff9933"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#138808"/></svg>',
+                    'HRV': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0000ff"/></svg>',
+                    'DEU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#000000"/><rect y="5" width="20" height="5" fill="#dd0000"/><rect y="10" width="20" height="5" fill="#ffce00"/></svg>',
+                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#b22234"/></svg>',
+                    'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/></svg>',
+                    'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>'
+                };
+                
+                // Vrati SVG ako postoji, inače fallback na emoji
+                if (svgFlags[countryCode]) {
+                    return svgFlags[countryCode];
+                }
+                
                 const flags = {
                     // Evropa
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
@@ -786,11 +798,11 @@
                 
                 console.log('Sorted data for leaders:', sortedData);
                 
-                leadersList.innerHTML = sortedData.map((country, index) => {
+                const htmlContent = sortedData.map((country, index) => {
                     console.log('Processing country for leaders:', country);
                     const flag = this.getCountryFlag(country.iso);
                     console.log('Flag for', country.iso, ':', flag);
-                    return `
+                    const html = `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold">
@@ -809,7 +821,12 @@
                         </button>
                     </div>
                 `;
+                    console.log('Generated HTML for', country.iso, ':', html);
+                    return html;
                 }).join('');
+                
+                console.log('Final HTML content:', htmlContent);
+                leadersList.innerHTML = htmlContent;
             }
             
             updateMapColors() {
