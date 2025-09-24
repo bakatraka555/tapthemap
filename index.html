@@ -90,6 +90,15 @@
             height: 0.9em;
             vertical-align: middle;
         }
+        
+        .custom-tooltip {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            font-size: 12px !important;
+            max-width: 200px !important;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -466,10 +475,37 @@
                             
                             this.countryLayers.set(countryCode, layer);
                             
-                            // Add tooltip
-                            layer.bindTooltip(`<span class="country-flag">${this.getCountryFlag(countryCode)}</span> ${countryName}`, {
+                            // Add rich tooltip
+                            const heatValue = this.stats.countryData?.[countryCode] || 0;
+                            const donors = this.getDonorsCount(countryCode);
+                            const rank = this.getCountryRank(countryCode);
+                            const activity = this.getActivityLevel(heatValue);
+                            
+                            const tooltipContent = `
+                                <div class="p-2">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="country-flag">${this.getCountryFlag(countryCode)}</span>
+                                        <span class="font-semibold text-white">${countryName}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-300 mb-1">
+                                        💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
+                                    </div>
+                                    <div class="text-sm text-gray-300 mb-2">
+                                        📊 Rank: #${rank} of 195 countries
+                                    </div>
+                                    <div class="text-sm text-gray-300 mb-2">
+                                        🔥 Activity: ${activity}
+                                    </div>
+                                    <div class="text-xs text-blue-300">
+                                        🎯 Be the first to donate!
+                                    </div>
+                                </div>
+                            `;
+                            
+                            layer.bindTooltip(tooltipContent, {
                                 sticky: true,
-                                opacity: 0.9
+                                opacity: 0.95,
+                                className: 'custom-tooltip'
                             });
                             
                             // Add click handler
@@ -576,6 +612,25 @@
                     'Serbia': 'SRB',
                     'Montenegro': 'MNE',
                     'Bosnia and Herzegovina': 'BIH',
+                    'Republic of Serbia': 'SRB',
+                    'Somaliland': 'SOL',
+                    'United Republic of Tanzania': 'TZA',
+                    'Western Sahara': 'ESH',
+                    'Guinea-Bissau': 'GNB',
+                    'Sri Lanka': 'LKA',
+                    'Antarctica': 'ATA',
+                    'Falkland Islands': 'FLK',
+                    'Colombia': 'COL',
+                    'Panama': 'PAN',
+                    'Nicaragua': 'NIC',
+                    'Costa Rica': 'CRI',
+                    'Honduras': 'HND',
+                    'Guatemala': 'GTM',
+                    'Dominican Republic': 'DOM',
+                    'Haiti': 'HTI',
+                    'Cuba': 'CUB',
+                    'Bahamas': 'BHS',
+                    'Jamaica': 'JAM',
                     'Croatia': 'HRV',
                     'Slovenia': 'SVN',
                     'Italy': 'ITA',
@@ -779,6 +834,27 @@
                 return properties.name || properties.NAME_EN || properties.ADMIN || properties.NAME_LONG || properties.SOVEREIGNT || 'Unknown';
             }
             
+            getDonorsCount(countryCode) {
+                // Ovo bi trebalo doći iz stats podataka
+                return this.stats.countryData?.[countryCode + '_donors'] || 0;
+            }
+            
+            getCountryRank(countryCode) {
+                // Sortiraj države po donacijama i vrati rank
+                const sortedCountries = Object.entries(this.stats.countryData || {})
+                    .sort(([,a], [,b]) => b - a);
+                const rank = sortedCountries.findIndex(([code]) => code === countryCode) + 1;
+                return rank || 1;
+            }
+            
+            getActivityLevel(heatValue) {
+                if (heatValue === 0) return 'Inactive';
+                if (heatValue < 50) return 'Low';
+                if (heatValue < 200) return 'Medium';
+                if (heatValue < 500) return 'High';
+                return 'Very High';
+            }
+            
             getCountryFlag(countryCode) {
                 console.log('getCountryFlag called with:', countryCode);
                 
@@ -795,7 +871,22 @@
                     'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/></svg>',
                     'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>',
                     'COL': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="7.5" fill="#ffcd00"/><rect y="7.5" width="20" height="7.5" fill="#003893"/></svg>',
-                    'BRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#009639"/></svg>',
+                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="3" fill="#b22234"/><rect y="3" width="20" height="3" fill="#ffffff"/><rect y="6" width="20" height="3" fill="#b22234"/><rect y="9" width="20" height="3" fill="#ffffff"/><rect y="12" width="20" height="3" fill="#b22234"/></svg>',
+                    'BRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#009639"/><circle cx="10" cy="7.5" r="3" fill="#ffcc00"/></svg>',
+                    'SOL': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#009639"/></svg>',
+                    'ESH': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#000000"/></svg>',
+                    'ATA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#ffffff"/></svg>',
+                    'FLK': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#0066cc"/></svg>',
+                    'PAN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="7.5" fill="#ffffff"/><rect y="7.5" width="20" height="7.5" fill="#ff0000"/></svg>',
+                    'NIC': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#0066cc"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0066cc"/></svg>',
+                    'CRI': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ff0000"/></svg>',
+                    'HND': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#0066cc"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0066cc"/></svg>',
+                    'GTM': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#0066cc"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0066cc"/></svg>',
+                    'DOM': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#0066cc"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ff0000"/></svg>',
+                    'HTI': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="7.5" fill="#0066cc"/><rect y="7.5" width="20" height="7.5" fill="#ff0000"/></svg>',
+                    'CUB': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#0066cc"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ff0000"/></svg>',
+                    'BHS': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#0066cc"/></svg>',
+                    'JAM': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ffcc00"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ffcc00"/></svg>',
                     'BOL': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ffcc00"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ffcc00"/></svg>',
                     'PER': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ce1126"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
                     'CHL': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="7.5" fill="#ffffff"/><rect y="7.5" width="20" height="7.5" fill="#0039a6"/></svg>',
@@ -826,10 +917,11 @@
                     'GBR': '🇬🇧', 'NLD': '🇳🇱', 'BEL': '🇧🇪', 'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪',
                     'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮', 'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷',
                     'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴', 'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿',
-                    'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
+                    'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦',                     'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
                     'ALB': '🇦🇱', 'XKX': '🇽🇰', 'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾',
                     'MDA': '🇲🇩', 'GEO': '🇬🇪', 'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪',
                     'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
+                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'ATA': '🇦🇶', 'FLK': '🇫🇰', 'BHS': '🇧🇸',
                     
                     // Amerika
                     'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷', 'CHL': '🇨🇱',
