@@ -320,13 +320,13 @@
                 });
             }
             
-            async selectCountry(country, name) {
+            selectCountry(country, name) {
                 this.selectedCountry = { code: country, name: name };
                 
                 // Update UI
                 document.getElementById('selected-country').innerHTML = `
                     <span class="text-lg">
-                        <span class="country-flag">${await this.getCountryFlag(country)}</span>
+                        <span class="country-flag">${this.getCountryFlag(country)}</span>
                         ${name}
                     </span>
                 `;
@@ -839,7 +839,7 @@
                 return 'Very High';
             }
             
-            async getCountryFlag(countryCode) {
+            getCountryFlag(countryCode) {
                 // Koristi emoji zastavice direktno
                 const flags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
