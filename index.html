@@ -759,6 +759,7 @@
             }
             
             updateLeadersList(data) {
+                console.log('updateLeadersList called with data:', data);
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -770,7 +771,13 @@
                     .sort((a, b) => (b.donors_24h || 0) - (a.donors_24h || 0))
                     .slice(0, 5);
                 
-                leadersList.innerHTML = sortedData.map((country, index) => `
+                console.log('Sorted data for leaders:', sortedData);
+                
+                leadersList.innerHTML = sortedData.map((country, index) => {
+                    console.log('Processing country for leaders:', country);
+                    const flag = this.getCountryFlag(country.iso);
+                    console.log('Flag for', country.iso, ':', flag);
+                    return `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold">
@@ -778,17 +785,18 @@
                             </div>
                             <div>
                                 <div class="font-semibold">
-                                    <span class="country-flag">${this.getCountryFlag(country.iso)}</span>
-                                    ${country.country_name || country.iso}
+                                    <span class="country-flag">${flag}</span>
+                                    ${country.name || country.iso}
                                 </div>
                                 <div class="text-xs text-gray-400">${country.donors_24h || 0} donors • €${(country.total_eur || 0).toFixed(0)}</div>
                             </div>
                         </div>
-                        <button class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.country_name || country.iso}')">
+                        <button class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name || country.iso}')">
                             Donate
                         </button>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
             
             updateMapColors() {
