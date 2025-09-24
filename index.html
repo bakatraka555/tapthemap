@@ -480,11 +480,12 @@
                             const donors = this.getDonorsCount(countryCode);
                             const rank = this.getCountryRank(countryCode);
                             const activity = this.getActivityLevel(heatValue);
+                            const flag = await this.getCountryFlag(countryCode);
                             
                             const tooltipContent = `
                                 <div class="p-2">
                                     <div class="flex items-center space-x-2 mb-2">
-                                        <span class="country-flag">${this.getCountryFlag(countryCode)}</span>
+                                        <span class="country-flag">${flag}</span>
                                         <span class="font-semibold text-white">${countryName}</span>
                                     </div>
                                     <div class="text-sm text-gray-300 mb-1">
@@ -855,11 +856,19 @@
                 return 'Very High';
             }
             
-            getCountryFlag(countryCode) {
+            async getCountryFlag(countryCode) {
                 console.log('getCountryFlag called with:', countryCode);
                 
-                // SVG zastavice za Chrome kompatibilnost
-                const svgFlags = {
+                // Učitaj zastavice iz vanjskog modula za bolje performanse
+                try {
+                    const flagsModule = await import('./flags.js');
+                    const flag = flagsModule.getCountryFlag(countryCode);
+                    console.log('Returning flag from module:', flag, 'for country:', countryCode);
+                    return flag;
+                } catch (error) {
+                    console.warn('Failed to load flags module, using fallback:', error);
+                    // Fallback na osnovne zastavice
+                    const basicFlags = {
                     'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
                     'ARG': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#74acdf"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#74acdf"/></svg>',
                     'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/></svg>',
