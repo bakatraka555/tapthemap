@@ -463,35 +463,35 @@
                             
                             this.countryLayers.set(countryCode, layer);
                             
-                            // Add rich tooltip
-                            const countryData = this.stats.countryData?.[countryCode];
-                            const heatValue = countryData ? (typeof countryData === 'object' ? countryData.total_eur : countryData) : 0;
-                            const donors = this.getDonorsCount(countryCode);
-                            const rank = this.getCountryRank(countryCode);
-                            const activity = this.getActivityLevel(heatValue);
-                            
-                            const tooltipContent = `
-                                <div class="p-2">
-                                    <div class="flex items-center space-x-2 mb-2">
-                                        <span class="country-flag">${this.getCountryFlagSync(countryCode)}</span>
-                                        <span class="font-semibold text-white">${countryName}</span>
+                            // Add dynamic tooltip
+                            layer.bindTooltip(() => {
+                                const countryData = this.stats.countryData?.[countryCode];
+                                const heatValue = countryData ? (typeof countryData === 'object' ? countryData.total_eur : countryData) : 0;
+                                const donors = this.getDonorsCount(countryCode);
+                                const rank = this.getCountryRank(countryCode);
+                                const activity = this.getActivityLevel(heatValue);
+                                
+                                return `
+                                    <div class="p-2">
+                                        <div class="flex items-center space-x-2 mb-2">
+                                            <span class="country-flag">${this.getCountryFlagSync(countryCode)}</span>
+                                            <span class="font-semibold text-white">${countryName}</span>
+                                        </div>
+                                        <div class="text-sm text-gray-300 mb-1">
+                                            💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
+                                        </div>
+                                        <div class="text-sm text-gray-300 mb-2">
+                                            📊 Rank: #${rank} of 195 countries
+                                        </div>
+                                        <div class="text-sm text-gray-300 mb-2">
+                                            🔥 Activity: ${activity}
+                                        </div>
+                                        <div class="text-xs text-blue-300">
+                                            🎯 Be the first to donate!
+                                        </div>
                                     </div>
-                                    <div class="text-sm text-gray-300 mb-1">
-                                        💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
-                                    </div>
-                                    <div class="text-sm text-gray-300 mb-2">
-                                        📊 Rank: #${rank} of 195 countries
-                                    </div>
-                                    <div class="text-sm text-gray-300 mb-2">
-                                        🔥 Activity: ${activity}
-                                    </div>
-                                    <div class="text-xs text-blue-300">
-                                        🎯 Be the first to donate!
-                                    </div>
-                                </div>
-                            `;
-                            
-                            layer.bindTooltip(tooltipContent, {
+                                `;
+                            }, {
                                 sticky: true,
                                 opacity: 0.95,
                                 className: 'custom-tooltip'
@@ -968,6 +968,38 @@
                     layer.setStyle({
                         fillColor: this.getHeatColor(heatValue),
                         fillOpacity: heatValue > 0 ? 0.8 : 0.3
+                    });
+                    
+                    // Update tooltip content
+                    layer.unbindTooltip();
+                    const countryName = this.getCountryName({ name: countryCode });
+                    const donors = this.getDonorsCount(countryCode);
+                    const rank = this.getCountryRank(countryCode);
+                    const activity = this.getActivityLevel(heatValue);
+                    
+                    layer.bindTooltip(`
+                        <div class="p-2">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="country-flag">${this.getCountryFlagSync(countryCode)}</span>
+                                <span class="font-semibold text-white">${countryName}</span>
+                            </div>
+                            <div class="text-sm text-gray-300 mb-1">
+                                💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
+                            </div>
+                            <div class="text-sm text-gray-300 mb-2">
+                                📊 Rank: #${rank} of 195 countries
+                            </div>
+                            <div class="text-sm text-gray-300 mb-2">
+                                🔥 Activity: ${activity}
+                            </div>
+                            <div class="text-xs text-blue-300">
+                                🎯 Be the first to donate!
+                            </div>
+                        </div>
+                    `, {
+                        sticky: true,
+                        opacity: 0.95,
+                        className: 'custom-tooltip'
                     });
                 });
             }
