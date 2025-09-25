@@ -839,30 +839,14 @@
                 return 'Very High';
             }
             
-            async getCountryFlag(countryCode) {
-                // Primarni izvor: GitHub zastavice
-                try {
-                    const githubUrl = `https://raw.githubusercontent.com/bakatraka555/tapthemap/main/flags/${countryCode.toLowerCase()}.png`;
-                    const response = await fetch(githubUrl);
-                    if (response.ok) {
-                        return `<img src="${githubUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
-                    }
-                } catch (error) {
-                    // Fallback na CDN
-                }
-                
-                // Backup izvor: flagcdn.com
-                try {
-                    const flagUrl = `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
-                    const response = await fetch(flagUrl);
-                    if (response.ok) {
-                        return `<img src="${flagUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
-                    }
-                } catch (error) {
-                    // Fallback na emoji
-                }
-                
-                // Emoji fallback
+            getCountryFlag(countryCode) {
+                // Direktno koristi GitHub zastavice bez fetch provjere
+                const githubUrl = `https://raw.githubusercontent.com/bakatraka555/tapthemap/main/flags/${countryCode.toLowerCase()}.png`;
+                return `<img src="${githubUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span style="display:none;">${this.getEmojiFlag(countryCode)}</span>`;
+            }
+            
+            getEmojiFlag(countryCode) {
                 const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
