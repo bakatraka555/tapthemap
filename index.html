@@ -886,8 +886,8 @@
                                   navigator.userAgent.indexOf('OPR') > -1;
                 
                 if (isChromium) {
-                    // Koristi Chromium-specific emoji font
-                    return `<span style="font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji', sans-serif; font-size: 1.2em; line-height: 1;">${flag}</span>`;
+                    // Koristi Chromium-specific emoji font s dodatnim CSS-om
+                    return `<span style="font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji', sans-serif; font-size: 1.2em; line-height: 1; display: inline-block; vertical-align: middle; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;">${flag}</span>`;
                 }
                 
                 return flag;
