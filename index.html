@@ -840,13 +840,7 @@
             }
             
             getCountryFlag(countryCode) {
-                // Direktno koristi GitHub zastavice bez fetch provjere
-                const githubUrl = `https://raw.githubusercontent.com/bakatraka555/tapthemap/main/flags/${countryCode.toLowerCase()}.png`;
-                return `<img src="${githubUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                        <span style="display:none;">${this.getEmojiFlag(countryCode)}</span>`;
-            }
-            
-            getEmojiFlag(countryCode) {
+                // Koristi emoji zastavice - rade u svim browserima
                 const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
