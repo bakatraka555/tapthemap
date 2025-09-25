@@ -840,64 +840,45 @@
             }
             
             getCountryFlag(countryCode) {
-                console.log('getCountryFlag called with:', countryCode);
-                
-                // Direktno koristi lokalne zastavice iz flags/ foldera
-                const localFlagUrl = `./flags/${countryCode.toLowerCase()}.png`;
-                return `<img src="${localFlagUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                        <span style="display:none;">${this.getEmojiFlag(countryCode)}</span>`;
-            }
-            
-            getEmojiFlag(countryCode) {
-                const flags = {
-                    // Evropa
+                // Koristi emoji zastavice - rade u svim browserima
+                const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
-                    'GBR': '🇬🇧', 'NLD': '🇳🇱', 'BEL': '🇧🇪', 'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪',
-                    'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮', 'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷',
-                    'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴', 'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿',
-                    'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
-                    'ALB': '🇦🇱', 'XKX': '🇽🇰', 'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾',
-                    'MDA': '🇲🇩', 'GEO': '🇬🇪', 'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪',
-                    'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
-                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'ATA': '🇦🇶', 'FLK': '🇫🇰', 'BHS': '🇧🇸',
-                    
-                    // Amerika
-                    'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷', 'CHL': '🇨🇱',
-                    'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴', 'PRY': '🇵🇾',
-                    'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'SLV': '🇸🇻', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
-                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'PRI': '🇵🇷',
-                    'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾', 'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨',
-                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿',
-                    
-                    // Azija
-                    'CHN': '🇨🇳', 'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩',
-                    'PHL': '🇵🇭', 'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬',
-                    'KOR': '🇰🇷', 'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬',
-                    'TJK': '🇹🇯', 'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾',
-                    'LBN': '🇱🇧', 'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲',
-                    'ARE': '🇦🇪', 'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵',
-                    'BTN': '🇧🇹', 'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱',
-                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼',
-                    
-                    // Afrika
-                    'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿', 'MAR': '🇲🇦', 'SDN': '🇸🇩',
-                    'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯', 'SOM': '🇸🇴', 'KEN': '🇰🇪',
-                    'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮', 'COD': '🇨🇩', 'COG': '🇨🇬',
-                    'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬', 'NER': '🇳🇪', 'MLI': '🇲🇱',
-                    'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲', 'GNB': '🇬🇼', 'GIN': '🇬🇳',
-                    'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭', 'TGO': '🇹🇬', 'BEN': '🇧🇯',
-                    'GNQ': '🇬🇶', 'GAB': '🇬🇦', 'STP': '🇸🇹', 'AGO': '🇦🇴', 'ZMB': '🇿🇲', 'ZWE': '🇿🇼',
-                    'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'ZAF': '🇿🇦', 'MDG': '🇲🇬',
-                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'REU': '🇷🇪',
-                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻',
-                    
-                    // Okeanija
-                    'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧', 'VUT': '🇻🇺',
-                    'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻', 'NRU': '🇳🇷',
-                    'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺', 'TKL': '🇹🇰',
-                    'WLF': '🇼🇫', 'PYF': '🇵🇫'
+                    'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
+                    'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
+                    'PRY': '🇵🇾', 'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
+                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'CHN': '🇨🇳',
+                    'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩', 'PHL': '🇵🇭',
+                    'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'KOR': '🇰🇷',
+                    'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬', 'TJK': '🇹🇯',
+                    'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾', 'LBN': '🇱🇧',
+                    'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲', 'ARE': '🇦🇪',
+                    'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵', 'BTN': '🇧🇹',
+                    'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱', 'MAC': '🇲🇴',
+                    'HKG': '🇭🇰', 'TWN': '🇹🇼', 'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿',
+                    'MAR': '🇲🇦', 'SDN': '🇸🇩', 'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯',
+                    'SOM': '🇸🇴', 'KEN': '🇰🇪', 'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮',
+                    'COD': '🇨🇩', 'COG': '🇨🇬', 'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬',
+                    'NER': '🇳🇪', 'MLI': '🇲🇱', 'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲',
+                    'GNB': '🇬🇼', 'GIN': '🇬🇳', 'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭',
+                    'TGO': '🇹🇬', 'BEN': '🇧🇯', 'ZAF': '🇿🇦', 'NAM': '🇳🇦', 'BWA': '🇧🇼', 'ZWE': '🇿🇼',
+                    'ZMB': '🇿🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'MDG': '🇲🇬', 'MUS': '🇲🇺', 'SYC': '🇸🇨',
+                    'COM': '🇰🇲', 'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧',
+                    'VUT': '🇻🇺', 'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻',
+                    'NRU': '🇳🇷', 'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺',
+                    'TKL': '🇹🇰', 'WLF': '🇼🇫', 'PYF': '🇵🇫', 'ATA': '🇦🇶', 'GRL': '🇬🇱', 'FLK': '🇫🇰',
+                    'GIB': '🇬🇮', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰', 'ALB': '🇦🇱', 'XKX': '🇽🇰',
+                    'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾', 'MDA': '🇲🇩', 'GEO': '🇬🇪',
+                    'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪', 'LUX': '🇱🇺', 'MLT': '🇲🇹',
+                    'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
+                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'BHS': '🇧🇸', 'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾',
+                    'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨', 'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳',
+                    'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'PRI': '🇵🇷', 'SLV': '🇸🇻', 'NLD': '🇳🇱', 'BEL': '🇧🇪',
+                    'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪', 'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮',
+                    'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷', 'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴',
+                    'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
                 };
-                return flags[countryCode] || '🏳️';
+                
+                return emojiFlags[countryCode] || '🏳️';
             }
             
             getCountryFlagSync(countryCode) {
