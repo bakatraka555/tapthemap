@@ -320,13 +320,13 @@
                 });
             }
             
-            selectCountry(country, name) {
+            async selectCountry(country, name) {
                 this.selectedCountry = { code: country, name: name };
                 
                 // Update UI
                 document.getElementById('selected-country').innerHTML = `
                     <span class="text-lg">
-                        <span class="country-flag">${this.getCountryFlag(country)}</span>
+                        <span class="country-flag">${await this.getCountryFlag(country)}</span>
                         ${name}
                     </span>
                 `;
@@ -839,9 +839,31 @@
                 return 'Very High';
             }
             
-            getCountryFlag(countryCode) {
-                // Koristi emoji zastavice direktno
-                const flags = {
+            async getCountryFlag(countryCode) {
+                // Primarni izvor: flagcdn.com
+                try {
+                    const flagUrl = `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
+                    const response = await fetch(flagUrl);
+                    if (response.ok) {
+                        return `<img src="${flagUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
+                    }
+                } catch (error) {
+                    // Fallback na backup CDN
+                }
+                
+                // Backup izvor: countryflagsapi.com
+                try {
+                    const backupUrl = `https://countryflagsapi.com/png/${countryCode}`;
+                    const backupResponse = await fetch(backupUrl);
+                    if (backupResponse.ok) {
+                        return `<img src="${backupUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
+                    }
+                } catch (error) {
+                    // Fallback na emoji
+                }
+                
+                // Emoji fallback
+                const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
                     'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
@@ -878,11 +900,49 @@
                     'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
                 };
                 
-                return flags[countryCode] || '🏳️';
+                return emojiFlags[countryCode] || '🏳️';
             }
             
             getCountryFlagSync(countryCode) {
-                return this.getCountryFlag(countryCode);
+                // Sinkronizovana verzija - koristi emoji direktno
+                const emojiFlags = {
+                    'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
+                    'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
+                    'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
+                    'PRY': '🇵🇾', 'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
+                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'CHN': '🇨🇳',
+                    'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩', 'PHL': '🇵🇭',
+                    'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'KOR': '🇰🇷',
+                    'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬', 'TJK': '🇹🇯',
+                    'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾', 'LBN': '🇱🇧',
+                    'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲', 'ARE': '🇦🇪',
+                    'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵', 'BTN': '🇧🇹',
+                    'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱', 'MAC': '🇲🇴',
+                    'HKG': '🇭🇰', 'TWN': '🇹🇼', 'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿',
+                    'MAR': '🇲🇦', 'SDN': '🇸🇩', 'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯',
+                    'SOM': '🇸🇴', 'KEN': '🇰🇪', 'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮',
+                    'COD': '🇨🇩', 'COG': '🇨🇬', 'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬',
+                    'NER': '🇳🇪', 'MLI': '🇲🇱', 'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲',
+                    'GNB': '🇬🇼', 'GIN': '🇬🇳', 'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭',
+                    'TGO': '🇹🇬', 'BEN': '🇧🇯', 'ZAF': '🇿🇦', 'NAM': '🇳🇦', 'BWA': '🇧🇼', 'ZWE': '🇿🇼',
+                    'ZMB': '🇿🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'MDG': '🇲🇬', 'MUS': '🇲🇺', 'SYC': '🇸🇨',
+                    'COM': '🇰🇲', 'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧',
+                    'VUT': '🇻🇺', 'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻',
+                    'NRU': '🇳🇷', 'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺',
+                    'TKL': '🇹🇰', 'WLF': '🇼🇫', 'PYF': '🇵🇫', 'ATA': '🇦🇶', 'GRL': '🇬🇱', 'FLK': '🇫🇰',
+                    'GIB': '🇬🇮', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰', 'ALB': '🇦🇱', 'XKX': '🇽🇰',
+                    'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾', 'MDA': '🇲🇩', 'GEO': '🇬🇪',
+                    'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪', 'LUX': '🇱🇺', 'MLT': '🇲🇹',
+                    'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
+                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'BHS': '🇧🇸', 'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾',
+                    'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨', 'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳',
+                    'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'PRI': '🇵🇷', 'SLV': '🇸🇻', 'NLD': '🇳🇱', 'BEL': '🇧🇪',
+                    'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪', 'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮',
+                    'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷', 'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴',
+                    'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
+                };
+                
+                return emojiFlags[countryCode] || '🏳️';
             }
             
             async loadStats() {
@@ -908,7 +968,7 @@
                     this.stats.totalDonors = totalDonors;
                     
                     this.updateStatsDisplay();
-                    this.updateLeadersList(data);
+                    await this.updateLeadersList(data);
                     this.updateMapColors();
                     
                 } catch (error) {
@@ -922,7 +982,7 @@
                 document.getElementById('total-donors').textContent = this.stats.totalDonors;
             }
             
-            updateLeadersList(data) {
+            async updateLeadersList(data) {
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -935,8 +995,8 @@
                     .slice(0, 5);
                 
                 
-                const htmlContent = sortedData.map((country, index) => {
-                    const flag = this.getCountryFlag(country.iso);
+                const htmlContent = await Promise.all(sortedData.map(async (country, index) => {
+                    const flag = await this.getCountryFlag(country.iso);
                     return `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
@@ -956,9 +1016,9 @@
                         </button>
                     </div>
                 `;
-                }).join('');
+                }));
                 
-                leadersList.innerHTML = htmlContent;
+                leadersList.innerHTML = htmlContent.join('');
             }
             
             updateMapColors() {
