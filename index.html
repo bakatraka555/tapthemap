@@ -840,8 +840,8 @@
             }
             
             getCountryFlag(countryCode) {
-                // Font-based rješenje za Windows kompatibilnost
-                const flagMap = {
+                // Jednostavno rješenje - samo emoji bez CSS-a
+                const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
                     'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
@@ -878,10 +878,7 @@
                     'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
                 };
                 
-                const flag = flagMap[countryCode] || '🏳️';
-                
-                // Dodaj CSS za bolje renderiranje na Windows-u
-                return `<span style="font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: 1.2em;">${flag}</span>`;
+                return emojiFlags[countryCode] || '🏳️';
             }
             
             getCountryFlagSync(countryCode) {
