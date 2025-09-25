@@ -840,7 +840,34 @@
             }
             
             getCountryFlag(countryCode) {
-                // Koristi emoji zastavice - rade u svim browserima
+                // SVG zastavice inline - garantirano rade u svim browserima
+                const svgFlags = {
+                    'HRV': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#FF0000"/><rect y="6" width="24" height="6" fill="#FFFFFF"/><rect y="12" width="24" height="6" fill="#0000FF"/></svg>',
+                    'DEU': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#000000"/><rect y="6" width="24" height="6" fill="#FF0000"/><rect y="12" width="24" height="6" fill="#FFD700"/></svg>',
+                    'FRA': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="8" height="18" fill="#002395"/><rect x="8" width="8" height="18" fill="#FFFFFF"/><rect x="16" width="8" height="18" fill="#ED2939"/></svg>',
+                    'USA': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#B22234"/><rect width="24" height="2" fill="#FFFFFF"/><rect y="4" width="24" height="2" fill="#FFFFFF"/><rect y="8" width="24" height="2" fill="#FFFFFF"/><rect y="12" width="24" height="2" fill="#FFFFFF"/><rect y="16" width="24" height="2" fill="#FFFFFF"/></svg>',
+                    'GBR': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#012169"/><path d="M0 0L24 18M24 0L0 18" stroke="#FFFFFF" stroke-width="2"/><path d="M0 0L24 18M24 0L0 18" stroke="#C8102E" stroke-width="1"/></svg>',
+                    'CAN': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#FF0000"/><path d="M12 2L14 8L20 6L16 12L22 12L18 18L12 16L6 18L2 12L8 12L4 6L10 8Z" fill="#FFFFFF"/></svg>',
+                    'MEX': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="8" height="18" fill="#006847"/><rect x="8" width="8" height="18" fill="#FFFFFF"/><rect x="16" width="8" height="18" fill="#CE1126"/></svg>',
+                    'BRA': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#009739"/><path d="M12 9C12 9 8 6 8 9C8 12 12 9 12 9Z" fill="#FEDD00"/></svg>',
+                    'ARG': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#74ACDF"/><rect y="6" width="24" height="6" fill="#FFFFFF"/><rect y="12" width="24" height="6" fill="#74ACDF"/></svg>',
+                    'CHN': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#DE2910"/><circle cx="6" cy="6" r="3" fill="#FFDE00"/></svg>',
+                    'JPN': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#FFFFFF"/><circle cx="12" cy="9" r="6" fill="#BC002D"/></svg>',
+                    'IND': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#FF9933"/><rect y="6" width="24" height="6" fill="#FFFFFF"/><rect y="12" width="24" height="6" fill="#138808"/></svg>',
+                    'AUS': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#00008B"/><circle cx="6" cy="6" r="3" fill="#FFFFFF"/><circle cx="18" cy="6" r="3" fill="#FFFFFF"/></svg>',
+                    'RUS': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#FFFFFF"/><rect y="6" width="24" height="6" fill="#0039A6"/><rect y="12" width="24" height="6" fill="#D52B1E"/></svg>',
+                    'TUR': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="18" fill="#E30A17"/><circle cx="8" cy="9" r="4" fill="#FFFFFF"/><circle cx="8" cy="9" r="3" fill="#E30A17"/></svg>',
+                    'ITA': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="8" height="18" fill="#009246"/><rect x="8" width="8" height="18" fill="#FFFFFF"/><rect x="16" width="8" height="18" fill="#CE2B37"/></svg>',
+                    'ESP': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="4" fill="#C60B1E"/><rect y="4" width="24" height="10" fill="#FFC400"/><rect y="14" width="24" height="4" fill="#C60B1E"/></svg>',
+                    'POL': '<svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="9" fill="#FFFFFF"/><rect y="9" width="24" height="9" fill="#DC143C"/></svg>'
+                };
+                
+                // Ako imamo SVG, koristi ga
+                if (svgFlags[countryCode]) {
+                    return svgFlags[countryCode];
+                }
+                
+                // Inače koristi emoji
                 const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
