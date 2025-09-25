@@ -840,36 +840,29 @@
             }
             
             async getCountryFlag(countryCode) {
-                console.log(`Loading flag for ${countryCode}`);
+                // Primarni izvor: GitHub zastavice
+                try {
+                    const githubUrl = `https://raw.githubusercontent.com/bakatraka555/tapthemap/main/flags/${countryCode.toLowerCase()}.png`;
+                    const response = await fetch(githubUrl);
+                    if (response.ok) {
+                        return `<img src="${githubUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
+                    }
+                } catch (error) {
+                    // Fallback na CDN
+                }
                 
-                // Primarni izvor: flagcdn.com
+                // Backup izvor: flagcdn.com
                 try {
                     const flagUrl = `https://flagcdn.com/24x18/${countryCode.toLowerCase()}.png`;
-                    console.log(`Trying flagcdn: ${flagUrl}`);
                     const response = await fetch(flagUrl);
                     if (response.ok) {
-                        console.log(`✅ flagcdn success for ${countryCode}`);
                         return `<img src="${flagUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
                     }
                 } catch (error) {
-                    console.log(`❌ flagcdn failed for ${countryCode}:`, error);
-                }
-                
-                // Backup izvor: countryflagsapi.com
-                try {
-                    const backupUrl = `https://countryflagsapi.com/png/${countryCode}`;
-                    console.log(`Trying countryflagsapi: ${backupUrl}`);
-                    const backupResponse = await fetch(backupUrl);
-                    if (backupResponse.ok) {
-                        console.log(`✅ countryflagsapi success for ${countryCode}`);
-                        return `<img src="${backupUrl}" alt="${countryCode}" style="width: 1.2em; height: 0.9em; vertical-align: middle;">`;
-                    }
-                } catch (error) {
-                    console.log(`❌ countryflagsapi failed for ${countryCode}:`, error);
+                    // Fallback na emoji
                 }
                 
                 // Emoji fallback
-                console.log(`Using emoji fallback for ${countryCode}`);
                 const emojiFlags = {
                     'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
                     'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
