@@ -467,45 +467,66 @@
             }
             
             async initializeGlobe() {
-                // Initialize 3D globe
-                this.globe = Globe()
-                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                    .width(window.innerWidth * 0.8)
-                    .height(400)
-                    .enablePointerInteraction(true)
-                    .polygonsData([])
-                    .polygonCapColor(d => this.getCountryColor(d))
-                    .polygonSideColor(d => this.getCountryColor(d))
-                    .polygonStrokeColor(() => 'rgba(255,255,255,0.1)')
-                    .polygonLabel(d => `${d.name}: ${d.total_eur || 0} EUR`)
-                    .onPolygonClick(d => this.handleCountryClick(d))
-                    .onPolygonHover(d => this.handleCountryHover(d));
+                console.log('Initializing globe...');
+                document.getElementById('map-status').textContent = 'Loading globe...';
                 
-                // Add to container
-                document.getElementById('globe').appendChild(this.globe);
-                
-                // Load country data
-                await this.loadCountryData();
-                
-                document.getElementById('map-status').textContent = 'Globe loaded ✓';
+                try {
+                    // Initialize 3D globe with optimized settings
+                    this.globe = Globe()
+                        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                        .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                        .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                        .width(window.innerWidth * 0.8)
+                        .height(400)
+                        .enablePointerInteraction(true)
+                        .polygonsData([])
+                        .polygonCapColor(d => this.getCountryColor(d))
+                        .polygonSideColor(d => this.getCountryColor(d))
+                        .polygonStrokeColor(() => 'rgba(255,255,255,0.1)')
+                        .polygonLabel(d => `${d.name}: ${d.total_eur || 0} EUR`)
+                        .onPolygonClick(d => this.handleCountryClick(d))
+                        .onPolygonHover(d => this.handleCountryHover(d))
+                        .polygonAltitude(0.01)  // Lower altitude for better performance
+                        .polygonCapMaterial({ transparent: true, opacity: 0.8 })
+                        .polygonSideMaterial({ transparent: true, opacity: 0.6 });
+                    
+                    console.log('Globe created, adding to DOM...');
+                    
+                    // Add to container
+                    document.getElementById('globe').appendChild(this.globe);
+                    
+                    console.log('Globe added to DOM, loading country data...');
+                    document.getElementById('map-status').textContent = 'Loading countries...';
+                    
+                    // Load country data
+                    await this.loadCountryData();
+                    
+                    console.log('Globe initialization complete');
+                    document.getElementById('map-status').textContent = 'Globe loaded ✓';
+                    
+                } catch (error) {
+                    console.error('Globe initialization error:', error);
+                    document.getElementById('map-status').textContent = 'Globe failed to load';
+                }
             }
             
             async loadCountryData() {
                 try {
-                    // Try multiple sources
+                    console.log('Loading country data...');
+                    
+                    // Use fastest, most reliable source first
                     const sources = [
                         'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson',
-                        'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
-                        'https://raw.githubusercontent.com/hjstowers/geojson-world/master/countries.geojson'
+                        'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
                     ];
                     
                     let geoData = null;
                     for (const source of sources) {
                         try {
                             console.log('Trying source:', source);
-                            const response = await fetch(source);
+                            const response = await fetch(source, {
+                                timeout: 10000 // 10 second timeout
+                            });
                             if (response.ok) {
                                 geoData = await response.json();
                                 console.log('Successfully loaded from:', source);
@@ -520,8 +541,11 @@
                         throw new Error('All sources failed');
                     }
                     
-                    // Process GeoJSON data for globe
-                    const countriesData = geoData.features.map(feature => {
+                    console.log('Processing country data...');
+                    document.getElementById('map-status').textContent = 'Processing countries...';
+                    
+                    // Process GeoJSON data for globe (limit to first 50 countries for faster loading)
+                    const countriesData = geoData.features.slice(0, 50).map(feature => {
                         const countryCode = this.getCountryCode(feature.properties);
                         const countryName = this.getCountryName(feature.properties);
                         const countryStats = this.stats.countryData?.[countryCode] || {};
@@ -538,8 +562,12 @@
                         };
                     });
                     
+                    console.log('Updating globe with', countriesData.length, 'countries...');
+                    
                     // Update globe with country data
                     this.globe.polygonsData(countriesData);
+                    
+                    console.log('Country data loaded successfully');
                     
                 } catch (error) {
                     console.error('Error loading country data:', error);
