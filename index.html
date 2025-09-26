@@ -64,6 +64,35 @@
             transform-origin: 0 0;
         }
         
+        /* Leaflet tooltip styling */
+        .leaflet-tooltip {
+            background: rgba(0, 0, 0, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 6px !important;
+            color: white !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        
+        .leaflet-tooltip-top:before {
+            border-top-color: rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        .leaflet-tooltip-bottom:before {
+            border-bottom-color: rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        .leaflet-tooltip-left:before {
+            border-left-color: rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        .leaflet-tooltip-right:before {
+            border-right-color: rgba(0, 0, 0, 0.8) !important;
+        }
+        
         .country-card {
             transition: all 0.3s ease;
         }
@@ -698,7 +727,13 @@
                     'Somaliland': 'SOM', 'Guinea Bissau': 'GNB', 'Western Sahara': 'ESH',
                     'Serbia': 'SRB', 'Ireland': 'IRL', 'Mongolia': 'MNG', 'North Korea': 'PRK',
                     'South Korea': 'KOR', 'Nepal': 'NPL', 'Bhutan': 'BTN', 'Thailand': 'THA',
-                    'Vietnam': 'VNM', 'Malaysia': 'MYS', 'Indonesia': 'IDN', 'Papua New Guinea': 'PNG'
+                    'Vietnam': 'VNM', 'Malaysia': 'MYS', 'Indonesia': 'IDN', 'Papua New Guinea': 'PNG',
+                    
+                    // Dodatni karipski otoci i države
+                    'Cuba': 'CUB', 'Jamaica': 'JAM', 'Puerto Rico': 'PRI', 'Bahamas': 'BHS',
+                    'Haiti': 'HTI', 'Dominican Republic': 'DOM', 'Somalia': 'SOM',
+                    'United Republic of Tanzania': 'TZA', 'Sri Lanka': 'LKA', 'Republic of Serbia': 'SRB',
+                    'Iceland': 'ISL', 'Philippines': 'PHL', 'Myanmar': 'MMR'
                 };
                 
                 return countryMapping[name] || 'UNK';
@@ -728,7 +763,7 @@
                     'USA': 'us', 'CAN': 'ca', 'MEX': 'mx', 'BRA': 'br', 'ARG': 'ar', 'CHL': 'cl',
                     'COL': 'co', 'PER': 'pe', 'VEN': 've', 'ECU': 'ec', 'BOL': 'bo', 'PRY': 'py',
                     'URY': 'uy', 'GTM': 'gt', 'HND': 'hn', 'SLV': 'sv', 'NIC': 'ni', 'CRI': 'cr',
-                    'PAN': 'pa', 'CUB': 'cu', 'JAM': 'jm', 'HTI': 'ht', 'DOM': 'do', 'PRI': 'pr',
+                    'PAN': 'pa', 'CUB': 'cu', 'JAM': 'jm', 'HTI': 'ht', 'BHS': 'bs',
                     'BRB': 'bb', 'TTO': 'tt', 'GUY': 'gy', 'SUR': 'sr', 'GRD': 'gd', 'VCT': 'vc',
                     'ATG': 'ag', 'DMA': 'dm', 'KNA': 'kn', 'LCA': 'lc', 'BLZ': 'bz',
                     'GRL': 'gl', 'FLK': 'fk', 'ATA': 'aq',
