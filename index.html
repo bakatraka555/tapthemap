@@ -49,6 +49,21 @@
             min-height: 400px;
         }
         
+        /* Leaflet map fixes */
+        .leaflet-container {
+            background: transparent !important;
+        }
+        
+        .leaflet-tile {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        /* Fix za Chrome rendering */
+        .leaflet-zoom-animated {
+            transform-origin: 0 0;
+        }
+        
         .country-card {
             transition: all 0.3s ease;
         }
@@ -413,7 +428,9 @@
                 // Initialize map
                 this.map = L.map('map', {
                     zoomControl: false,
-                    worldCopyJump: true
+                    worldCopyJump: true,
+                    preferCanvas: true,  // Bolje performanse
+                    renderer: L.canvas()  // Konzistentan rendering
                 }).setView([20, 0], 2);
                 
                 // Add tile layer
@@ -421,7 +438,8 @@
                     attribution: '&copy; OpenStreetMap & CARTO',
                     detectRetina: true,
                     maxZoom: 6,
-                    minZoom: 2
+                    minZoom: 2,
+                    crossOrigin: true
                 }).addTo(this.map);
                 
                 // Load country data
@@ -503,9 +521,9 @@
                 
                 return {
                     fillColor: this.getHeatColor(heatValue),
-                    weight: 0.5,
-                    opacity: 0.8,
-                    color: '#64748b',
+                    weight: 0,  // Ukloni granice država
+                    opacity: 0,
+                    color: 'transparent',
                     dashArray: '',
                     fillOpacity: 0.7
                 };
