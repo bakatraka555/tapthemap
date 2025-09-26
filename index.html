@@ -531,16 +531,6 @@
                         .polygonsData([])
                         .polygonCapColor(d => this.getCountryColor(d))
                         .polygonSideColor(d => this.getCountryColor(d))
-                        .polygonCapMaterial(d => ({ 
-                            transparent: true, 
-                            opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                            side: 2
-                        }))
-                        .polygonSideMaterial(d => ({ 
-                            transparent: true, 
-                            opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                            side: 2
-                        }))
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
@@ -645,16 +635,6 @@
                 console.log('🔄 Forcing immediate color update...');
                 this.globe.polygonCapColor(d => this.getCountryColor(d));
                 this.globe.polygonSideColor(d => this.getCountryColor(d));
-                this.globe.polygonCapMaterial(d => ({ 
-                    transparent: true, 
-                    opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                    side: 2
-                }));
-                this.globe.polygonSideMaterial(d => ({ 
-                    transparent: true, 
-                    opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                    side: 2
-                }));
                     
                     console.log('Country data loaded successfully');
                     
@@ -701,13 +681,33 @@
             }
             
             getHeatColor(value) {
-                if (value === 0) return 'rgba(0, 0, 0, 0.1)'; // Prozirna crna za države bez donacija
-                if (value < 25) return 'rgba(59, 130, 246, 1.0)'; // Puna plava za male donacije
-                if (value < 50) return 'rgba(6, 182, 212, 1.0)'; // Puna cyan za srednje donacije
-                if (value < 100) return 'rgba(34, 197, 94, 1.0)'; // Puna zelena za dobre donacije
-                if (value < 200) return 'rgba(234, 179, 8, 1.0)'; // Puna žuta za velike donacije
-                if (value < 500) return 'rgba(249, 115, 22, 1.0)'; // Puna narančasta za vrlo velike donacije
-                return 'rgba(239, 68, 68, 1.0)'; // Puna crvena za najveće donacije
+                console.log(`🎨 Getting heat color for value: ${value}`);
+                if (value === 0) {
+                    console.log('Returning transparent black for €0');
+                    return 'rgba(0, 0, 0, 0.1)'; // Prozirna crna za države bez donacija
+                }
+                if (value < 25) {
+                    console.log('Returning blue for < €25');
+                    return 'rgba(59, 130, 246, 0.8)'; // Prozirna plava za male donacije
+                }
+                if (value < 50) {
+                    console.log('Returning cyan for < €50');
+                    return 'rgba(6, 182, 212, 0.8)'; // Prozirna cyan za srednje donacije
+                }
+                if (value < 100) {
+                    console.log('Returning green for < €100');
+                    return 'rgba(34, 197, 94, 0.8)'; // Prozirna zelena za dobre donacije
+                }
+                if (value < 200) {
+                    console.log('Returning yellow for < €200');
+                    return 'rgba(234, 179, 8, 0.8)'; // Prozirna žuta za velike donacije
+                }
+                if (value < 500) {
+                    console.log('Returning orange for < €500');
+                    return 'rgba(249, 115, 22, 0.8)'; // Prozirna narančasta za vrlo velike donacije
+                }
+                console.log('Returning red for €500+');
+                return 'rgba(239, 68, 68, 0.8)'; // Prozirna crvena za najveće donacije
             }
             
             getCountryCode(properties) {
@@ -1036,16 +1036,6 @@
                     // Update globe colors based on new stats
                     this.globe.polygonCapColor(d => this.getCountryColor(d));
                     this.globe.polygonSideColor(d => this.getCountryColor(d));
-                    this.globe.polygonCapMaterial(d => ({ 
-                        transparent: true, 
-                        opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                        side: 2
-                    }));
-                    this.globe.polygonSideMaterial(d => ({ 
-                        transparent: true, 
-                        opacity: d.properties?.total_eur > 0 ? 0.8 : 0.1,
-                        side: 2
-                    }));
                     
                     // Force re-render
                     setTimeout(() => {
