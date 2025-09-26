@@ -598,6 +598,7 @@
                     console.log('Available stats:', this.stats.countryData);
                     
                     // Process GeoJSON data for 3D globe
+                    console.log('Starting to process', geoData.features.length, 'countries...');
                     const countriesData = geoData.features.map(feature => {
                         const countryCode = this.getCountryCode(feature.properties);
                         const countryName = this.getCountryName(feature.properties);
@@ -620,10 +621,18 @@
                         };
                     });
                     
+                    console.log('Finished processing countries. Countries with donations:', 
+                        countriesData.filter(c => c.properties.total_eur > 0).length);
+                    
                     console.log('Updating globe with', countriesData.length, 'countries...');
                     
                     // Update globe with country data
                     this.globe.polygonsData(countriesData);
+                    
+                    // Force update colors immediately
+                    console.log('🔄 Forcing immediate color update...');
+                    this.globe.polygonCapColor(d => this.getCountryColor(d));
+                    this.globe.polygonSideColor(d => this.getCountryColor(d));
                     
                     console.log('Country data loaded successfully');
                     
