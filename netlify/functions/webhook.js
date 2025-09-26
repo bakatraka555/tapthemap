@@ -254,6 +254,9 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: "skip: unknown iso" };
     }
 
+    const donorHashValue = donorHash(pseudoId, salt);
+    console.log("WEBHOOK: Generated donor_hash:", donorHashValue, "from pseudoId:", pseudoId);
+    
     const row = {
       created_at: new Date().toISOString(),
       country_iso,
@@ -261,7 +264,7 @@ exports.handler = async (event) => {
       amount_eur,
       amount_cents: amountCents,
       ref: meta.ref || null,
-      donor_hash: donorHash(pseudoId, salt),
+      donor_hash: donorHashValue,
       stripe_pi: String(session.payment_intent || session.id || ""),
     };
 
