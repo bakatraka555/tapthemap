@@ -604,6 +604,11 @@
                         const countryName = this.getCountryName(feature.properties);
                         const countryStats = this.stats.countryData?.[countryCode] || {};
                         
+                        // Debug: Log all countries to see what codes we're getting
+                        if (countryCode && this.stats.countryData && Object.keys(this.stats.countryData).includes(countryCode)) {
+                            console.log(`🔍 Found match: ${countryName} (${countryCode}) -> ${countryStats.total_eur} EUR`);
+                        }
+                        
                         // Log all countries with donations
                         if (countryStats.total_eur > 0) {
                             console.log(`✅ Processing ${countryName} (${countryCode}):`, countryStats);
