@@ -90,15 +90,6 @@
             height: 0.9em;
             vertical-align: middle;
         }
-        
-        .custom-tooltip {
-            background: rgba(0, 0, 0, 0.9) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-            font-size: 12px !important;
-            max-width: 200px !important;
-        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -187,8 +178,15 @@
                 <!-- Country Selection -->
                 <div class="glass-effect rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4">Select Your Country</h3>
-                    <div class="flex flex-wrap gap-2" id="country-buttons">
-                        <!-- Buttons will be generated dynamically -->
+                    <div class="flex flex-wrap gap-2">
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia">🇭🇷 Croatia</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany">🇩🇪 Germany</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States">🇺🇸 USA</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom">🇬🇧 UK</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France">🇫🇷 France</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy">🇮🇹 Italy</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain">🇪🇸 Spain</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland">🇵🇱 Poland</button>
                     </div>
                 </div>
             </div>
@@ -270,32 +268,14 @@
             }
             
             async init() {
-                this.generateCountryButtons();
                 this.setupEventListeners();
                 await this.initializeMap();
                 await this.loadStats();
                 this.setupReferral();
             }
             
-            generateCountryButtons() {
-                const countries = [
-                    { code: 'HRV', name: 'Croatia' },
-                    { code: 'DEU', name: 'Germany' },
-                    { code: 'USA', name: 'United States' },
-                    { code: 'GBR', name: 'United Kingdom' },
-                    { code: 'FRA', name: 'France' },
-                    { code: 'ITA', name: 'Italy' },
-                    { code: 'ESP', name: 'Spain' },
-                    { code: 'POL', name: 'Poland' }
-                ];
-                
-                const container = document.getElementById('country-buttons');
-                container.innerHTML = countries.map(country => 
-                    `<button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="${country.code}" data-name="${country.name}">${this.getCountryFlagSync(country.code)} ${country.name}</button>`
-                ).join('');
-            }
-            
             setupEventListeners() {
+                // Country selection
                 document.querySelectorAll('.country-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const country = e.target.dataset.country;
@@ -332,13 +312,14 @@
                 });
             }
             
-            async selectCountry(country, name) {
+            selectCountry(country, name) {
+                console.log('selectCountry called:', country, name);
                 this.selectedCountry = { code: country, name: name };
                 
                 // Update UI
                 document.getElementById('selected-country').innerHTML = `
                     <span class="text-lg">
-                        <span class="country-flag">${await this.getCountryFlag(country)}</span>
+                        <span class="country-flag">${this.getCountryFlag(country)}</span>
                         ${name}
                     </span>
                 `;
@@ -381,6 +362,10 @@
             }
             
             async processDonation() {
+                console.log('processDonation called:', {
+                    selectedCountry: this.selectedCountry,
+                    selectedAmount: this.selectedAmount
+                });
                 
                 if (!this.selectedCountry || !this.selectedAmount) {
                     alert('Please select a country and amount');
@@ -412,12 +397,14 @@
                     
                     const data = await response.json();
                     if (data.url) {
+                        // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
                         window.location.href = data.url;
                     } else {
                         throw new Error('No checkout URL returned');
                     }
                 } catch (error) {
+                    console.error('Donation error:', error);
                     alert('Error processing donation: ' + error.message);
                 }
             }
@@ -437,6 +424,7 @@
                     minZoom: 2
                 }).addTo(this.map);
                 
+                // Load country data
                 await this.loadCountryData();
                 
                 document.getElementById('map-status').textContent = 'Map loaded ✓';
@@ -444,6 +432,7 @@
             
             async loadCountryData() {
                 try {
+                    // Try multiple sources
                     const sources = [
                         'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson',
                         'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson',
@@ -453,13 +442,15 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
+                            console.log('Trying source:', source);
                             const response = await fetch(source);
                             if (response.ok) {
                                 geoData = await response.json();
+                                console.log('Successfully loaded from:', source);
                                 break;
                             }
                         } catch (e) {
-                            // Continue to next source
+                            console.log('Failed to load from:', source, e.message);
                         }
                     }
                     
@@ -475,56 +466,40 @@
                             
                             this.countryLayers.set(countryCode, layer);
                             
-                            // Add dynamic tooltip
-                            layer.bindTooltip(() => {
-                                const countryData = this.stats.countryData?.[countryCode];
-                                const heatValue = countryData ? (typeof countryData === 'object' ? countryData.total_eur : countryData) : 0;
-                                const donors = this.getDonorsCount(countryCode);
-                                const rank = this.getCountryRank(countryCode);
-                                const activity = this.getActivityLevel(heatValue);
-                                
-                                return `
-                                    <div class="p-2">
-                                        <div class="flex items-center space-x-2 mb-2">
-                                            <span class="country-flag">${this.getCountryFlagSync(countryCode)}</span>
-                                            <span class="font-semibold text-white">${countryName}</span>
-                                        </div>
-                                        <div class="text-sm text-gray-300 mb-1">
-                                            💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
-                                        </div>
-                                        <div class="text-sm text-gray-300 mb-2">
-                                            📊 Rank: #${rank} of 195 countries
-                                        </div>
-                                        <div class="text-sm text-gray-300 mb-2">
-                                            🔥 Activity: ${activity}
-                                        </div>
-                                        <div class="text-xs text-blue-300">
-                                            🎯 Be the first to donate!
-                                        </div>
-                                    </div>
-                                `;
-                            }, {
+                            // Add tooltip
+                            layer.bindTooltip(`<span class="country-flag">${this.getCountryFlag(countryCode)}</span> ${countryName}`, {
                                 sticky: true,
-                                opacity: 0.95,
-                                className: 'custom-tooltip'
+                                opacity: 0.9
                             });
                             
+                            // Add click handler
                             layer.on('click', () => {
                                 this.selectCountry(countryCode, countryName);
                             });
                             
+                            // Remove hover effects - države ostaju tamne
+                            // layer.on('mouseover', (e) => {
+                            //     e.target.setStyle({
+                            //         weight: 2,
+                            //         opacity: 1
+                            //     });
+                            // });
+                            
+                            // layer.on('mouseout', (e) => {
+                            //     e.target.setStyle(this.getCountryStyle(feature));
+                            // });
                         }
                     }).addTo(this.map);
                     
                 } catch (error) {
+                    console.error('Error loading country data:', error);
                     document.getElementById('map-status').textContent = 'Map failed to load';
                 }
             }
             
             getCountryStyle(feature) {
                 const countryCode = this.getCountryCode(feature.properties);
-                const countryData = this.stats.countryData?.[countryCode];
-                const heatValue = countryData ? (typeof countryData === 'object' ? countryData.total_eur : countryData) : 0;
+                const heatValue = this.stats.countryData?.[countryCode] || 0;
                 
                 return {
                     fillColor: this.getHeatColor(heatValue),
@@ -568,132 +543,6 @@
                     'Russia': 'RUS',
                     'Mexico': 'MEX',
                     'Argentina': 'ARG',
-                    'Bolivia': 'BOL',
-                    'Peru': 'PER',
-                    'Chile': 'CHL',
-                    'Ecuador': 'ECU',
-                    'Paraguay': 'PRY',
-                    'Uruguay': 'URY',
-                    'Venezuela': 'VEN',
-                    'Guyana': 'GUY',
-                    'Suriname': 'SUR',
-                    'French Guiana': 'GUF',
-                    'Greenland': 'GRL',
-                    'Iceland': 'ISL',
-                    'Ireland': 'IRL',
-                    'Norway': 'NOR',
-                    'Sweden': 'SWE',
-                    'Finland': 'FIN',
-                    'Denmark': 'DNK',
-                    'Netherlands': 'NLD',
-                    'Belgium': 'BEL',
-                    'Luxembourg': 'LUX',
-                    'Switzerland': 'CHE',
-                    'Austria': 'AUT',
-                    'Czech Republic': 'CZE',
-                    'Slovakia': 'SVK',
-                    'Hungary': 'HUN',
-                    'Romania': 'ROU',
-                    'Bulgaria': 'BGR',
-                    'Greece': 'GRC',
-                    'Albania': 'ALB',
-                    'Macedonia': 'MKD',
-                    'Serbia': 'SRB',
-                    'Montenegro': 'MNE',
-                    'Bosnia and Herzegovina': 'BIH',
-                    'Republic of Serbia': 'SRB',
-                    'Somaliland': 'SOL',
-                    'United Republic of Tanzania': 'TZA',
-                    'Western Sahara': 'ESH',
-                    'Guinea-Bissau': 'GNB',
-                    'Sri Lanka': 'LKA',
-                    'Antarctica': 'ATA',
-                    'Falkland Islands': 'FLK',
-                    'Colombia': 'COL',
-                    'Panama': 'PAN',
-                    'Nicaragua': 'NIC',
-                    'Costa Rica': 'CRI',
-                    'Honduras': 'HND',
-                    'Guatemala': 'GTM',
-                    'Dominican Republic': 'DOM',
-                    'Haiti': 'HTI',
-                    'Cuba': 'CUB',
-                    'Bahamas': 'BHS',
-                    'Jamaica': 'JAM',
-                    'Croatia': 'HRV',
-                    'Slovenia': 'SVN',
-                    'Italy': 'ITA',
-                    'Malta': 'MLT',
-                    'Spain': 'ESP',
-                    'Portugal': 'PRT',
-                    'France': 'FRA',
-                    'Monaco': 'MCO',
-                    'Andorra': 'AND',
-                    'San Marino': 'SMR',
-                    'Vatican': 'VAT',
-                    'Liechtenstein': 'LIE',
-                    'Poland': 'POL',
-                    'Lithuania': 'LTU',
-                    'Latvia': 'LVA',
-                    'Estonia': 'EST',
-                    'Belarus': 'BLR',
-                    'Ukraine': 'UKR',
-                    'Moldova': 'MDA',
-                    'Russia': 'RUS',
-                    'Georgia': 'GEO',
-                    'Armenia': 'ARM',
-                    'Azerbaijan': 'AZE',
-                    'Turkey': 'TUR',
-                    'Cyprus': 'CYP',
-                    'Lebanon': 'LBN',
-                    'Syria': 'SYR',
-                    'Iraq': 'IRQ',
-                    'Iran': 'IRN',
-                    'Afghanistan': 'AFG',
-                    'Pakistan': 'PAK',
-                    'Turkmenistan': 'TKM',
-                    'Uzbekistan': 'UZB',
-                    'Kazakhstan': 'KAZ',
-                    'Kyrgyzstan': 'KGZ',
-                    'Tajikistan': 'TJK',
-                    'Mongolia': 'MNG',
-                    'North Korea': 'PRK',
-                    'South Korea': 'KOR',
-                    'Japan': 'JPN',
-                    'Taiwan': 'TWN',
-                    'Hong Kong': 'HKG',
-                    'Macau': 'MAC',
-                    'Vietnam': 'VNM',
-                    'Laos': 'LAO',
-                    'Cambodia': 'KHM',
-                    'Thailand': 'THA',
-                    'Myanmar': 'MMR',
-                    'Malaysia': 'MYS',
-                    'Singapore': 'SGP',
-                    'Brunei': 'BRN',
-                    'Philippines': 'PHL',
-                    'Indonesia': 'IDN',
-                    'East Timor': 'TLS',
-                    'Papua New Guinea': 'PNG',
-                    'Australia': 'AUS',
-                    'New Zealand': 'NZL',
-                    'Fiji': 'FJI',
-                    'Solomon Islands': 'SLB',
-                    'Vanuatu': 'VUT',
-                    'New Caledonia': 'NCL',
-                    'Samoa': 'WSM',
-                    'Tonga': 'TON',
-                    'Kiribati': 'KIR',
-                    'Tuvalu': 'TUV',
-                    'Nauru': 'NRU',
-                    'Marshall Islands': 'MHL',
-                    'Micronesia': 'FSM',
-                    'Palau': 'PLW',
-                    'Cook Islands': 'COK',
-                    'Niue': 'NIU',
-                    'Tokelau': 'TKL',
-                    'Wallis and Futuna': 'WLF',
-                    'French Polynesia': 'PYF',
                     'South Africa': 'ZAF',
                     'Egypt': 'EGY',
                     'Netherlands': 'NLD',
@@ -823,44 +672,78 @@
                 return properties.name || properties.NAME_EN || properties.ADMIN || properties.NAME_LONG || properties.SOVEREIGNT || 'Unknown';
             }
             
-            getDonorsCount(countryCode) {
-                // Pronađi podatke za državu iz stats
-                const countryData = this.stats.countryData?.[countryCode];
-                if (countryData && typeof countryData === 'object') {
-                    return countryData.donors_24h || 0;
-                }
-                return 0;
-            }
-            
-            getCountryRank(countryCode) {
-                const sortedCountries = Object.entries(this.stats.countryData || {})
-                    .sort(([,a], [,b]) => {
-                        const valA = typeof a === 'object' ? a.total_eur : a;
-                        const valB = typeof b === 'object' ? b.total_eur : b;
-                        return valB - valA;
-                    });
-                const rank = sortedCountries.findIndex(([code]) => code === countryCode) + 1;
-                return rank || 1;
-            }
-            
-            getActivityLevel(heatValue) {
-                if (heatValue === 0) return 'Inactive';
-                if (heatValue < 50) return 'Low';
-                if (heatValue < 200) return 'Medium';
-                if (heatValue < 500) return 'High';
-                return 'Very High';
-            }
-            
             getCountryFlag(countryCode) {
-                // SVG zastavice s dva vanjska izvora - sve zemlje
-                return `<img src="https://flagcdn.com/w20/${countryCode.toLowerCase()}.svg" 
-                             width="20" height="15" 
-                             onerror="this.src='https://countryflagsapi.com/svg/${countryCode.toLowerCase()}'; this.onerror=function(){this.style.display='none'; this.nextSibling.textContent='[${countryCode}]';}">`;
-            }
-            
-            getCountryFlagSync(countryCode) {
-                // Sinkronizovana verzija - koristi isti SVG kao getCountryFlag
-                return this.getCountryFlag(countryCode);
+                console.log('getCountryFlag called with:', countryCode);
+                
+                // SVG zastavice za Chrome kompatibilnost
+                const svgFlags = {
+                    'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
+                    'ARG': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#74acdf"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#74acdf"/></svg>',
+                    'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/></svg>',
+                    'SAU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#006c35"/></svg>',
+                    'IND': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff9933"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#138808"/></svg>',
+                    'HRV': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0000ff"/></svg>',
+                    'DEU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#000000"/><rect y="5" width="20" height="5" fill="#dd0000"/><rect y="10" width="20" height="5" fill="#ffce00"/></svg>',
+                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#b22234"/></svg>',
+                    'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/></svg>',
+                    'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>'
+                };
+                
+                // Vrati SVG ako postoji, inače fallback na emoji
+                if (svgFlags[countryCode]) {
+                    return svgFlags[countryCode];
+                }
+                
+                const flags = {
+                    // Evropa
+                    'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
+                    'GBR': '🇬🇧', 'NLD': '🇳🇱', 'BEL': '🇧🇪', 'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪',
+                    'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮', 'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷',
+                    'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴', 'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿',
+                    'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
+                    'ALB': '🇦🇱', 'XKX': '🇽🇰', 'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾',
+                    'MDA': '🇲🇩', 'GEO': '🇬🇪', 'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪',
+                    'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
+                    
+                    // Amerika
+                    'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷', 'CHL': '🇨🇱',
+                    'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴', 'PRY': '🇵🇾',
+                    'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'SLV': '🇸🇻', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
+                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'PRI': '🇵🇷',
+                    'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾', 'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨',
+                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿',
+                    
+                    // Azija
+                    'CHN': '🇨🇳', 'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩',
+                    'PHL': '🇵🇭', 'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬',
+                    'KOR': '🇰🇷', 'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬',
+                    'TJK': '🇹🇯', 'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾',
+                    'LBN': '🇱🇧', 'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲',
+                    'ARE': '🇦🇪', 'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵',
+                    'BTN': '🇧🇹', 'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱',
+                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼',
+                    
+                    // Afrika
+                    'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿', 'MAR': '🇲🇦', 'SDN': '🇸🇩',
+                    'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯', 'SOM': '🇸🇴', 'KEN': '🇰🇪',
+                    'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮', 'COD': '🇨🇩', 'COG': '🇨🇬',
+                    'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬', 'NER': '🇳🇪', 'MLI': '🇲🇱',
+                    'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲', 'GNB': '🇬🇼', 'GIN': '🇬🇳',
+                    'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭', 'TGO': '🇹🇬', 'BEN': '🇧🇯',
+                    'GNQ': '🇬🇶', 'GAB': '🇬🇦', 'STP': '🇸🇹', 'AGO': '🇦🇴', 'ZMB': '🇿🇲', 'ZWE': '🇿🇼',
+                    'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'ZAF': '🇿🇦', 'MDG': '🇲🇬',
+                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'REU': '🇷🇪',
+                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻',
+                    
+                    // Okeanija
+                    'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧', 'VUT': '🇻🇺',
+                    'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻', 'NRU': '🇳🇷',
+                    'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺', 'TKL': '🇹🇰',
+                    'WLF': '🇼🇫', 'PYF': '🇵🇫'
+                };
+                const flag = flags[countryCode] || '🏳️';
+                console.log('Returning flag:', flag, 'for country:', countryCode);
+                return flag;
             }
             
             async loadStats() {
@@ -873,12 +756,9 @@
                     let totalDonors = 0;
                     
                     data.forEach(country => {
-                        this.stats.countryData[country.iso] = {
-                            total_eur: country.total_eur,
-                            donors_24h: country.donors_24h || 0
-                        };
+                        this.stats.countryData[country.iso] = country.total_eur;
                         totalDonations += country.total_eur;
-                        totalDonors += country.donors_24h || 0;
+                        totalDonors += country.donors_24h;
                     });
                     
                     this.stats.totalDonations = totalDonations;
@@ -886,11 +766,14 @@
                     this.stats.totalDonors = totalDonors;
                     
                     this.updateStatsDisplay();
-                    await this.updateLeadersList(data);
+                    this.updateLeadersList(data);
                     this.updateMapColors();
                     
+                    console.log('Stats loaded:', this.stats.countryData);
+                    console.log('Raw stats data:', data);
+                    
                 } catch (error) {
-                    // Handle error silently
+                    console.error('Error loading stats:', error);
                 }
             }
             
@@ -900,7 +783,8 @@
                 document.getElementById('total-donors').textContent = this.stats.totalDonors;
             }
             
-            async updateLeadersList(data) {
+            updateLeadersList(data) {
+                console.log('updateLeadersList called with data:', data);
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -912,10 +796,13 @@
                     .sort((a, b) => (b.donors_24h || 0) - (a.donors_24h || 0))
                     .slice(0, 5);
                 
+                console.log('Sorted data for leaders:', sortedData);
                 
-                const htmlContent = await Promise.all(sortedData.map(async (country, index) => {
-                    const flag = await this.getCountryFlag(country.iso);
-                    return `
+                const htmlContent = sortedData.map((country, index) => {
+                    console.log('Processing country for leaders:', country);
+                    const flag = this.getCountryFlag(country.iso);
+                    console.log('Flag for', country.iso, ':', flag);
+                    const html = `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold">
@@ -934,50 +821,20 @@
                         </button>
                     </div>
                 `;
-                }));
+                    console.log('Generated HTML for', country.iso, ':', html);
+                    return html;
+                }).join('');
                 
-                leadersList.innerHTML = htmlContent.join('');
+                console.log('Final HTML content:', htmlContent);
+                leadersList.innerHTML = htmlContent;
             }
             
             updateMapColors() {
                 this.countryLayers.forEach((layer, countryCode) => {
-                    const countryData = this.stats.countryData?.[countryCode];
-                    const heatValue = countryData ? (typeof countryData === 'object' ? countryData.total_eur : countryData) : 0;
+                    const heatValue = this.stats.countryData?.[countryCode] || 0;
                     layer.setStyle({
                         fillColor: this.getHeatColor(heatValue),
                         fillOpacity: heatValue > 0 ? 0.8 : 0.3
-                    });
-                    
-                    // Update tooltip content
-                    layer.unbindTooltip();
-                    const countryName = this.getCountryName({ name: countryCode });
-                    const donors = this.getDonorsCount(countryCode);
-                    const rank = this.getCountryRank(countryCode);
-                    const activity = this.getActivityLevel(heatValue);
-                    
-                    layer.bindTooltip(`
-                        <div class="p-2">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="country-flag">${this.getCountryFlagSync(countryCode)}</span>
-                                <span class="font-semibold text-white">${countryName}</span>
-                            </div>
-                            <div class="text-sm text-gray-300 mb-1">
-                                💰 €${heatValue.toFixed(0)} donated • 👥 ${donors} donors (24h)
-                            </div>
-                            <div class="text-sm text-gray-300 mb-2">
-                                📊 Rank: #${rank} of 195 countries
-                            </div>
-                            <div class="text-sm text-gray-300 mb-2">
-                                🔥 Activity: ${activity}
-                            </div>
-                            <div class="text-xs text-blue-300">
-                                🎯 Be the first to donate!
-                            </div>
-                        </div>
-                    `, {
-                        sticky: true,
-                        opacity: 0.95,
-                        className: 'custom-tooltip'
                     });
                 });
             }
