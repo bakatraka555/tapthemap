@@ -19,6 +19,7 @@ exports.handler = async () => {
     
     console.log('Stats: Raw data from Supabase:', data?.length, 'records');
     console.log('Stats: Latest 3 records:', data?.slice(0, 3));
+    console.log('Stats: Sample record with donor_hash:', data?.find(r => r.donor_hash));
 
     const by = new Map();
     const now = Date.now();
@@ -64,10 +65,14 @@ exports.handler = async () => {
 
       if (!by.has(iso)) by.set(iso, {
         iso, name, total_eur: 0,
-        donors24: new Set(), donors7: new Set()
+        donors24: new Set(), donors7: new Set(), allDonors: new Set()
       });
       const o = by.get(iso);
       o.total_eur += amt;
+      if (dh) {
+        o.allDonors.add(dh); // Dodaj sve donore
+        console.log(`Adding donor ${dh} to ${iso}, total donors now: ${o.allDonors.size}`);
+      }
       if (ts >= since7d && dh) o.donors7.add(dh);
       if (ts >= since24 && dh) o.donors24.add(dh);
     }
@@ -77,7 +82,8 @@ exports.handler = async () => {
       name: o.name,
       total_eur: Math.round(o.total_eur),
       donors_24h: o.donors24.size,
-      donors_7d: o.donors7.size
+      donors_7d: o.donors7.size,
+      total_donors: o.allDonors.size
     }))
     // default sortiranje za "Today's heat": po donors_24h pa total
     .sort((a,b)=>{
@@ -87,6 +93,7 @@ exports.handler = async () => {
     });
 
     console.log('Stats: Final output:', out);
+    console.log('Stats: Sample country with donors:', out.find(c => c.total_eur > 0));
     return { statusCode: 200, body: JSON.stringify(out) };
   } catch (e) {
     return { statusCode: 500, body: `Stats error: ${e.message}` };
