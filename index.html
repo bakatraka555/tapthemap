@@ -852,28 +852,8 @@
             }
             
             getCountryFlag(countryCode) {
-                // SVG zastavice za ključne zemlje - rade u svim browserima
-                const svgFlags = {
-                    'HRV': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0000ff"/></svg>',
-                    'DEU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#000000"/><rect y="5" width="20" height="5" fill="#ff0000"/><rect y="10" width="20" height="5" fill="#ffd700"/></svg>',
-                    'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>',
-                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#b22234"/><rect width="20" height="1.15" fill="#ffffff"/><rect y="2.3" width="20" height="1.15" fill="#ffffff"/><rect y="4.6" width="20" height="1.15" fill="#ffffff"/><rect y="6.9" width="20" height="1.15" fill="#ffffff"/><rect y="9.2" width="20" height="1.15" fill="#ffffff"/><rect y="11.5" width="20" height="1.15" fill="#ffffff"/><rect y="13.8" width="20" height="1.15" fill="#ffffff"/></svg>',
-                    'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/><path d="M0 0l20 15M20 0L0 15" stroke="#ffffff" stroke-width="2"/><path d="M0 0l20 15M20 0L0 15" stroke="#c8102e" stroke-width="1.2"/></svg>',
-                    'CAN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#ff0000"/><rect x="6" y="3" width="8" height="9" fill="#ffffff"/><path d="M10 6l1 1-1 1-1-1z" fill="#ff0000"/></svg>',
-                    'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
-                    'BRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#009739"/><path d="M10 7.5c0-2.5 2.5-5 5-5s5 2.5 5 5-2.5 5-5 5-5-2.5-5-5z" fill="#fedf00"/></svg>',
-                    'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/><path d="M5 3l1 1-1 1-1-1z" fill="#ffde00"/></svg>',
-                    'JPN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#ffffff"/><circle cx="10" cy="7.5" r="3" fill="#bc002d"/></svg>',
-                    'TCD': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#002664"/><rect y="5" width="20" height="5" fill="#fecb00"/><rect y="10" width="20" height="5" fill="#c8102e"/></svg>'
-                };
-                
-                // Vrati SVG ako postoji, inače fallback na tekst
-                if (svgFlags[countryCode]) {
-                    return svgFlags[countryCode];
-                }
-                
-                // Fallback na tekst
-                return `[${countryCode}]`;
+                // Koristi .png slike iz flags/ foldera
+                return `<img src="flags/${countryCode.toLowerCase()}.png" width="20" height="15" onerror="this.style.display='none'">`;
             }
             
             getCountryFlagSync(countryCode) {
