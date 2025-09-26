@@ -46,12 +46,15 @@
         }
         
         .globe-container {
-            height: 60vh;
-            min-height: 400px;
+            height: 70vh;
+            min-height: 500px;
             background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
             position: relative;
             overflow: hidden;
             border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         /* Leaflet map fixes */
@@ -481,8 +484,8 @@
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
                         .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                        .width(window.innerWidth * 0.8)
-                        .height(400)
+                        .width(window.innerWidth * 0.9)
+                        .height(500)
                         .enablePointerInteraction(true)
                         .polygonsData([])
                         .polygonCapColor(d => this.getCountryColor(d))
