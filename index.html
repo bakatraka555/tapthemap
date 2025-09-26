@@ -235,25 +235,23 @@
                     </div>
                     
                     <!-- Legend -->
-                    <div class="mt-4 flex items-center justify-between text-sm">
-                        <span class="text-gray-400">Donation Amount</span>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-3 h-3 bg-gray-700 rounded"></div>
-                            <span class="text-gray-400">€0</span>
-                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
-                            <span class="text-gray-400">€25</span>
-                            <div class="w-3 h-3 bg-cyan-500 rounded"></div>
-                            <span class="text-gray-400">€50</span>
-                            <div class="w-3 h-3 bg-green-500 rounded"></div>
-                            <span class="text-gray-400">€100</span>
-                            <div class="w-3 h-3 bg-yellow-500 rounded"></div>
-                            <span class="text-gray-400">€200</span>
-                            <div class="w-3 h-3 bg-orange-500 rounded"></div>
-                            <span class="text-gray-400">€500</span>
-                            <div class="w-3 h-3 bg-red-500 rounded"></div>
-                            <span class="text-gray-400">€500+</span>
-                        </div>
+                <div class="mt-4 flex items-center justify-between text-sm">
+                    <span class="text-gray-400">Donation Points</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span class="text-gray-400">€25</span>
+                        <div class="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                        <span class="text-gray-400">€50</span>
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-gray-400">€100</span>
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <span class="text-gray-400">€200</span>
+                        <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span class="text-gray-400">€500</span>
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span class="text-gray-400">€500+</span>
                     </div>
+                </div>
                 </div>
                 
                 <!-- Country Selection -->
@@ -529,23 +527,31 @@
                         .height(600)
                         .enablePointerInteraction(true)
                         .polygonsData([])
-                        .polygonCapColor(d => this.getCountryColor(d))
-                        .polygonSideColor(d => this.getCountryColor(d))
-                        .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,1.0)' : 'rgba(255,255,255,0.5)')
+                        .polygonCapColor('rgba(255,255,255,0.1)')
+                        .polygonSideColor('rgba(255,255,255,0.1)')
+                        .polygonStrokeColor('rgba(255,255,255,0.2)')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.05 : 0.01) // Higher altitude for extreme visibility
+                        .polygonAltitude(0.01)
                         .polygonCapMaterial({ 
-                            transparent: false, 
-                            opacity: 1.0,
-                            side: 2 // DoubleSide
+                            transparent: true, 
+                            opacity: 0.1,
+                            side: 2
                         })
                         .polygonSideMaterial({ 
-                            transparent: false, 
-                            opacity: 1.0,
-                            side: 2 // DoubleSide
-                        });
+                            transparent: true, 
+                            opacity: 0.1,
+                            side: 2
+                        })
+                        .pointsData([])
+                        .pointColor('color')
+                        .pointAltitude('alt')
+                        .pointRadius('radius')
+                        .pointResolution(8)
+                        .pointLabel('label')
+                        .onPointClick(d => this.handleCountryClick(d))
+                        .onPointHover(d => this.handleCountryHover(d));
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -605,57 +611,59 @@
                     
                     console.log('Available stats:', this.stats.countryData);
                     
-                    // Process GeoJSON data for 3D globe
-                    console.log('Starting to process', geoData.features.length, 'countries...');
-                    const countriesData = geoData.features.map(feature => {
-                        const countryCode = this.getCountryCode(feature.properties);
-                        const countryName = this.getCountryName(feature.properties);
-                        const countryStats = this.stats.countryData?.[countryCode] || {};
-                        
-                        // Debug: Log all countries to see what codes we're getting
-                        if (countryCode && this.stats.countryData && Object.keys(this.stats.countryData).includes(countryCode)) {
-                            console.log(`🔍 Found match: ${countryName} (${countryCode}) -> ${countryStats} EUR (type: ${typeof countryStats})`);
+                // Process GeoJSON data for 3D globe
+                console.log('Starting to process', geoData.features.length, 'countries...');
+                const countriesData = geoData.features.map(feature => {
+                    const countryCode = this.getCountryCode(feature.properties);
+                    const countryName = this.getCountryName(feature.properties);
+                    const countryStats = this.stats.countryData?.[countryCode] || {};
+                    
+                    // Handle both object and number formats
+                    const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
+                    const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
+                    
+                    return {
+                        ...feature,
+                        properties: {
+                            ...feature.properties,
+                            iso: countryCode,
+                            name: countryName,
+                            total_eur: totalEur,
+                            total_donors: totalDonors
                         }
+                    };
+                });
+                
+                // Create points for countries with donations
+                const pointsData = countriesData
+                    .filter(country => country.properties.total_eur > 0)
+                    .map(country => {
+                        const totalEur = country.properties.total_eur;
+                        const countryName = country.properties.name;
+                        const totalDonors = country.properties.total_donors;
                         
-                        // Handle both object and number formats
-                        const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
-                        const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1; // Default to 1 if it's just a number
+                        // Get country center coordinates
+                        const center = this.getCountryCenter(country);
                         
-                        // Log all countries with donations
-                        if (totalEur > 0) {
-                            console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
-                        }
+                        console.log(`📍 Creating point for ${countryName}: ${totalEur} EUR`);
                         
                         return {
-                            ...feature,
-                            properties: {
-                                ...feature.properties,
-                                iso: countryCode,
-                                name: countryName,
-                                total_eur: totalEur,
-                                total_donors: totalDonors
-                            }
+                            lat: center.lat,
+                            lng: center.lng,
+                            alt: 0.02,
+                            radius: Math.min(Math.max(totalEur / 50, 0.5), 3), // Size based on donation amount
+                            color: this.getPointColor(totalEur),
+                            label: `${countryName}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`,
+                            country: country
                         };
                     });
-                    
-                    console.log('Finished processing countries. Countries with donations:', 
-                        countriesData.filter(c => c.properties.total_eur > 0).length);
-                    
-                    console.log('Updating globe with', countriesData.length, 'countries...');
-                    
-                    // Update globe with country data
-                    this.globe.polygonsData(countriesData);
-                    
-                // Force update colors immediately
-                console.log('🔄 Forcing immediate color update...');
-                this.globe.polygonCapColor(d => this.getCountryColor(d));
-                this.globe.polygonSideColor(d => this.getCountryColor(d));
                 
-                // Force re-render
-                setTimeout(() => {
-                    console.log('🔄 Forcing re-render...');
-                    this.globe.polygonsData(this.globe.polygonsData());
-                }, 100);
+                console.log('Finished processing countries. Countries with donations:', pointsData.length);
+                console.log('Updating globe with', countriesData.length, 'countries and', pointsData.length, 'points...');
+                
+                // Update globe with country data and points
+                this.globe.polygonsData(countriesData);
+                this.globe.pointsData(pointsData);
                     
                     console.log('Country data loaded successfully');
                     
@@ -665,24 +673,21 @@
                 }
             }
             
-            getCountryColor(country) {
-                const heatValue = country.properties?.total_eur || 0;
-                // Log all countries with donations
-                if (heatValue > 0) {
-                    console.log(`🎨 Getting color for ${country.properties?.name}: ${heatValue} EUR`);
-                }
-                return this.getHeatColor(heatValue);
-            }
             
             handleCountryClick(country) {
                 if (country && country.properties) {
                     this.selectCountry(country.properties.iso, country.properties.name);
+                } else if (country && country.country) {
+                    // Handle point click
+                    this.selectCountry(country.country.properties.iso, country.country.properties.name);
                 }
             }
-            
+
             handleCountryHover(country) {
                 if (country && country.properties) {
                     console.log('Hovering over:', country.properties.name);
+                } else if (country && country.country) {
+                    console.log('Hovering over point:', country.country.properties.name);
                 }
             }
             
@@ -700,14 +705,40 @@
                 return `${name}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`;
             }
             
-            getHeatColor(value) {
-                if (value === 0) return 'rgba(0, 0, 0, 0.3)'; // Crna za države bez donacija
-                if (value < 25) return 'rgba(0, 0, 255, 1.0)'; // Puna plava za male donacije
-                if (value < 50) return 'rgba(0, 255, 255, 1.0)'; // Puna cyan za srednje donacije
-                if (value < 100) return 'rgba(0, 255, 0, 1.0)'; // Puna zelena za dobre donacije
-                if (value < 200) return 'rgba(255, 255, 0, 1.0)'; // Puna žuta za velike donacije
-                if (value < 500) return 'rgba(255, 165, 0, 1.0)'; // Puna narančasta za vrlo velike donacije
-                return 'rgba(255, 0, 0, 1.0)'; // Puna crvena za najveće donacije
+            getPointColor(value) {
+                if (value < 25) return '#3b82f6'; // Plava za male donacije
+                if (value < 50) return '#06b6d4'; // Cyan za srednje donacije
+                if (value < 100) return '#22c55e'; // Zelena za dobre donacije
+                if (value < 200) return '#eab308'; // Žuta za velike donacije
+                if (value < 500) return '#f97316'; // Narančasta za vrlo velike donacije
+                return '#ef4444'; // Crvena za najveće donacije
+            }
+            
+            getCountryCenter(country) {
+                // Simple center calculation for country
+                if (country.geometry && country.geometry.coordinates) {
+                    // For now, return a default center - in real implementation, 
+                    // you'd calculate the centroid of the country's geometry
+                    const countryCenters = {
+                        'USA': { lat: 39.8283, lng: -98.5795 },
+                        'MEX': { lat: 23.6345, lng: -102.5528 },
+                        'PER': { lat: -9.1900, lng: -75.0152 },
+                        'ARG': { lat: -38.4161, lng: -63.6167 },
+                        'CHN': { lat: 35.8617, lng: 104.1954 },
+                        'IND': { lat: 20.5937, lng: 78.9629 },
+                        'SAU': { lat: 23.8859, lng: 45.0792 },
+                        'SDN': { lat: 12.8628, lng: 30.2176 },
+                        'TCD': { lat: 15.4542, lng: 18.7322 }
+                    };
+                    
+                    const iso = country.properties.iso;
+                    if (countryCenters[iso]) {
+                        return countryCenters[iso];
+                    }
+                }
+                
+                // Fallback to a random location if not found
+                return { lat: Math.random() * 180 - 90, lng: Math.random() * 360 - 180 };
             }
             
             getCountryCode(properties) {
@@ -1032,16 +1063,9 @@
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
-                    // Update globe colors based on new stats
-                    this.globe.polygonCapColor(d => this.getCountryColor(d));
-                    this.globe.polygonSideColor(d => this.getCountryColor(d));
-                    
-                    // Force re-render
-                    setTimeout(() => {
-                        console.log('🔄 Forcing color update re-render...');
-                        this.globe.polygonsData(this.globe.polygonsData());
-                    }, 50);
+                    console.log('🔄 Updating globe points with stats:', this.stats.countryData);
+                    // Reload country data to update points
+                    this.loadCountryData();
                 }
             }
             
