@@ -33,8 +33,9 @@
         }
     </script>
     
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Three.js and Globe.gl -->
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -44,9 +45,13 @@
             font-family: 'Inter', sans-serif;
         }
         
-        .map-container {
+        .globe-container {
             height: 60vh;
             min-height: 400px;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
         }
         
         /* Leaflet map fixes */
@@ -214,7 +219,7 @@
                     </div>
                     
                     <!-- Map Container -->
-                    <div id="map" class="map-container rounded-lg overflow-hidden"></div>
+                    <div id="globe" class="globe-container rounded-lg overflow-hidden"></div>
                     
                     <!-- Legend -->
                     <div class="mt-4 flex items-center justify-between text-sm">
@@ -309,7 +314,7 @@
                 this.selectedCountry = null;
                 this.selectedAmount = null;
                 this.map = null;
-                this.countryLayers = new Map();
+                this.globe = null;
                 this.stats = {
                     totalDonations: 0,
                     totalCountries: 0,
@@ -321,7 +326,7 @@
             
             async init() {
                 this.setupEventListeners();
-                await this.initializeMap();
+                await this.initializeGlobe();
                 await this.loadStats();
                 this.setupReferral();
             }
@@ -461,28 +466,30 @@
                 }
             }
             
-            async initializeMap() {
-                // Initialize map
-                this.map = L.map('map', {
-                    zoomControl: false,
-                    worldCopyJump: true,
-                    preferCanvas: true,  // Bolje performanse
-                    renderer: L.canvas()  // Konzistentan rendering
-                }).setView([20, 0], 2);
+            async initializeGlobe() {
+                // Initialize 3D globe
+                this.globe = Globe()
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                    .width(window.innerWidth * 0.8)
+                    .height(400)
+                    .enablePointerInteraction(true)
+                    .polygonsData([])
+                    .polygonCapColor(d => this.getCountryColor(d))
+                    .polygonSideColor(d => this.getCountryColor(d))
+                    .polygonStrokeColor(() => 'rgba(255,255,255,0.1)')
+                    .polygonLabel(d => `${d.name}: ${d.total_eur || 0} EUR`)
+                    .onPolygonClick(d => this.handleCountryClick(d))
+                    .onPolygonHover(d => this.handleCountryHover(d));
                 
-                // Add tile layer
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap & CARTO',
-                    detectRetina: true,
-                    maxZoom: 6,
-                    minZoom: 2,
-                    crossOrigin: true
-                }).addTo(this.map);
+                // Add to container
+                document.getElementById('globe').appendChild(this.globe);
                 
                 // Load country data
                 await this.loadCountryData();
                 
-                document.getElementById('map-status').textContent = 'Map loaded ✓';
+                document.getElementById('map-status').textContent = 'Globe loaded ✓';
             }
             
             async loadCountryData() {
@@ -513,57 +520,49 @@
                         throw new Error('All sources failed');
                     }
                     
-                    L.geoJSON(geoData, {
-                        style: (feature) => this.getCountryStyle(feature),
-                        onEachFeature: (feature, layer) => {
-                            const countryCode = this.getCountryCode(feature.properties);
-                            const countryName = this.getCountryName(feature.properties);
-                            
-                            this.countryLayers.set(countryCode, layer);
-                            
-                            // Add tooltip
-                            layer.bindTooltip(`<span class="country-flag">${this.getCountryFlag(countryCode)}</span> ${countryName}`, {
-                                sticky: true,
-                                opacity: 0.9
-                            });
-                            
-                            // Add click handler
-                            layer.on('click', () => {
-                                this.selectCountry(countryCode, countryName);
-                            });
-                            
-                            // Remove hover effects - države ostaju tamne
-                            // layer.on('mouseover', (e) => {
-                            //     e.target.setStyle({
-                            //         weight: 2,
-                            //         opacity: 1
-                            //     });
-                            // });
-                            
-                            // layer.on('mouseout', (e) => {
-                            //     e.target.setStyle(this.getCountryStyle(feature));
-                            // });
-                        }
-                    }).addTo(this.map);
+                    // Process GeoJSON data for globe
+                    const countriesData = geoData.features.map(feature => {
+                        const countryCode = this.getCountryCode(feature.properties);
+                        const countryName = this.getCountryName(feature.properties);
+                        const countryStats = this.stats.countryData?.[countryCode] || {};
+                        
+                        return {
+                            ...feature,
+                            properties: {
+                                ...feature.properties,
+                                iso: countryCode,
+                                name: countryName,
+                                total_eur: countryStats.total_eur || 0,
+                                total_donors: countryStats.total_donors || 0
+                            }
+                        };
+                    });
+                    
+                    // Update globe with country data
+                    this.globe.polygonsData(countriesData);
                     
                 } catch (error) {
                     console.error('Error loading country data:', error);
-                    document.getElementById('map-status').textContent = 'Map failed to load';
+                    document.getElementById('map-status').textContent = 'Globe failed to load';
                 }
             }
             
-            getCountryStyle(feature) {
-                const countryCode = this.getCountryCode(feature.properties);
-                const heatValue = this.stats.countryData?.[countryCode] || 0;
-                
-                return {
-                    fillColor: this.getHeatColor(heatValue),
-                    weight: 0,  // Ukloni granice država
-                    opacity: 0,
-                    color: 'transparent',
-                    dashArray: '',
-                    fillOpacity: 0.7
-                };
+            getCountryColor(country) {
+                const heatValue = country.properties?.total_eur || 0;
+                return this.getHeatColor(heatValue);
+            }
+            
+            handleCountryClick(country) {
+                if (country && country.properties) {
+                    this.selectCountry(country.properties.iso, country.properties.name);
+                }
+            }
+            
+            handleCountryHover(country) {
+                // Optional: Add hover effects
+                if (country && country.properties) {
+                    console.log('Hovering over:', country.properties.name);
+                }
             }
             
             getHeatColor(value) {
@@ -831,7 +830,7 @@
                     
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
-                    this.updateMapColors();
+                    this.updateGlobeColors();
                     
                     console.log('Stats loaded:', this.stats.countryData);
                     console.log('Raw stats data:', data);
@@ -894,14 +893,12 @@
                 leadersList.innerHTML = htmlContent;
             }
             
-            updateMapColors() {
-                this.countryLayers.forEach((layer, countryCode) => {
-                    const heatValue = this.stats.countryData?.[countryCode] || 0;
-                    layer.setStyle({
-                        fillColor: this.getHeatColor(heatValue),
-                        fillOpacity: heatValue > 0 ? 0.8 : 0.3
-                    });
-                });
+            updateGlobeColors() {
+                if (this.globe && this.globe.polygonsData) {
+                    // Update globe colors based on new stats
+                    this.globe.polygonCapColor(d => this.getCountryColor(d));
+                    this.globe.polygonSideColor(d => this.getCountryColor(d));
+                }
             }
             
             setupReferral() {
