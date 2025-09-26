@@ -545,7 +545,17 @@
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.02 : 0.01);
+                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.02 : 0.01)
+                        .polygonCapMaterial({ 
+                            transparent: true, 
+                            opacity: 0.7,
+                            side: 2
+                        })
+                        .polygonSideMaterial({ 
+                            transparent: true, 
+                            opacity: 0.7,
+                            side: 2
+                        });
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -655,6 +665,13 @@
                     opacity: 0.7,
                     side: 2
                 });
+                
+                // Start animations for countries with donations
+                const countriesWithDonations = countriesData.filter(c => c.properties.total_eur > 0);
+                if (countriesWithDonations.length > 0) {
+                    console.log('🎬 Starting country animations...');
+                    this.animateCountries();
+                }
                 
                 // Force re-render
                 setTimeout(() => {
@@ -1079,6 +1096,48 @@
                         this.globe.polygonsData(this.globe.polygonsData());
                     }, 50);
                 }
+            }
+            
+            // Animation functions for pulsing and glowing effects
+            animateCountries() {
+                if (!this.globe || !this.globe.polygonsData) return;
+                
+                const countries = this.globe.polygonsData();
+                if (!countries || countries.length === 0) return;
+                
+                const time = Date.now() * 0.001; // Time in seconds
+                
+                // Update countries with animations
+                const animatedCountries = countries.map(country => {
+                    const hasDonations = country.properties?.total_eur > 0;
+                    
+                    if (!hasDonations) return country;
+                    
+                    // Pulsing effect - altitude changes
+                    const pulseIntensity = 0.3 + 0.2 * Math.sin(time * 2);
+                    const newAltitude = 0.02 + 0.01 * pulseIntensity;
+                    
+                    // Glowing effect - stroke color changes
+                    const glowIntensity = 0.5 + 0.5 * Math.sin(time * 3);
+                    const glowColor = `rgba(255, 255, 255, ${glowIntensity})`;
+                    
+                    return {
+                        ...country,
+                        properties: {
+                            ...country.properties,
+                            animatedAltitude: newAltitude,
+                            animatedStrokeColor: glowColor
+                        }
+                    };
+                });
+                
+                // Update globe with animated data
+                this.globe.polygonsData(animatedCountries);
+                this.globe.polygonAltitude(d => d.properties?.animatedAltitude || d.properties?.total_eur > 0 ? 0.02 : 0.01);
+                this.globe.polygonStrokeColor(d => d.properties?.animatedStrokeColor || (d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc'));
+                
+                // Continue animation
+                requestAnimationFrame(() => this.animateCountries());
             }
             
             zoomIn() {
