@@ -852,8 +852,10 @@
             }
             
             getCountryFlag(countryCode) {
-                // Koristi .png slike iz flags/ foldera
-                return `<img src="flags/${countryCode.toLowerCase()}.png" width="20" height="15" onerror="this.style.display='none'">`;
+                // SVG zastavice s dva vanjska izvora - sve zemlje
+                return `<img src="https://flagcdn.com/w20/${countryCode.toLowerCase()}.svg" 
+                             width="20" height="15" 
+                             onerror="this.src='https://countryflagsapi.com/svg/${countryCode.toLowerCase()}'; this.onerror=function(){this.style.display='none'; this.nextSibling.textContent='[${countryCode}]';}">`;
             }
             
             getCountryFlagSync(countryCode) {
