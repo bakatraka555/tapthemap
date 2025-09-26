@@ -349,12 +349,12 @@
                 this.init();
             }
             
-            async init() {
-                this.setupEventListeners();
-                await this.initializeGlobe();
-                await this.loadStats();
-                this.setupReferral();
-            }
+        async init() {
+            this.setupEventListeners();
+            await this.loadStats(); // Load stats first
+            await this.initializeGlobe(); // Then initialize globe with stats
+            this.setupReferral();
+        }
             
             setupEventListeners() {
                 // Country selection
@@ -546,11 +546,11 @@
                     container.innerHTML = '';
                     this.globe(container);
                     
-                    console.log('Globe mounted, loading country data...');
-                    document.getElementById('map-status').textContent = 'Loading countries...';
-                    
-                    // Load country data
-                    await this.loadCountryData();
+                console.log('Globe mounted, loading country data...');
+                document.getElementById('map-status').textContent = 'Loading countries...';
+                
+                // Load country data (stats already loaded in init)
+                await this.loadCountryData();
                     
                     console.log('Globe initialization complete');
                     document.getElementById('map-status').textContent = 'Globe loaded ✓';
@@ -601,7 +601,10 @@
                         const countryName = this.getCountryName(feature.properties);
                         const countryStats = this.stats.countryData?.[countryCode] || {};
                         
-                        console.log(`Processing ${countryName} (${countryCode}):`, countryStats);
+                        // Only log countries with donations to reduce console spam
+                        if (countryStats.total_eur > 0) {
+                            console.log(`Processing ${countryName} (${countryCode}):`, countryStats);
+                        }
                         
                         return {
                             ...feature,
@@ -630,7 +633,10 @@
             
             getCountryColor(country) {
                 const heatValue = country.properties?.total_eur || 0;
-                console.log(`Getting color for ${country.properties?.name}: ${heatValue} EUR`);
+                // Only log countries with donations to reduce console spam
+                if (heatValue > 0) {
+                    console.log(`Getting color for ${country.properties?.name}: ${heatValue} EUR`);
+                }
                 return this.getHeatColor(heatValue);
             }
             
