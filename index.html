@@ -532,7 +532,6 @@
                         .polygonCapColor(d => this.getCountryColor(d))
                         .polygonSideColor(d => this.getCountryColor(d))
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)')
-                        .polygonStrokeWidth(d => d.properties?.total_eur > 0 ? 2 : 0)
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
