@@ -551,14 +551,7 @@
                         .pointResolution(8)
                         .pointLabel('label')
                         .onPointClick(d => this.handleCountryClick(d))
-                        .onPointHover(d => this.handleCountryHover(d))
-                        .pointMaterial({ 
-                            transparent: true, 
-                            opacity: 0.8,
-                            emissive: true,
-                            emissiveIntensity: 0.3,
-                            side: 2 // DoubleSide for better visibility
-                        });
+                        .onPointHover(d => this.handleCountryHover(d));
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -662,11 +655,8 @@
                             color: this.getPointColor(totalEur),
                             label: `${countryName}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`,
                             country: country,
-                            // Animation properties
-                            pulse: true,
-                            rotation: true,
-                            glow: true,
-                            // Store original color for animation
+                            // Store original values for animation
+                            originalRadius: Math.min(Math.max(totalEur / 50, 0.5), 3),
                             originalColor: this.getPointColor(totalEur)
                         };
                     });
@@ -1102,7 +1092,7 @@
                     return {
                         ...point,
                         // Pulsing effect - radius changes
-                        radius: point.radius * (1 + 0.3 * Math.sin(time * 2)),
+                        radius: point.originalRadius * (1 + 0.3 * Math.sin(time * 2)),
                         // Rotation effect - altitude changes
                         alt: 0.02 + 0.01 * Math.sin(time * 1.5),
                         // Glow effect - color intensity changes
