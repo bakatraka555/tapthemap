@@ -105,6 +105,14 @@
             height: 0.9em;
             vertical-align: middle;
         }
+        
+        .country-flag img {
+            display: inline-block;
+            vertical-align: middle;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -695,6 +703,7 @@
                 
                 // PNG zastavice za Chrome Windows kompatibilnost
                 const countryToFileName = {
+                    // Evropa
                     'HRV': 'hr', 'DEU': 'de', 'FRA': 'fr', 'ITA': 'it', 'ESP': 'es', 'POL': 'pl',
                     'GBR': 'gb', 'NLD': 'nl', 'BEL': 'be', 'CHE': 'ch', 'AUT': 'at', 'SWE': 'se',
                     'NOR': 'no', 'DNK': 'dk', 'FIN': 'fi', 'PRT': 'pt', 'GRC': 'gr', 'TUR': 'tr',
@@ -705,19 +714,25 @@
                     'LUX': 'lu', 'MLT': 'mt', 'CYP': 'cy', 'AND': 'ad', 'SMR': 'sm', 'VAT': 'va',
                     'MCO': 'mc', 'LIE': 'li',
                     
+                    // Amerika
                     'USA': 'us', 'CAN': 'ca', 'MEX': 'mx', 'BRA': 'br', 'ARG': 'ar', 'CHL': 'cl',
                     'COL': 'co', 'PER': 'pe', 'VEN': 've', 'ECU': 'ec', 'BOL': 'bo', 'PRY': 'py',
                     'URY': 'uy', 'GTM': 'gt', 'HND': 'hn', 'SLV': 'sv', 'NIC': 'ni', 'CRI': 'cr',
                     'PAN': 'pa', 'CUB': 'cu', 'JAM': 'jm', 'HTI': 'ht', 'DOM': 'do', 'PRI': 'pr',
+                    'BRB': 'bb', 'TTO': 'tt', 'GUY': 'gy', 'SUR': 'sr', 'GRD': 'gd', 'VCT': 'vc',
+                    'ATG': 'ag', 'DMA': 'dm', 'KNA': 'kn', 'LCA': 'lc', 'BLZ': 'bz',
                     
+                    // Azija
                     'CHN': 'cn', 'JPN': 'jp', 'IND': 'in', 'PAK': 'pk', 'BGD': 'bd', 'IDN': 'id',
                     'PHL': 'ph', 'VNM': 'vn', 'THA': 'th', 'MMR': 'mm', 'MYS': 'my', 'SGP': 'sg',
                     'KOR': 'kr', 'PRK': 'kp', 'MNG': 'mn', 'KAZ': 'kz', 'UZB': 'uz', 'KGZ': 'kg',
                     'TJK': 'tj', 'TKM': 'tm', 'AFG': 'af', 'IRN': 'ir', 'IRQ': 'iq', 'SYR': 'sy',
                     'LBN': 'lb', 'JOR': 'jo', 'ISR': 'il', 'SAU': 'sa', 'YEM': 'ye', 'OMN': 'om',
                     'ARE': 'ae', 'QAT': 'qa', 'KWT': 'kw', 'BHR': 'bh', 'LKA': 'lk', 'NPL': 'np',
-                    'BTN': 'bt', 'MDV': 'mv',
+                    'BTN': 'bt', 'MDV': 'mv', 'LAO': 'la', 'KHM': 'kh', 'BRN': 'bn', 'TLS': 'tl',
+                    'MAC': 'mo', 'HKG': 'hk', 'TWN': 'tw',
                     
+                    // Afrika
                     'EGY': 'eg', 'LBY': 'ly', 'TUN': 'tn', 'DZA': 'dz', 'MAR': 'ma', 'SDN': 'sd',
                     'SSD': 'ss', 'ETH': 'et', 'ERI': 'er', 'DJI': 'dj', 'SOM': 'so', 'KEN': 'ke',
                     'UGA': 'ug', 'TZA': 'tz', 'RWA': 'rw', 'BDI': 'bi', 'COD': 'cd', 'COG': 'cg',
@@ -726,22 +741,26 @@
                     'SLE': 'sl', 'LBR': 'lr', 'CIV': 'ci', 'GHA': 'gh', 'TGO': 'tg', 'BEN': 'bj',
                     'GNQ': 'gq', 'GAB': 'ga', 'STP': 'st', 'AGO': 'ao', 'ZMB': 'zm', 'ZWE': 'zw',
                     'BWA': 'bw', 'NAM': 'na', 'LSO': 'ls', 'SWZ': 'sz', 'ZAF': 'za', 'MDG': 'mg',
-                    'MUS': 'mu', 'SYC': 'sc', 'COM': 'km', 'MWI': 'mw', 'MOZ': 'mz',
+                    'MUS': 'mu', 'SYC': 'sc', 'COM': 'km', 'MWI': 'mw', 'MOZ': 'mz', 'REU': 're',
+                    'MYT': 'yt', 'SHN': 'sh', 'CPV': 'cv',
                     
+                    // Okeanija
                     'AUS': 'au', 'NZL': 'nz', 'FJI': 'fj', 'PNG': 'pg', 'SLB': 'sb', 'VUT': 'vu',
                     'NCL': 'nc', 'WSM': 'ws', 'TON': 'to', 'KIR': 'ki', 'TUV': 'tv', 'NRU': 'nr',
-                    'MHL': 'mh', 'FSM': 'fm', 'PLW': 'pw'
+                    'MHL': 'mh', 'FSM': 'fm', 'PLW': 'pw', 'COK': 'ck', 'NIU': 'nu', 'TKL': 'tk',
+                    'WLF': 'wf', 'PYF': 'pf'
                 };
                 
                 // Koristi PNG zastavice iz /flags/ direktorija
                 const fileName = countryToFileName[countryCode];
                 if (fileName) {
+                    console.log('Using PNG flag for:', countryCode, '->', fileName);
                     return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;">`;
                 }
                 
                 // Fallback na emoji ako nema PNG
                 const flag = '🏳️';
-                console.log('Returning fallback flag for unknown country:', countryCode);
+                console.warn('No PNG flag found for country:', countryCode, '- using fallback');
                 return flag;
             }
             
