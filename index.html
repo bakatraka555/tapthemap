@@ -606,12 +606,16 @@
                         
                         // Debug: Log all countries to see what codes we're getting
                         if (countryCode && this.stats.countryData && Object.keys(this.stats.countryData).includes(countryCode)) {
-                            console.log(`🔍 Found match: ${countryName} (${countryCode}) -> ${countryStats.total_eur} EUR`);
+                            console.log(`🔍 Found match: ${countryName} (${countryCode}) -> ${countryStats} EUR (type: ${typeof countryStats})`);
                         }
                         
+                        // Handle both object and number formats
+                        const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
+                        const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1; // Default to 1 if it's just a number
+                        
                         // Log all countries with donations
-                        if (countryStats.total_eur > 0) {
-                            console.log(`✅ Processing ${countryName} (${countryCode}):`, countryStats);
+                        if (totalEur > 0) {
+                            console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
                         }
                         
                         return {
@@ -620,8 +624,8 @@
                                 ...feature.properties,
                                 iso: countryCode,
                                 name: countryName,
-                                total_eur: countryStats.total_eur || 0,
-                                total_donors: countryStats.total_donors || 0
+                                total_eur: totalEur,
+                                total_donors: totalDonors
                             }
                         };
                     });
