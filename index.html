@@ -531,11 +531,21 @@
                         .polygonsData([])
                         .polygonCapColor(d => this.getCountryColor(d))
                         .polygonSideColor(d => this.getCountryColor(d))
+                        .polygonCapMaterial({ 
+                            transparent: true, 
+                            opacity: 0.7,
+                            side: 2
+                        })
+                        .polygonSideMaterial({ 
+                            transparent: true, 
+                            opacity: 0.7,
+                            side: 2
+                        })
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.1 : 0.01);
+                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.02 : 0.01);
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -635,6 +645,16 @@
                 console.log('🔄 Forcing immediate color update...');
                 this.globe.polygonCapColor(d => this.getCountryColor(d));
                 this.globe.polygonSideColor(d => this.getCountryColor(d));
+                this.globe.polygonCapMaterial({ 
+                    transparent: true, 
+                    opacity: 0.7,
+                    side: 2
+                });
+                this.globe.polygonSideMaterial({ 
+                    transparent: true, 
+                    opacity: 0.7,
+                    side: 2
+                });
                 
                 // Force re-render
                 setTimeout(() => {
@@ -1042,6 +1062,16 @@
                     // Update globe colors based on new stats
                     this.globe.polygonCapColor(d => this.getCountryColor(d));
                     this.globe.polygonSideColor(d => this.getCountryColor(d));
+                    this.globe.polygonCapMaterial({ 
+                        transparent: true, 
+                        opacity: 0.7,
+                        side: 2
+                    });
+                    this.globe.polygonSideMaterial({ 
+                        transparent: true, 
+                        opacity: 0.7,
+                        side: 2
+                    });
                     
                     // Force re-render
                     setTimeout(() => {
