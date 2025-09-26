@@ -822,7 +822,7 @@
                     data.forEach(country => {
                         this.stats.countryData[country.iso] = country.total_eur;
                         totalDonations += country.total_eur;
-                        totalDonors += country.donors_24h;
+                        totalDonors += (country.total_donors || country.donors_24h || 0);
                     });
                     
                     this.stats.totalDonations = totalDonations;
@@ -877,7 +877,7 @@
                                     <span class="country-flag">${flag}</span>
                                     ${country.name || country.iso}
                                 </div>
-                                <div class="text-xs text-gray-400">${country.donors_24h || 0} donors • €${(country.total_eur || 0).toFixed(0)}</div>
+                                <div class="text-xs text-gray-400">${country.total_donors || country.donors_24h || 0} donors • €${(country.total_eur || 0).toFixed(0)}</div>
                             </div>
                         </div>
                         <button class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name || country.iso}')">
