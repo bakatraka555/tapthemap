@@ -835,6 +835,7 @@
                     
                     console.log('Stats loaded:', this.stats.countryData);
                     console.log('Raw stats data:', data);
+                    console.log('Sample country with donors:', data.find(c => c.total_eur > 0));
                     
                 } catch (error) {
                     console.error('Error loading stats:', error);
