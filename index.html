@@ -533,19 +533,19 @@
                         .polygonSideColor(d => this.getCountryColor(d))
                         .polygonCapMaterial({ 
                             transparent: true, 
-                            opacity: 0.6,
+                            opacity: 0.8,
                             side: 2
                         })
                         .polygonSideMaterial({ 
                             transparent: true, 
-                            opacity: 0.6,
+                            opacity: 0.8,
                             side: 2
                         })
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,1.0)' : 'rgba(255,255,255,0.2)')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.02 : 0.01);
+                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.01 : 0.005);
                     
                     console.log('Globe created, mounting to container...');
                     
