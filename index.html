@@ -533,19 +533,19 @@
                         .polygonSideColor(d => this.getCountryColor(d))
                         .polygonCapMaterial({ 
                             transparent: true, 
-                            opacity: 0.8,
+                            opacity: 1.0,
                             side: 2
                         })
                         .polygonSideMaterial({ 
                             transparent: true, 
-                            opacity: 0.8,
+                            opacity: 1.0,
                             side: 2
                         })
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,1.0)' : 'rgba(255,255,255,0.2)')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.01 : 0.005);
+                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.05 : 0.01);
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -694,30 +694,30 @@
                 console.log(`🎨 Getting heat color for value: ${value}`);
                 if (value === 0) {
                     console.log('Returning transparent black for €0');
-                    return 'rgba(0, 0, 0, 0.05)'; // Vrlo prozirna crna za države bez donacija
+                    return 'rgba(0, 0, 0, 0.1)'; // Prozirna crna za države bez donacija
                 }
                 if (value < 25) {
                     console.log('Returning blue for < €25');
-                    return 'rgba(59, 130, 246, 0.9)'; // Intenzivnija plava za male donacije
+                    return 'rgba(59, 130, 246, 1.0)'; // Puna plava za male donacije
                 }
                 if (value < 50) {
                     console.log('Returning cyan for < €50');
-                    return 'rgba(6, 182, 212, 0.9)'; // Intenzivnija cyan za srednje donacije
+                    return 'rgba(6, 182, 212, 1.0)'; // Puna cyan za srednje donacije
                 }
                 if (value < 100) {
                     console.log('Returning green for < €100');
-                    return 'rgba(34, 197, 94, 0.9)'; // Intenzivnija zelena za dobre donacije
+                    return 'rgba(34, 197, 94, 1.0)'; // Puna zelena za dobre donacije
                 }
                 if (value < 200) {
                     console.log('Returning yellow for < €200');
-                    return 'rgba(234, 179, 8, 0.9)'; // Intenzivnija žuta za velike donacije
+                    return 'rgba(234, 179, 8, 1.0)'; // Puna žuta za velike donacije
                 }
                 if (value < 500) {
                     console.log('Returning orange for < €500');
-                    return 'rgba(249, 115, 22, 0.9)'; // Intenzivnija narančasta za vrlo velike donacije
+                    return 'rgba(249, 115, 22, 1.0)'; // Puna narančasta za vrlo velike donacije
                 }
                 console.log('Returning red for €500+');
-                return 'rgba(239, 68, 68, 0.9)'; // Intenzivnija crvena za najveće donacije
+                return 'rgba(239, 68, 68, 1.0)'; // Puna crvena za najveće donacije
             }
             
             getCountryCode(properties) {
