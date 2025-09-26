@@ -187,15 +187,8 @@
                 <!-- Country Selection -->
                 <div class="glass-effect rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4">Select Your Country</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia">🇭🇷 Croatia</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany">🇩🇪 Germany</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States">🇺🇸 USA</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom">🇬🇧 UK</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France">🇫🇷 France</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy">🇮🇹 Italy</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain">🇪🇸 Spain</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland">🇵🇱 Poland</button>
+                    <div class="flex flex-wrap gap-2" id="country-buttons">
+                        <!-- Buttons will be generated dynamically -->
                     </div>
                 </div>
             </div>
@@ -277,10 +270,29 @@
             }
             
             async init() {
+                this.generateCountryButtons();
                 this.setupEventListeners();
                 await this.initializeMap();
                 await this.loadStats();
                 this.setupReferral();
+            }
+            
+            generateCountryButtons() {
+                const countries = [
+                    { code: 'HRV', name: 'Croatia' },
+                    { code: 'DEU', name: 'Germany' },
+                    { code: 'USA', name: 'United States' },
+                    { code: 'GBR', name: 'United Kingdom' },
+                    { code: 'FRA', name: 'France' },
+                    { code: 'ITA', name: 'Italy' },
+                    { code: 'ESP', name: 'Spain' },
+                    { code: 'POL', name: 'Poland' }
+                ];
+                
+                const container = document.getElementById('country-buttons');
+                container.innerHTML = countries.map(country => 
+                    `<button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="${country.code}" data-name="${country.name}">${this.getCountryFlagSync(country.code)} ${country.name}</button>`
+                ).join('');
             }
             
             setupEventListeners() {
