@@ -551,14 +551,13 @@
                 
                 // Load country data (stats already loaded in init)
                 await this.loadCountryData();
-                    
-                    console.log('Globe initialization complete');
-                    document.getElementById('map-status').textContent = 'Globe loaded ✓';
-                    
-                } catch (error) {
-                    console.error('Globe initialization error:', error);
-                    document.getElementById('map-status').textContent = 'Globe failed to load';
-                }
+                
+                console.log('Globe initialization complete');
+                document.getElementById('map-status').textContent = 'Globe loaded ✓';
+                
+            } catch (error) {
+                console.error('Globe initialization error:', error);
+                document.getElementById('map-status').textContent = 'Globe failed to load';
             }
             
             async loadCountryData() {
