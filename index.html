@@ -840,99 +840,33 @@
             }
             
             getCountryFlag(countryCode) {
-                // Chromium-specific rješenje - koristi Chromium emoji font
-                const emojiFlags = {
-                    'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
-                    'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
-                    'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
-                    'PRY': '🇵🇾', 'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
-                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'CHN': '🇨🇳',
-                    'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩', 'PHL': '🇵🇭',
-                    'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'KOR': '🇰🇷',
-                    'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬', 'TJK': '🇹🇯',
-                    'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾', 'LBN': '🇱🇧',
-                    'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲', 'ARE': '🇦🇪',
-                    'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵', 'BTN': '🇧🇹',
-                    'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱', 'MAC': '🇲🇴',
-                    'HKG': '🇭🇰', 'TWN': '🇹🇼', 'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿',
-                    'MAR': '🇲🇦', 'SDN': '🇸🇩', 'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯',
-                    'SOM': '🇸🇴', 'KEN': '🇰🇪', 'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮',
-                    'COD': '🇨🇩', 'COG': '🇨🇬', 'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬',
-                    'NER': '🇳🇪', 'MLI': '🇲🇱', 'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲',
-                    'GNB': '🇬🇼', 'GIN': '🇬🇳', 'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭',
-                    'TGO': '🇹🇬', 'BEN': '🇧🇯', 'ZAF': '🇿🇦', 'NAM': '🇳🇦', 'BWA': '🇧🇼', 'ZWE': '🇿🇼',
-                    'ZMB': '🇿🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'MDG': '🇲🇬', 'MUS': '🇲🇺', 'SYC': '🇸🇨',
-                    'COM': '🇰🇲', 'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧',
-                    'VUT': '🇻🇺', 'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻',
-                    'NRU': '🇳🇷', 'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺',
-                    'TKL': '🇹🇰', 'WLF': '🇼🇫', 'PYF': '🇵🇫', 'ATA': '🇦🇶', 'GRL': '🇬🇱', 'FLK': '🇫🇰',
-                    'GIB': '🇬🇮', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰', 'ALB': '🇦🇱', 'XKX': '🇽🇰',
-                    'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾', 'MDA': '🇲🇩', 'GEO': '🇬🇪',
-                    'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪', 'LUX': '🇱🇺', 'MLT': '🇲🇹',
-                    'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
-                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'BHS': '🇧🇸', 'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾',
-                    'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨', 'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳',
-                    'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'PRI': '🇵🇷', 'SLV': '🇸🇻', 'NLD': '🇳🇱', 'BEL': '🇧🇪',
-                    'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪', 'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮',
-                    'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷', 'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴',
-                    'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
+                // SVG zastavice za ključne zemlje - rade u svim browserima
+                const svgFlags = {
+                    'HRV': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0000ff"/></svg>',
+                    'DEU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#000000"/><rect y="5" width="20" height="5" fill="#ff0000"/><rect y="10" width="20" height="5" fill="#ffd700"/></svg>',
+                    'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>',
+                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#b22234"/><rect width="20" height="1.15" fill="#ffffff"/><rect y="2.3" width="20" height="1.15" fill="#ffffff"/><rect y="4.6" width="20" height="1.15" fill="#ffffff"/><rect y="6.9" width="20" height="1.15" fill="#ffffff"/><rect y="9.2" width="20" height="1.15" fill="#ffffff"/><rect y="11.5" width="20" height="1.15" fill="#ffffff"/><rect y="13.8" width="20" height="1.15" fill="#ffffff"/></svg>',
+                    'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/><path d="M0 0l20 15M20 0L0 15" stroke="#ffffff" stroke-width="2"/><path d="M0 0l20 15M20 0L0 15" stroke="#c8102e" stroke-width="1.2"/></svg>',
+                    'CAN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#ff0000"/><rect x="6" y="3" width="8" height="9" fill="#ffffff"/><path d="M10 6l1 1-1 1-1-1z" fill="#ff0000"/></svg>',
+                    'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
+                    'BRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#009739"/><path d="M10 7.5c0-2.5 2.5-5 5-5s5 2.5 5 5-2.5 5-5 5-5-2.5-5-5z" fill="#fedf00"/></svg>',
+                    'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/><path d="M5 3l1 1-1 1-1-1z" fill="#ffde00"/></svg>',
+                    'JPN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#ffffff"/><circle cx="10" cy="7.5" r="3" fill="#bc002d"/></svg>',
+                    'TCD': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#002664"/><rect y="5" width="20" height="5" fill="#fecb00"/><rect y="10" width="20" height="5" fill="#c8102e"/></svg>'
                 };
                 
-                const flag = emojiFlags[countryCode] || '🏳️';
-                
-                // Detektiraj Chromium-based browseri (Chrome, Edge, Opera)
-                const isChromium = navigator.userAgent.indexOf('Chrome') > -1 || 
-                                  navigator.userAgent.indexOf('Edg') > -1 || 
-                                  navigator.userAgent.indexOf('OPR') > -1;
-                
-                if (isChromium) {
-                    // Koristi Chromium-specific emoji font s dodatnim CSS-om
-                    return `<span style="font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji', sans-serif; font-size: 1.2em; line-height: 1; display: inline-block; vertical-align: middle; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;">${flag}</span>`;
+                // Vrati SVG ako postoji, inače fallback na tekst
+                if (svgFlags[countryCode]) {
+                    return svgFlags[countryCode];
                 }
                 
-                return flag;
+                // Fallback na tekst
+                return `[${countryCode}]`;
             }
             
             getCountryFlagSync(countryCode) {
-                // Sinkronizovana verzija - koristi emoji direktno
-                const emojiFlags = {
-                    'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
-                    'GBR': '🇬🇧', 'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷',
-                    'CHL': '🇨🇱', 'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴',
-                    'PRY': '🇵🇾', 'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
-                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'CHN': '🇨🇳',
-                    'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩', 'PHL': '🇵🇭',
-                    'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬', 'KOR': '🇰🇷',
-                    'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬', 'TJK': '🇹🇯',
-                    'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾', 'LBN': '🇱🇧',
-                    'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲', 'ARE': '🇦🇪',
-                    'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵', 'BTN': '🇧🇹',
-                    'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱', 'MAC': '🇲🇴',
-                    'HKG': '🇭🇰', 'TWN': '🇹🇼', 'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿',
-                    'MAR': '🇲🇦', 'SDN': '🇸🇩', 'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯',
-                    'SOM': '🇸🇴', 'KEN': '🇰🇪', 'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮',
-                    'COD': '🇨🇩', 'COG': '🇨🇬', 'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬',
-                    'NER': '🇳🇪', 'MLI': '🇲🇱', 'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲',
-                    'GNB': '🇬🇼', 'GIN': '🇬🇳', 'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭',
-                    'TGO': '🇹🇬', 'BEN': '🇧🇯', 'ZAF': '🇿🇦', 'NAM': '🇳🇦', 'BWA': '🇧🇼', 'ZWE': '🇿🇼',
-                    'ZMB': '🇿🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'MDG': '🇲🇬', 'MUS': '🇲🇺', 'SYC': '🇸🇨',
-                    'COM': '🇰🇲', 'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧',
-                    'VUT': '🇻🇺', 'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻',
-                    'NRU': '🇳🇷', 'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺',
-                    'TKL': '🇹🇰', 'WLF': '🇼🇫', 'PYF': '🇵🇫', 'ATA': '🇦🇶', 'GRL': '🇬🇱', 'FLK': '🇫🇰',
-                    'GIB': '🇬🇮', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰', 'ALB': '🇦🇱', 'XKX': '🇽🇰',
-                    'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾', 'MDA': '🇲🇩', 'GEO': '🇬🇪',
-                    'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪', 'LUX': '🇱🇺', 'MLT': '🇲🇹',
-                    'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
-                    'SOL': '🇸🇴', 'ESH': '🇪🇭', 'BHS': '🇧🇸', 'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾',
-                    'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨', 'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳',
-                    'LCA': '🇱🇨', 'BLZ': '🇧🇿', 'PRI': '🇵🇷', 'SLV': '🇸🇻', 'NLD': '🇳🇱', 'BEL': '🇧🇪',
-                    'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪', 'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮',
-                    'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷', 'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴',
-                    'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿', 'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦'
-                };
-                
-                return emojiFlags[countryCode] || '🏳️';
+                // Sinkronizovana verzija - koristi isti SVG kao getCountryFlag
+                return this.getCountryFlag(countryCode);
             }
             
             async loadStats() {
