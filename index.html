@@ -179,14 +179,14 @@
                 <div class="glass-effect rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4">Select Your Country</h3>
                     <div class="flex flex-wrap gap-2">
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia">🇭🇷 Croatia</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany">🇩🇪 Germany</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States">🇺🇸 USA</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom">🇬🇧 UK</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France">🇫🇷 France</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy">🇮🇹 Italy</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain">🇪🇸 Spain</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland">🇵🇱 Poland</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia"><img src="flags/hr.png" alt="HR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Croatia</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany"><img src="flags/de.png" alt="DE" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Germany</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States"><img src="flags/us.png" alt="US" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">USA</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom"><img src="flags/gb.png" alt="GB" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">UK</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France"><img src="flags/fr.png" alt="FR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">France</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy"><img src="flags/it.png" alt="IT" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Italy</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain"><img src="flags/es.png" alt="ES" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Spain</button>
+                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland"><img src="flags/pl.png" alt="PL" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Poland</button>
                     </div>
                 </div>
             </div>
@@ -675,74 +675,55 @@
             getCountryFlag(countryCode) {
                 console.log('getCountryFlag called with:', countryCode);
                 
-                // SVG zastavice za Chrome kompatibilnost
-                const svgFlags = {
-                    'MEX': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#006847"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#ce1126"/></svg>',
-                    'ARG': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#74acdf"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#74acdf"/></svg>',
-                    'CHN': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#de2910"/></svg>',
-                    'SAU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#006c35"/></svg>',
-                    'IND': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff9933"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#138808"/></svg>',
-                    'HRV': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#ff0000"/><rect y="5" width="20" height="5" fill="#ffffff"/><rect y="10" width="20" height="5" fill="#0000ff"/></svg>',
-                    'DEU': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="5" fill="#000000"/><rect y="5" width="20" height="5" fill="#dd0000"/><rect y="10" width="20" height="5" fill="#ffce00"/></svg>',
-                    'USA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#b22234"/></svg>',
-                    'GBR': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="20" height="15" fill="#012169"/></svg>',
-                    'FRA': '<svg width="20" height="15" viewBox="0 0 20 15"><rect width="6.67" height="15" fill="#002395"/><rect x="6.67" width="6.67" height="15" fill="#ffffff"/><rect x="13.33" width="6.67" height="15" fill="#ed2939"/></svg>'
+                // PNG zastavice za Chrome Windows kompatibilnost
+                const countryToFileName = {
+                    'HRV': 'hr', 'DEU': 'de', 'FRA': 'fr', 'ITA': 'it', 'ESP': 'es', 'POL': 'pl',
+                    'GBR': 'gb', 'NLD': 'nl', 'BEL': 'be', 'CHE': 'ch', 'AUT': 'at', 'SWE': 'se',
+                    'NOR': 'no', 'DNK': 'dk', 'FIN': 'fi', 'PRT': 'pt', 'GRC': 'gr', 'TUR': 'tr',
+                    'UKR': 'ua', 'RUS': 'ru', 'ROU': 'ro', 'BGR': 'bg', 'HUN': 'hu', 'CZE': 'cz',
+                    'SVK': 'sk', 'SVN': 'si', 'BIH': 'ba', 'SRB': 'rs', 'MNE': 'me', 'MKD': 'mk',
+                    'ALB': 'al', 'XKX': 'xk', 'LTU': 'lt', 'LVA': 'lv', 'EST': 'ee', 'BLR': 'by',
+                    'MDA': 'md', 'GEO': 'ge', 'ARM': 'am', 'AZE': 'az', 'ISL': 'is', 'IRL': 'ie',
+                    'LUX': 'lu', 'MLT': 'mt', 'CYP': 'cy', 'AND': 'ad', 'SMR': 'sm', 'VAT': 'va',
+                    'MCO': 'mc', 'LIE': 'li',
+                    
+                    'USA': 'us', 'CAN': 'ca', 'MEX': 'mx', 'BRA': 'br', 'ARG': 'ar', 'CHL': 'cl',
+                    'COL': 'co', 'PER': 'pe', 'VEN': 've', 'ECU': 'ec', 'BOL': 'bo', 'PRY': 'py',
+                    'URY': 'uy', 'GTM': 'gt', 'HND': 'hn', 'SLV': 'sv', 'NIC': 'ni', 'CRI': 'cr',
+                    'PAN': 'pa', 'CUB': 'cu', 'JAM': 'jm', 'HTI': 'ht', 'DOM': 'do', 'PRI': 'pr',
+                    
+                    'CHN': 'cn', 'JPN': 'jp', 'IND': 'in', 'PAK': 'pk', 'BGD': 'bd', 'IDN': 'id',
+                    'PHL': 'ph', 'VNM': 'vn', 'THA': 'th', 'MMR': 'mm', 'MYS': 'my', 'SGP': 'sg',
+                    'KOR': 'kr', 'PRK': 'kp', 'MNG': 'mn', 'KAZ': 'kz', 'UZB': 'uz', 'KGZ': 'kg',
+                    'TJK': 'tj', 'TKM': 'tm', 'AFG': 'af', 'IRN': 'ir', 'IRQ': 'iq', 'SYR': 'sy',
+                    'LBN': 'lb', 'JOR': 'jo', 'ISR': 'il', 'SAU': 'sa', 'YEM': 'ye', 'OMN': 'om',
+                    'ARE': 'ae', 'QAT': 'qa', 'KWT': 'kw', 'BHR': 'bh', 'LKA': 'lk', 'NPL': 'np',
+                    'BTN': 'bt', 'MDV': 'mv',
+                    
+                    'EGY': 'eg', 'LBY': 'ly', 'TUN': 'tn', 'DZA': 'dz', 'MAR': 'ma', 'SDN': 'sd',
+                    'SSD': 'ss', 'ETH': 'et', 'ERI': 'er', 'DJI': 'dj', 'SOM': 'so', 'KEN': 'ke',
+                    'UGA': 'ug', 'TZA': 'tz', 'RWA': 'rw', 'BDI': 'bi', 'COD': 'cd', 'COG': 'cg',
+                    'CAF': 'cf', 'TCD': 'td', 'CMR': 'cm', 'NGA': 'ng', 'NER': 'ne', 'MLI': 'ml',
+                    'BFA': 'bf', 'SEN': 'sn', 'MRT': 'mr', 'GMB': 'gm', 'GNB': 'gw', 'GIN': 'gn',
+                    'SLE': 'sl', 'LBR': 'lr', 'CIV': 'ci', 'GHA': 'gh', 'TGO': 'tg', 'BEN': 'bj',
+                    'GNQ': 'gq', 'GAB': 'ga', 'STP': 'st', 'AGO': 'ao', 'ZMB': 'zm', 'ZWE': 'zw',
+                    'BWA': 'bw', 'NAM': 'na', 'LSO': 'ls', 'SWZ': 'sz', 'ZAF': 'za', 'MDG': 'mg',
+                    'MUS': 'mu', 'SYC': 'sc', 'COM': 'km', 'MWI': 'mw', 'MOZ': 'mz',
+                    
+                    'AUS': 'au', 'NZL': 'nz', 'FJI': 'fj', 'PNG': 'pg', 'SLB': 'sb', 'VUT': 'vu',
+                    'NCL': 'nc', 'WSM': 'ws', 'TON': 'to', 'KIR': 'ki', 'TUV': 'tv', 'NRU': 'nr',
+                    'MHL': 'mh', 'FSM': 'fm', 'PLW': 'pw'
                 };
                 
-                // Vrati SVG ako postoji, inače fallback na emoji
-                if (svgFlags[countryCode]) {
-                    return svgFlags[countryCode];
+                // Koristi PNG zastavice iz /flags/ direktorija
+                const fileName = countryToFileName[countryCode];
+                if (fileName) {
+                    return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;">`;
                 }
                 
-                const flags = {
-                    // Evropa
-                    'HRV': '🇭🇷', 'DEU': '🇩🇪', 'FRA': '🇫🇷', 'ITA': '🇮🇹', 'ESP': '🇪🇸', 'POL': '🇵🇱',
-                    'GBR': '🇬🇧', 'NLD': '🇳🇱', 'BEL': '🇧🇪', 'CHE': '🇨🇭', 'AUT': '🇦🇹', 'SWE': '🇸🇪',
-                    'NOR': '🇳🇴', 'DNK': '🇩🇰', 'FIN': '🇫🇮', 'PRT': '🇵🇹', 'GRC': '🇬🇷', 'TUR': '🇹🇷',
-                    'UKR': '🇺🇦', 'RUS': '🇷🇺', 'ROU': '🇷🇴', 'BGR': '🇧🇬', 'HUN': '🇭🇺', 'CZE': '🇨🇿',
-                    'SVK': '🇸🇰', 'SVN': '🇸🇮', 'BIH': '🇧🇦', 'SRB': '🇷🇸', 'MNE': '🇲🇪', 'MKD': '🇲🇰',
-                    'ALB': '🇦🇱', 'XKX': '🇽🇰', 'LTU': '🇱🇹', 'LVA': '🇱🇻', 'EST': '🇪🇪', 'BLR': '🇧🇾',
-                    'MDA': '🇲🇩', 'GEO': '🇬🇪', 'ARM': '🇦🇲', 'AZE': '🇦🇿', 'ISL': '🇮🇸', 'IRL': '🇮🇪',
-                    'LUX': '🇱🇺', 'MLT': '🇲🇹', 'CYP': '🇨🇾', 'AND': '🇦🇩', 'SMR': '🇸🇲', 'VAT': '🇻🇦', 'MCO': '🇲🇨', 'LIE': '🇱🇮',
-                    
-                    // Amerika
-                    'USA': '🇺🇸', 'CAN': '🇨🇦', 'MEX': '🇲🇽', 'BRA': '🇧🇷', 'ARG': '🇦🇷', 'CHL': '🇨🇱',
-                    'COL': '🇨🇴', 'PER': '🇵🇪', 'VEN': '🇻🇪', 'ECU': '🇪🇨', 'BOL': '🇧🇴', 'PRY': '🇵🇾',
-                    'URY': '🇺🇾', 'GTM': '🇬🇹', 'HND': '🇭🇳', 'SLV': '🇸🇻', 'NIC': '🇳🇮', 'CRI': '🇨🇷',
-                    'PAN': '🇵🇦', 'CUB': '🇨🇺', 'JAM': '🇯🇲', 'HTI': '🇭🇹', 'DOM': '🇩🇴', 'PRI': '🇵🇷',
-                    'BRB': '🇧🇧', 'TTO': '🇹🇹', 'GUY': '🇬🇾', 'SUR': '🇸🇷', 'GRD': '🇬🇩', 'VCT': '🇻🇨',
-                    'ATG': '🇦🇬', 'DMA': '🇩🇲', 'KNA': '🇰🇳', 'LCA': '🇱🇨', 'BLZ': '🇧🇿',
-                    
-                    // Azija
-                    'CHN': '🇨🇳', 'JPN': '🇯🇵', 'IND': '🇮🇳', 'PAK': '🇵🇰', 'BGD': '🇧🇩', 'IDN': '🇮🇩',
-                    'PHL': '🇵🇭', 'VNM': '🇻🇳', 'THA': '🇹🇭', 'MMR': '🇲🇲', 'MYS': '🇲🇾', 'SGP': '🇸🇬',
-                    'KOR': '🇰🇷', 'PRK': '🇰🇵', 'MNG': '🇲🇳', 'KAZ': '🇰🇿', 'UZB': '🇺🇿', 'KGZ': '🇰🇬',
-                    'TJK': '🇹🇯', 'TKM': '🇹🇲', 'AFG': '🇦🇫', 'IRN': '🇮🇷', 'IRQ': '🇮🇶', 'SYR': '🇸🇾',
-                    'LBN': '🇱🇧', 'JOR': '🇯🇴', 'ISR': '🇮🇱', 'SAU': '🇸🇦', 'YEM': '🇾🇪', 'OMN': '🇴🇲',
-                    'ARE': '🇦🇪', 'QAT': '🇶🇦', 'KWT': '🇰🇼', 'BHR': '🇧🇭', 'LKA': '🇱🇰', 'NPL': '🇳🇵',
-                    'BTN': '🇧🇹', 'MDV': '🇲🇻', 'LAO': '🇱🇦', 'KHM': '🇰🇭', 'BRN': '🇧🇳', 'TLS': '🇹🇱',
-                    'MAC': '🇲🇴', 'HKG': '🇭🇰', 'TWN': '🇹🇼',
-                    
-                    // Afrika
-                    'EGY': '🇪🇬', 'LBY': '🇱🇾', 'TUN': '🇹🇳', 'DZA': '🇩🇿', 'MAR': '🇲🇦', 'SDN': '🇸🇩',
-                    'SSD': '🇸🇸', 'ETH': '🇪🇹', 'ERI': '🇪🇷', 'DJI': '🇩🇯', 'SOM': '🇸🇴', 'KEN': '🇰🇪',
-                    'UGA': '🇺🇬', 'TZA': '🇹🇿', 'RWA': '🇷🇼', 'BDI': '🇧🇮', 'COD': '🇨🇩', 'COG': '🇨🇬',
-                    'CAF': '🇨🇫', 'TCD': '🇹🇩', 'CMR': '🇨🇲', 'NGA': '🇳🇬', 'NER': '🇳🇪', 'MLI': '🇲🇱',
-                    'BFA': '🇧🇫', 'SEN': '🇸🇳', 'MRT': '🇲🇷', 'GMB': '🇬🇲', 'GNB': '🇬🇼', 'GIN': '🇬🇳',
-                    'SLE': '🇸🇱', 'LBR': '🇱🇷', 'CIV': '🇨🇮', 'GHA': '🇬🇭', 'TGO': '🇹🇬', 'BEN': '🇧🇯',
-                    'GNQ': '🇬🇶', 'GAB': '🇬🇦', 'STP': '🇸🇹', 'AGO': '🇦🇴', 'ZMB': '🇿🇲', 'ZWE': '🇿🇼',
-                    'BWA': '🇧🇼', 'NAM': '🇳🇦', 'LSO': '🇱🇸', 'SWZ': '🇸🇿', 'ZAF': '🇿🇦', 'MDG': '🇲🇬',
-                    'MUS': '🇲🇺', 'SYC': '🇸🇨', 'COM': '🇰🇲', 'MWI': '🇲🇼', 'MOZ': '🇲🇿', 'REU': '🇷🇪',
-                    'MYT': '🇾🇹', 'SHN': '🇸🇭', 'CPV': '🇨🇻',
-                    
-                    // Okeanija
-                    'AUS': '🇦🇺', 'NZL': '🇳🇿', 'FJI': '🇫🇯', 'PNG': '🇵🇬', 'SLB': '🇸🇧', 'VUT': '🇻🇺',
-                    'NCL': '🇳🇨', 'WSM': '🇼🇸', 'TON': '🇹🇴', 'KIR': '🇰🇮', 'TUV': '🇹🇻', 'NRU': '🇳🇷',
-                    'MHL': '🇲🇭', 'FSM': '🇫🇲', 'PLW': '🇵🇼', 'COK': '🇨🇰', 'NIU': '🇳🇺', 'TKL': '🇹🇰',
-                    'WLF': '🇼🇫', 'PYF': '🇵🇫'
-                };
-                const flag = flags[countryCode] || '🏳️';
-                console.log('Returning flag:', flag, 'for country:', countryCode);
+                // Fallback na emoji ako nema PNG
+                const flag = '🏳️';
+                console.log('Returning fallback flag for unknown country:', countryCode);
                 return flag;
             }
             
