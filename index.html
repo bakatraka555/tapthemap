@@ -236,22 +236,18 @@
                     
                     <!-- Legend -->
                 <div class="mt-4 flex items-center justify-between text-sm">
-                    <span class="text-gray-400">Donation Amount</span>
+                    <span class="text-gray-400">Donation Hearts</span>
                     <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-gray-700 rounded"></div>
                         <span class="text-gray-400">€0</span>
-                        <div class="w-3 h-3 bg-blue-500 rounded"></div>
-                        <span class="text-gray-400">€25</span>
-                        <div class="w-3 h-3 bg-cyan-500 rounded"></div>
-                        <span class="text-gray-400">€50</span>
-                        <div class="w-3 h-3 bg-green-500 rounded"></div>
-                        <span class="text-gray-400">€100</span>
-                        <div class="w-3 h-3 bg-yellow-500 rounded"></div>
-                        <span class="text-gray-400">€200</span>
-                        <div class="w-3 h-3 bg-orange-500 rounded"></div>
-                        <span class="text-gray-400">€500</span>
-                        <div class="w-3 h-3 bg-red-500 rounded"></div>
-                        <span class="text-gray-400">€500+</span>
+                        <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                        <span class="text-gray-400">€25+</span>
+                        <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+                        <span class="text-gray-400">€50+</span>
+                        <div class="w-5 h-5 bg-red-600 rounded-full"></div>
+                        <span class="text-gray-400">€100+</span>
+                        <span class="text-red-500 text-lg">❤️</span>
+                        <span class="text-gray-400">Hover for effect</span>
                     </div>
                 </div>
                 </div>
@@ -545,17 +541,14 @@
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.02 : 0.01)
-                        .polygonCapMaterial({ 
-                            transparent: true, 
-                            opacity: 0.7,
-                            side: 2
-                        })
-                        .polygonSideMaterial({ 
-                            transparent: true, 
-                            opacity: 0.7,
-                            side: 2
-                        });
+                        .pointsData([])
+                        .pointColor('color')
+                        .pointAltitude('alt')
+                        .pointRadius('radius')
+                        .pointResolution(8)
+                        .pointLabel('label')
+                        .onPointClick(d => this.handleCountryClick(d))
+                        .onPointHover(d => this.handleCountryHover(d));
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -626,11 +619,6 @@
                     const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
                     const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
                     
-                    // Log countries with donations
-                    if (totalEur > 0) {
-                        console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
-                    }
-                    
                     return {
                         ...feature,
                         properties: {
@@ -643,41 +631,43 @@
                     };
                 });
                 
-                console.log('Finished processing countries. Countries with donations:', 
-                    countriesData.filter(c => c.properties.total_eur > 0).length);
+                // Create heart points for countries with donations
+                const heartPoints = countriesData
+                    .filter(country => country.properties.total_eur > 0)
+                    .map(country => {
+                        const totalEur = country.properties.total_eur;
+                        const countryName = country.properties.name;
+                        const totalDonors = country.properties.total_donors;
+                        
+                        // Get country center coordinates
+                        const center = this.getCountryCenter(country);
+                        
+                        console.log(`❤️ Creating heart for ${countryName}: ${totalEur} EUR`);
+                        
+                        return {
+                            lat: center.lat,
+                            lng: center.lng,
+                            alt: 0.05,
+                            radius: Math.min(Math.max(totalEur / 30, 0.8), 2.5), // Size based on donation amount
+                            color: '#ff6b6b', // Heart red color
+                            label: `${countryName}<br/>❤️ €${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`,
+                            country: country,
+                            isHeart: true
+                        };
+                    });
                 
-                console.log('Updating globe with', countriesData.length, 'countries...');
+                console.log('Finished processing countries. Hearts created:', heartPoints.length);
+                console.log('Updating globe with', countriesData.length, 'countries and', heartPoints.length, 'hearts...');
                 
-                // Update globe with country data
+                // Update globe with country data and hearts
                 this.globe.polygonsData(countriesData);
+                this.globe.pointsData(heartPoints);
                 
-                // Force update colors immediately
-                console.log('🔄 Forcing immediate color update...');
-                this.globe.polygonCapColor(d => this.getCountryColor(d));
-                this.globe.polygonSideColor(d => this.getCountryColor(d));
-                this.globe.polygonCapMaterial({ 
-                    transparent: true, 
-                    opacity: 0.7,
-                    side: 2
-                });
-                this.globe.polygonSideMaterial({ 
-                    transparent: true, 
-                    opacity: 0.7,
-                    side: 2
-                });
-                
-                // Start animations for countries with donations
-                const countriesWithDonations = countriesData.filter(c => c.properties.total_eur > 0);
-                if (countriesWithDonations.length > 0) {
-                    console.log('🎬 Starting country animations...');
-                    this.animateCountries();
+                // Start heart animations
+                if (heartPoints.length > 0) {
+                    console.log('❤️ Starting heart animations...');
+                    this.animateHearts();
                 }
-                
-                // Force re-render
-                setTimeout(() => {
-                    console.log('🔄 Forcing re-render...');
-                    this.globe.polygonsData(this.globe.polygonsData());
-                }, 100);
                     
                     console.log('Country data loaded successfully');
                     
@@ -691,13 +681,48 @@
             handleCountryClick(country) {
                 if (country && country.properties) {
                     this.selectCountry(country.properties.iso, country.properties.name);
+                } else if (country && country.country) {
+                    // Handle heart click
+                    this.selectCountry(country.country.properties.iso, country.country.properties.name);
                 }
             }
 
             handleCountryHover(country) {
                 if (country && country.properties) {
                     console.log('Hovering over:', country.properties.name);
+                } else if (country && country.country) {
+                    console.log('Hovering over heart:', country.country.properties.name);
+                    // Add hover effect to heart
+                    this.addHeartHoverEffect(country);
                 }
+            }
+            
+            addHeartHoverEffect(heart) {
+                // Create floating hearts around the main heart
+                const time = Date.now() * 0.001;
+                const center = { lat: heart.lat, lng: heart.lng };
+                
+                // Create small floating hearts
+                const floatingHearts = [];
+                for (let i = 0; i < 3; i++) {
+                    const angle = (time * 2 + i * 2.09) % (Math.PI * 2);
+                    const radius = 0.1 + 0.05 * Math.sin(time * 3 + i);
+                    
+                    floatingHearts.push({
+                        lat: center.lat + radius * Math.cos(angle),
+                        lng: center.lng + radius * Math.sin(angle),
+                        alt: 0.08 + 0.02 * Math.sin(time * 4 + i),
+                        radius: 0.3,
+                        color: '#ff9999',
+                        label: '❤️',
+                        isFloating: true
+                    });
+                }
+                
+                // Update points with floating hearts
+                const currentPoints = this.globe.pointsData();
+                const nonFloatingPoints = currentPoints.filter(p => !p.isFloating);
+                this.globe.pointsData([...nonFloatingPoints, ...floatingHearts]);
             }
             
             getCountryTooltip(country) {
@@ -714,43 +739,70 @@
                 return `${name}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`;
             }
             
-            getCountryColor(country) {
-                const heatValue = country.properties?.total_eur || 0;
-                // Log all countries with donations
-                if (heatValue > 0) {
-                    console.log(`🎨 Getting color for ${country.properties?.name}: ${heatValue} EUR`);
+            getCountryCenter(country) {
+                // Simple center calculation for country
+                if (country.geometry && country.geometry.coordinates) {
+                    // For now, return a default center - in real implementation, 
+                    // you'd calculate the centroid of the country's geometry
+                    const countryCenters = {
+                        'USA': { lat: 39.8283, lng: -98.5795 },
+                        'MEX': { lat: 23.6345, lng: -102.5528 },
+                        'PER': { lat: -9.1900, lng: -75.0152 },
+                        'ARG': { lat: -38.4161, lng: -63.6167 },
+                        'CHN': { lat: 35.8617, lng: 104.1954 },
+                        'IND': { lat: 20.5937, lng: 78.9629 },
+                        'SAU': { lat: 23.8859, lng: 45.0792 },
+                        'SDN': { lat: 12.8628, lng: 30.2176 },
+                        'TCD': { lat: 15.4542, lng: 18.7322 }
+                    };
+                    
+                    const iso = country.properties.iso;
+                    if (countryCenters[iso]) {
+                        return countryCenters[iso];
+                    }
                 }
-                return this.getHeatColor(heatValue);
+                
+                // Fallback to a random location if not found
+                return { lat: Math.random() * 180 - 90, lng: Math.random() * 360 - 180 };
             }
             
-            getHeatColor(value) {
-                console.log(`🎨 Getting heat color for value: ${value}`);
-                if (value === 0) {
-                    console.log('Returning transparent for €0');
-                    return 'transparent'; // Prozirna za države bez donacija
-                }
-                if (value < 25) {
-                    console.log('Returning blue for < €25');
-                    return '#3b82f6'; // Plava za male donacije
-                }
-                if (value < 50) {
-                    console.log('Returning cyan for < €50');
-                    return '#06b6d4'; // Cyan za srednje donacije
-                }
-                if (value < 100) {
-                    console.log('Returning green for < €100');
-                    return '#22c55e'; // Zelena za dobre donacije
-                }
-                if (value < 200) {
-                    console.log('Returning yellow for < €200');
-                    return '#eab308'; // Žuta za velike donacije
-                }
-                if (value < 500) {
-                    console.log('Returning orange for < €500');
-                    return '#f97316'; // Narančasta za vrlo velike donacije
-                }
-                console.log('Returning red for €500+');
-                return '#ef4444'; // Crvena za najveće donacije
+            // Heart animation function
+            animateHearts() {
+                if (!this.globe || !this.globe.pointsData) return;
+                
+                const points = this.globe.pointsData();
+                if (!points || points.length === 0) return;
+                
+                const time = Date.now() * 0.001; // Time in seconds
+                
+                // Update heart properties for animation
+                const animatedPoints = points.map(point => {
+                    if (!point.isHeart) return point;
+                    
+                    return {
+                        ...point,
+                        // Gentle pulsing effect
+                        radius: point.radius * (1 + 0.2 * Math.sin(time * 2)),
+                        // Slight altitude variation
+                        alt: 0.05 + 0.02 * Math.sin(time * 1.5),
+                        // Color intensity variation
+                        color: this.getAnimatedHeartColor(time)
+                    };
+                });
+                
+                this.globe.pointsData(animatedPoints);
+                
+                // Continue animation
+                requestAnimationFrame(() => this.animateHearts());
+            }
+            
+            getAnimatedHeartColor(time) {
+                // Heart color with gentle pulsing
+                const intensity = 0.8 + 0.2 * Math.sin(time * 3);
+                const r = Math.floor(255 * intensity);
+                const g = Math.floor(107 * intensity);
+                const b = Math.floor(107 * intensity);
+                return `rgb(${r}, ${g}, ${b})`;
             }
             
             getCountryCode(properties) {
@@ -1075,69 +1127,10 @@
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
-                    // Update globe colors based on new stats
-                    this.globe.polygonCapColor(d => this.getCountryColor(d));
-                    this.globe.polygonSideColor(d => this.getCountryColor(d));
-                    this.globe.polygonCapMaterial({ 
-                        transparent: true, 
-                        opacity: 0.7,
-                        side: 2
-                    });
-                    this.globe.polygonSideMaterial({ 
-                        transparent: true, 
-                        opacity: 0.7,
-                        side: 2
-                    });
-                    
-                    // Force re-render
-                    setTimeout(() => {
-                        console.log('🔄 Forcing color update re-render...');
-                        this.globe.polygonsData(this.globe.polygonsData());
-                    }, 50);
+                    console.log('🔄 Updating globe hearts with stats:', this.stats.countryData);
+                    // Reload country data to update hearts
+                    this.loadCountryData();
                 }
-            }
-            
-            // Animation functions for pulsing and glowing effects
-            animateCountries() {
-                if (!this.globe || !this.globe.polygonsData) return;
-                
-                const countries = this.globe.polygonsData();
-                if (!countries || countries.length === 0) return;
-                
-                const time = Date.now() * 0.001; // Time in seconds
-                
-                // Update countries with animations
-                const animatedCountries = countries.map(country => {
-                    const hasDonations = country.properties?.total_eur > 0;
-                    
-                    if (!hasDonations) return country;
-                    
-                    // Pulsing effect - altitude changes
-                    const pulseIntensity = 0.3 + 0.2 * Math.sin(time * 2);
-                    const newAltitude = 0.02 + 0.01 * pulseIntensity;
-                    
-                    // Glowing effect - stroke color changes
-                    const glowIntensity = 0.5 + 0.5 * Math.sin(time * 3);
-                    const glowColor = `rgba(255, 255, 255, ${glowIntensity})`;
-                    
-                    return {
-                        ...country,
-                        properties: {
-                            ...country.properties,
-                            animatedAltitude: newAltitude,
-                            animatedStrokeColor: glowColor
-                        }
-                    };
-                });
-                
-                // Update globe with animated data
-                this.globe.polygonsData(animatedCountries);
-                this.globe.polygonAltitude(d => d.properties?.animatedAltitude || d.properties?.total_eur > 0 ? 0.02 : 0.01);
-                this.globe.polygonStrokeColor(d => d.properties?.animatedStrokeColor || (d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc'));
-                
-                // Continue animation
-                requestAnimationFrame(() => this.animateCountries());
             }
             
             zoomIn() {
