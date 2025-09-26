@@ -235,9 +235,9 @@
                     </div>
                     
                     <!-- Legend -->
-                <div class="mt-4 flex items-center justify-between text-sm">
+                    <div class="mt-4 flex items-center justify-between text-sm">
                     <span class="text-gray-400">Donation Points</span>
-                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2">
                         <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
                         <span class="text-gray-400">€25</span>
                         <div class="w-3 h-3 bg-cyan-500 rounded-full"></div>
@@ -250,8 +250,8 @@
                         <span class="text-gray-400">€500</span>
                         <div class="w-3 h-3 bg-red-500 rounded-full"></div>
                         <span class="text-gray-400">€500+</span>
+                        </div>
                     </div>
-                </div>
                 </div>
                 
                 <!-- Country Selection -->
@@ -347,12 +347,12 @@
                 this.init();
             }
             
-        async init() {
-            this.setupEventListeners();
+            async init() {
+                this.setupEventListeners();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
-            this.setupReferral();
-        }
+                this.setupReferral();
+            }
             
             setupEventListeners() {
                 // Country selection
@@ -551,7 +551,14 @@
                         .pointResolution(8)
                         .pointLabel('label')
                         .onPointClick(d => this.handleCountryClick(d))
-                        .onPointHover(d => this.handleCountryHover(d));
+                        .onPointHover(d => this.handleCountryHover(d))
+                        .pointMaterial({ 
+                            transparent: true, 
+                            opacity: 0.8,
+                            emissive: true,
+                            emissiveIntensity: 0.3,
+                            side: 2 // DoubleSide for better visibility
+                        });
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -573,9 +580,9 @@
                 console.error('Globe initialization error:', error);
                 document.getElementById('map-status').textContent = 'Globe failed to load';
             }
-        }
+            }
             
-        async loadCountryData() {
+            async loadCountryData() {
                 try {
                     console.log('Loading country data...');
                     
@@ -614,8 +621,8 @@
                 // Process GeoJSON data for 3D globe
                 console.log('Starting to process', geoData.features.length, 'countries...');
                 const countriesData = geoData.features.map(feature => {
-                    const countryCode = this.getCountryCode(feature.properties);
-                    const countryName = this.getCountryName(feature.properties);
+                            const countryCode = this.getCountryCode(feature.properties);
+                            const countryName = this.getCountryName(feature.properties);
                     const countryStats = this.stats.countryData?.[countryCode] || {};
                     
                     // Handle both object and number formats
@@ -654,7 +661,13 @@
                             radius: Math.min(Math.max(totalEur / 50, 0.5), 3), // Size based on donation amount
                             color: this.getPointColor(totalEur),
                             label: `${countryName}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`,
-                            country: country
+                            country: country,
+                            // Animation properties
+                            pulse: true,
+                            rotation: true,
+                            glow: true,
+                            // Store original color for animation
+                            originalColor: this.getPointColor(totalEur)
                         };
                     });
                 
@@ -664,6 +677,12 @@
                 // Update globe with country data and points
                 this.globe.polygonsData(countriesData);
                 this.globe.pointsData(pointsData);
+                
+                // Start animation after points are loaded
+                if (pointsData.length > 0) {
+                    console.log('🎬 Starting point animations...');
+                    this.animatePoints();
+                }
                     
                     console.log('Country data loaded successfully');
                     
@@ -1067,6 +1086,52 @@
                     // Reload country data to update points
                     this.loadCountryData();
                 }
+            }
+            
+            // Animation functions
+            animatePoints() {
+                if (!this.globe || !this.globe.pointsData) return;
+                
+                const points = this.globe.pointsData();
+                if (!points || points.length === 0) return;
+                
+                // Update point properties for animation
+                const animatedPoints = points.map(point => {
+                    const time = Date.now() * 0.001; // Time in seconds
+                    
+                    return {
+                        ...point,
+                        // Pulsing effect - radius changes
+                        radius: point.radius * (1 + 0.3 * Math.sin(time * 2)),
+                        // Rotation effect - altitude changes
+                        alt: 0.02 + 0.01 * Math.sin(time * 1.5),
+                        // Glow effect - color intensity changes
+                        color: this.getAnimatedColor(point.originalColor || point.color, time)
+                    };
+                });
+                
+                this.globe.pointsData(animatedPoints);
+                
+                // Continue animation
+                requestAnimationFrame(() => this.animatePoints());
+            }
+            
+            getAnimatedColor(baseColor, time) {
+                // Convert hex to RGB
+                const hex = baseColor.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+                
+                // Add glow effect with sine wave
+                const glowIntensity = 0.3 + 0.2 * Math.sin(time * 3);
+                
+                // Brighten the color
+                const newR = Math.min(255, r + (255 - r) * glowIntensity);
+                const newG = Math.min(255, g + (255 - g) * glowIntensity);
+                const newB = Math.min(255, b + (255 - b) * glowIntensity);
+                
+                return `rgb(${Math.floor(newR)}, ${Math.floor(newG)}, ${Math.floor(newB)})`;
             }
             
             zoomIn() {
