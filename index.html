@@ -520,7 +520,7 @@
                         throw new Error('Globe.gl library not loaded');
                     }
                     
-                    // Initialize 3D globe with transparent country overlays
+                    // Initialize 3D globe with simple country overlays
                     this.globe = Globe()
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
@@ -531,21 +531,11 @@
                         .polygonsData([])
                         .polygonCapColor(d => this.getCountryColor(d))
                         .polygonSideColor(d => this.getCountryColor(d))
-                        .polygonCapMaterial({ 
-                            transparent: true, 
-                            opacity: 1.0,
-                            side: 2
-                        })
-                        .polygonSideMaterial({ 
-                            transparent: true, 
-                            opacity: 1.0,
-                            side: 2
-                        })
-                        .polygonStrokeColor(d => d.properties?.total_eur > 0 ? 'rgba(255,255,255,1.0)' : 'rgba(255,255,255,0.2)')
+                        .polygonStrokeColor(d => d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc')
                         .polygonLabel(d => this.getCountryTooltip(d))
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
-                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.05 : 0.01);
+                        .polygonAltitude(d => d.properties?.total_eur > 0 ? 0.1 : 0.01);
                     
                     console.log('Globe created, mounting to container...');
                     
@@ -645,6 +635,12 @@
                 console.log('🔄 Forcing immediate color update...');
                 this.globe.polygonCapColor(d => this.getCountryColor(d));
                 this.globe.polygonSideColor(d => this.getCountryColor(d));
+                
+                // Force re-render
+                setTimeout(() => {
+                    console.log('🔄 Forcing re-render...');
+                    this.globe.polygonsData(this.globe.polygonsData());
+                }, 100);
                     
                     console.log('Country data loaded successfully');
                     
@@ -693,31 +689,31 @@
             getHeatColor(value) {
                 console.log(`🎨 Getting heat color for value: ${value}`);
                 if (value === 0) {
-                    console.log('Returning transparent black for €0');
-                    return 'rgba(0, 0, 0, 0.1)'; // Prozirna crna za države bez donacija
+                    console.log('Returning transparent for €0');
+                    return 'transparent'; // Prozirna za države bez donacija
                 }
                 if (value < 25) {
                     console.log('Returning blue for < €25');
-                    return 'rgba(59, 130, 246, 1.0)'; // Puna plava za male donacije
+                    return '#3b82f6'; // Plava za male donacije
                 }
                 if (value < 50) {
                     console.log('Returning cyan for < €50');
-                    return 'rgba(6, 182, 212, 1.0)'; // Puna cyan za srednje donacije
+                    return '#06b6d4'; // Cyan za srednje donacije
                 }
                 if (value < 100) {
                     console.log('Returning green for < €100');
-                    return 'rgba(34, 197, 94, 1.0)'; // Puna zelena za dobre donacije
+                    return '#22c55e'; // Zelena za dobre donacije
                 }
                 if (value < 200) {
                     console.log('Returning yellow for < €200');
-                    return 'rgba(234, 179, 8, 1.0)'; // Puna žuta za velike donacije
+                    return '#eab308'; // Žuta za velike donacije
                 }
                 if (value < 500) {
                     console.log('Returning orange for < €500');
-                    return 'rgba(249, 115, 22, 1.0)'; // Puna narančasta za vrlo velike donacije
+                    return '#f97316'; // Narančasta za vrlo velike donacije
                 }
                 console.log('Returning red for €500+');
-                return 'rgba(239, 68, 68, 1.0)'; // Puna crvena za najveće donacije
+                return '#ef4444'; // Crvena za najveće donacije
             }
             
             getCountryCode(properties) {
