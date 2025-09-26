@@ -595,15 +595,17 @@
                     console.log('Processing country data...');
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
+                    console.log('Available stats:', this.stats.countryData);
+                    
                     // Process GeoJSON data for 3D globe
                     const countriesData = geoData.features.map(feature => {
                         const countryCode = this.getCountryCode(feature.properties);
                         const countryName = this.getCountryName(feature.properties);
                         const countryStats = this.stats.countryData?.[countryCode] || {};
                         
-                        // Only log countries with donations to reduce console spam
+                        // Log all countries with donations
                         if (countryStats.total_eur > 0) {
-                            console.log(`Processing ${countryName} (${countryCode}):`, countryStats);
+                            console.log(`✅ Processing ${countryName} (${countryCode}):`, countryStats);
                         }
                         
                         return {
@@ -633,9 +635,9 @@
             
             getCountryColor(country) {
                 const heatValue = country.properties?.total_eur || 0;
-                // Only log countries with donations to reduce console spam
+                // Log all countries with donations
                 if (heatValue > 0) {
-                    console.log(`Getting color for ${country.properties?.name}: ${heatValue} EUR`);
+                    console.log(`🎨 Getting color for ${country.properties?.name}: ${heatValue} EUR`);
                 }
                 return this.getHeatColor(heatValue);
             }
@@ -998,7 +1000,7 @@
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    console.log('Updating globe colors with stats:', this.stats.countryData);
+                    console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
                     // Update globe colors based on new stats
                     this.globe.polygonCapColor(d => this.getCountryColor(d));
                     this.globe.polygonSideColor(d => this.getCountryColor(d));
