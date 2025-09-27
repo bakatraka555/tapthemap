@@ -151,72 +151,67 @@
             image-rendering: pixelated;
         }
         
-        /* Premium visual effects for donated countries */
-        .premium-country {
-            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
-            animation: premiumGlow 3s ease-in-out infinite alternate;
+        /* Flag badges for countries */
+        .flag-badge {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-10px);
         }
         
-        .premium-country-high {
-            filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.9));
-            animation: premiumGlowGreen 2s ease-in-out infinite alternate;
+        .flag-badge.show {
+            opacity: 1;
+            transform: translateY(0);
         }
         
-        .premium-country-premium {
-            filter: drop-shadow(0 0 20px rgba(245, 158, 11, 1));
-            animation: premiumGlowGold 1.5s ease-in-out infinite alternate;
+        .flag-badge .flag-icon {
+            width: 16px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 6px;
+            vertical-align: middle;
+            display: inline-block;
         }
         
-        @keyframes premiumGlow {
-            0% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8)); }
-            100% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 1)); }
+        .flag-badge .donation-amount {
+            color: #22c55e;
+            font-weight: 700;
         }
         
-        @keyframes premiumGlowGreen {
-            0% { filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.9)); }
-            100% { filter: drop-shadow(0 0 25px rgba(34, 197, 94, 1)); }
+        .flag-badge .donor-count {
+            color: #3b82f6;
+            font-size: 10px;
         }
         
-        @keyframes premiumGlowGold {
-            0% { filter: drop-shadow(0 0 20px rgba(245, 158, 11, 1)); }
-            100% { filter: drop-shadow(0 0 30px rgba(245, 158, 11, 1)); }
+        .flag-badge.premium {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
         }
         
-        /* Hatching pattern for premium countries */
-        .hatching-pattern {
-            background-image: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 2px,
-                rgba(255, 255, 255, 0.3) 2px,
-                rgba(255, 255, 255, 0.3) 4px
-            );
+        .flag-badge.high {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
         }
         
-        .hatching-pattern-premium {
-            background-image: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 1px,
-                rgba(255, 215, 0, 0.4) 1px,
-                rgba(255, 215, 0, 0.4) 3px
-            );
+        .flag-badge.medium {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
         }
         
-        /* Pulsing effect for active countries */
-        .pulsing-country {
-            animation: countryPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes countryPulse {
-            0%, 100% { 
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% { 
-                transform: scale(1.05);
-                opacity: 0.8;
-            }
+        .flag-badge.basic {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
         }
     </style>
 </head>
@@ -303,32 +298,23 @@
                     </div>
                     
                     <!-- Legend -->
-                <div class="mt-4">
-                    <div class="text-sm text-gray-400 mb-2">Premium Levels</div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-400">Donation Amount</span>
-                        <div class="flex items-center space-x-3">
-                            <div class="flex items-center space-x-1">
-                                <div class="w-3 h-3 bg-gray-700 rounded"></div>
-                                <span class="text-gray-400 text-xs">€0</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <div class="w-3 h-3 bg-purple-500 rounded"></div>
-                                <span class="text-gray-400 text-xs">€1+ 💫</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <div class="w-3 h-3 bg-blue-500 rounded"></div>
-                                <span class="text-gray-400 text-xs">€100+ 🔥</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <div class="w-3 h-3 bg-green-500 rounded"></div>
-                                <span class="text-gray-400 text-xs">€500+ ⭐</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <div class="w-3 h-3 bg-yellow-500 rounded"></div>
-                                <span class="text-gray-400 text-xs">€1000+ 🏆</span>
-                            </div>
-                        </div>
+                <div class="mt-4 flex items-center justify-between text-sm">
+                    <span class="text-gray-400">Donation Amount</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-gray-700 rounded"></div>
+                        <span class="text-gray-400">€0</span>
+                        <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                        <span class="text-gray-400">€25</span>
+                        <div class="w-3 h-3 bg-cyan-500 rounded"></div>
+                        <span class="text-gray-400">€50</span>
+                        <div class="w-3 h-3 bg-green-500 rounded"></div>
+                        <span class="text-gray-400">€100</span>
+                        <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+                        <span class="text-gray-400">€200</span>
+                        <div class="w-3 h-3 bg-orange-500 rounded"></div>
+                        <span class="text-gray-400">€500</span>
+                        <div class="w-3 h-3 bg-red-500 rounded"></div>
+                        <span class="text-gray-400">€500+</span>
                     </div>
                 </div>
                 </div>
@@ -693,12 +679,9 @@
                     const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
                     const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
                     
-                    // Determine premium visual effects based on donation amount
-                    const premiumLevel = this.getPremiumLevel(totalEur);
-                    
                     // Log countries with donations
                     if (totalEur > 0) {
-                        console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR - Premium Level: ${premiumLevel}`);
+                        console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
                     }
                     
                     return {
@@ -708,8 +691,7 @@
                             iso: countryCode,
                             name: countryName,
                             total_eur: totalEur,
-                            total_donors: totalDonors,
-                            premium_level: premiumLevel
+                            total_donors: totalDonors
                         }
                     };
                 });
@@ -719,9 +701,9 @@
                 
                 console.log('Updating globe with', countriesData.length, 'countries...');
                 
-                // Update globe with country data and premium styling
+                // Update globe with country data
                 this.globe.polygonsData(countriesData);
-                this.applyPremiumStyling();
+                this.addFlagBadges(countriesData);
                     
                     console.log('Country data loaded successfully');
                     
@@ -750,86 +732,118 @@
                 const name = country.properties.name;
                 const totalEur = country.properties.total_eur || 0;
                 const totalDonors = country.properties.total_donors || 0;
-                const premiumLevel = country.properties.premium_level || 'none';
                 
                 if (totalEur === 0) {
                     return `${name}<br/>No donations yet`;
                 }
                 
-                const premiumBadge = this.getPremiumBadge(premiumLevel);
-                return `${name}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}<br/>${premiumBadge}`;
+                return `${name}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`;
             }
             
-            getPremiumLevel(totalEur) {
-                if (totalEur >= 1000) return 'premium';
-                if (totalEur >= 500) return 'high';
-                if (totalEur >= 100) return 'medium';
-                if (totalEur > 0) return 'basic';
-                return 'none';
-            }
-            
-            getPremiumBadge(premiumLevel) {
-                const badges = {
-                    'premium': '🏆 Premium',
-                    'high': '⭐ High',
-                    'medium': '🔥 Active',
-                    'basic': '💫 Donated',
-                    'none': ''
-                };
-                return badges[premiumLevel] || '';
-            }
-            
-            applyPremiumStyling() {
-                if (!this.globe) return;
+            addFlagBadges(countriesData) {
+                // Remove existing badges
+                document.querySelectorAll('.flag-badge').forEach(badge => badge.remove());
                 
-                // Update polygon colors based on premium level
-                this.globe.polygonCapColor(d => {
-                    const totalEur = d.properties?.total_eur || 0;
-                    const premiumLevel = d.properties?.premium_level || 'none';
-                    
-                    switch (premiumLevel) {
-                        case 'premium':
-                            return 'rgba(255, 215, 0, 0.8)'; // Gold
-                        case 'high':
-                            return 'rgba(34, 197, 94, 0.8)'; // Green
-                        case 'medium':
-                            return 'rgba(59, 130, 246, 0.8)'; // Blue
-                        case 'basic':
-                            return 'rgba(168, 85, 247, 0.8)'; // Purple
-                        default:
-                            return 'rgba(255,255,255,0.1)'; // Default
-                    }
-                });
-                
-                // Update polygon stroke colors
-                this.globe.polygonStrokeColor(d => {
-                    const totalEur = d.properties?.total_eur || 0;
-                    const premiumLevel = d.properties?.premium_level || 'none';
-                    
-                    if (totalEur === 0) return '#cccccc';
-                    
-                    switch (premiumLevel) {
-                        case 'premium':
-                            return '#FFD700'; // Gold stroke
-                        case 'high':
-                            return '#22C55E'; // Green stroke
-                        case 'medium':
-                            return '#3B82F6'; // Blue stroke
-                        case 'basic':
-                            return '#A855F7'; // Purple stroke
-                        default:
-                            return '#ffffff';
-                    }
-                });
-                
-                // Add pulsing animation for premium countries
-                this.globe.polygonAltitude(d => {
-                    const totalEur = d.properties?.total_eur || 0;
+                // Add badges for countries with donations
+                countriesData.forEach(country => {
+                    const totalEur = country.properties.total_eur || 0;
                     if (totalEur > 0) {
-                        return 0.02 + (Math.sin(Date.now() * 0.002) * 0.01);
+                        this.createFlagBadge(country);
                     }
-                    return 0.01;
                 });
+            }
+            
+            createFlagBadge(country) {
+                const totalEur = country.properties.total_eur || 0;
+                const totalDonors = country.properties.total_donors || 0;
+                const countryCode = country.properties.iso;
+                const countryName = country.properties.name;
+                
+                // Get country center coordinates
+                const coordinates = this.getCountryCenter(country);
+                if (!coordinates) return;
+                
+                // Create badge element
+                const badge = document.createElement('div');
+                badge.className = 'flag-badge';
+                
+                // Determine badge class based on donation amount
+                if (totalEur >= 1000) badge.classList.add('premium');
+                else if (totalEur >= 500) badge.classList.add('high');
+                else if (totalEur >= 100) badge.classList.add('medium');
+                else badge.classList.add('basic');
+                
+                // Get flag icon
+                const flagIcon = this.getCountryFlag(countryCode);
+                
+                // Create badge content
+                badge.innerHTML = `
+                    <span class="flag-icon">${flagIcon}</span>
+                    <span class="donation-amount">€${totalEur}</span>
+                    <span class="donor-count">${totalDonors} donor${totalDonors !== 1 ? 's' : ''}</span>
+                `;
+                
+                // Position badge on globe
+                const globeContainer = document.getElementById('globe');
+                globeContainer.appendChild(badge);
+                
+                // Convert lat/lng to screen coordinates
+                const screenPos = this.latLngToScreen(coordinates.lat, coordinates.lng);
+                badge.style.left = `${screenPos.x}px`;
+                badge.style.top = `${screenPos.y}px`;
+                
+                // Show badge with animation
+                setTimeout(() => {
+                    badge.classList.add('show');
+                }, 100);
+                
+                // Add hover effects
+                badge.addEventListener('mouseenter', () => {
+                    badge.style.transform = 'translateY(0) scale(1.1)';
+                });
+                
+                badge.addEventListener('mouseleave', () => {
+                    badge.style.transform = 'translateY(0) scale(1)';
+                });
+            }
+            
+            getCountryCenter(country) {
+                if (!country.geometry || !country.geometry.coordinates) return null;
+                
+                // Simple center calculation for polygon
+                let totalLat = 0, totalLng = 0, pointCount = 0;
+                
+                const processCoordinates = (coords) => {
+                    if (Array.isArray(coords[0])) {
+                        coords.forEach(coord => processCoordinates(coord));
+                    } else if (coords.length >= 2) {
+                        totalLng += coords[0];
+                        totalLat += coords[1];
+                        pointCount++;
+                    }
+                };
+                
+                processCoordinates(country.geometry.coordinates);
+                
+                if (pointCount === 0) return null;
+                
+                return {
+                    lat: totalLat / pointCount,
+                    lng: totalLng / pointCount
+                };
+            }
+            
+            latLngToScreen(lat, lng) {
+                // Simple projection - this would need to be more sophisticated for a real globe
+                const globeContainer = document.getElementById('globe');
+                const width = globeContainer.offsetWidth;
+                const height = globeContainer.offsetHeight;
+                
+                // Convert lat/lng to screen coordinates (simplified)
+                const x = ((lng + 180) / 360) * width;
+                const y = ((90 - lat) / 180) * height;
+                
+                return { x: Math.max(0, Math.min(width, x)), y: Math.max(0, Math.min(height, y)) };
             }
             
             
@@ -1156,7 +1170,7 @@
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
                     console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
-                    // Reload country data to update colors and premium effects
+                    // Reload country data to update colors and flag badges
                     this.loadCountryData();
                 }
             }
@@ -1201,13 +1215,6 @@
         setInterval(() => {
             app.loadStats();
         }, 30000);
-        
-        // Animate premium effects every 100ms for smooth pulsing
-        setInterval(() => {
-            if (app.globe) {
-                app.applyPremiumStyling();
-            }
-        }, 100);
     </script>
 </body>
 </html>
