@@ -151,67 +151,81 @@
             image-rendering: pixelated;
         }
         
-        /* Flag badges for countries */
-        .flag-badge {
+        /* Hover effect for countries */
+        .country-hover-badge {
             position: absolute;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 8px;
-            padding: 4px 8px;
+            padding: 6px 10px;
             font-size: 12px;
             font-weight: 600;
             color: white;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
             z-index: 1000;
             pointer-events: none;
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-10px) scale(0.9);
+            white-space: nowrap;
         }
         
-        .flag-badge.show {
+        .country-hover-badge.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
         
-        .flag-badge .flag-icon {
-            width: 16px;
-            height: 12px;
+        .country-hover-badge .flag-icon {
+            width: 18px;
+            height: 14px;
             border-radius: 2px;
-            margin-right: 6px;
+            margin-right: 8px;
             vertical-align: middle;
             display: inline-block;
         }
         
-        .flag-badge .donation-amount {
+        .country-hover-badge .donation-amount {
             color: #22c55e;
             font-weight: 700;
+            font-size: 13px;
         }
         
-        .flag-badge .donor-count {
+        .country-hover-badge .donor-count {
             color: #3b82f6;
-            font-size: 10px;
+            font-size: 11px;
+            margin-left: 8px;
         }
         
-        .flag-badge.premium {
+        .country-hover-badge .country-name {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 2px;
+            display: block;
+        }
+        
+        .country-hover-badge.premium {
             border-color: #f59e0b;
-            background: rgba(245, 158, 11, 0.1);
+            background: rgba(245, 158, 11, 0.15);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
         }
         
-        .flag-badge.high {
+        .country-hover-badge.high {
             border-color: #22c55e;
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(34, 197, 94, 0.15);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
         }
         
-        .flag-badge.medium {
+        .country-hover-badge.medium {
             border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
         
-        .flag-badge.basic {
+        .country-hover-badge.basic {
             border-color: #a855f7;
-            background: rgba(168, 85, 247, 0.1);
+            background: rgba(168, 85, 247, 0.15);
+            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
         }
     </style>
 </head>
@@ -403,6 +417,7 @@
                 this.map = null;
                 this.globe = null;
                 this.zoomLevel = 1.0;
+                this.currentHoverBadge = null;
                 this.stats = {
                     totalDonations: 0,
                     totalCountries: 0,
@@ -703,7 +718,6 @@
                 
                 // Update globe with country data
                 this.globe.polygonsData(countriesData);
-                this.addFlagBadges(countriesData);
                     
                     console.log('Country data loaded successfully');
                     
@@ -723,6 +737,69 @@
             handleCountryHover(country) {
                 if (country && country.properties) {
                     console.log('Hovering over:', country.properties.name);
+                    this.showHoverBadge(country);
+                } else {
+                    this.hideHoverBadge();
+                }
+            }
+            
+            showHoverBadge(country) {
+                // Remove existing hover badge
+                this.hideHoverBadge();
+                
+                const totalEur = country.properties.total_eur || 0;
+                const totalDonors = country.properties.total_donors || 0;
+                const countryCode = country.properties.iso;
+                const countryName = country.properties.name;
+                
+                if (totalEur === 0) return; // Don't show badge for countries without donations
+                
+                // Create hover badge element
+                const badge = document.createElement('div');
+                badge.className = 'country-hover-badge';
+                
+                // Determine badge class based on donation amount
+                if (totalEur >= 1000) badge.classList.add('premium');
+                else if (totalEur >= 500) badge.classList.add('high');
+                else if (totalEur >= 100) badge.classList.add('medium');
+                else badge.classList.add('basic');
+                
+                // Get flag icon
+                const flagIcon = this.getCountryFlag(countryCode);
+                
+                // Create badge content
+                badge.innerHTML = `
+                    <span class="country-name">${countryName}</span>
+                    <span class="flag-icon">${flagIcon}</span>
+                    <span class="donation-amount">€${totalEur}</span>
+                    <span class="donor-count">${totalDonors} donor${totalDonors !== 1 ? 's' : ''}</span>
+                `;
+                
+                // Position badge near mouse cursor
+                const globeContainer = document.getElementById('globe');
+                globeContainer.appendChild(badge);
+                
+                // Get country center coordinates
+                const coordinates = this.getCountryCenter(country);
+                if (coordinates) {
+                    const screenPos = this.latLngToScreen(coordinates.lat, coordinates.lng);
+                    badge.style.left = `${screenPos.x + 20}px`;
+                    badge.style.top = `${screenPos.y - 20}px`;
+                }
+                
+                // Show badge with animation
+                setTimeout(() => {
+                    badge.classList.add('show');
+                }, 50);
+                
+                // Store reference for cleanup
+                this.currentHoverBadge = badge;
+            }
+            
+            hideHoverBadge() {
+                if (this.currentHoverBadge) {
+                    this.currentHoverBadge.remove();
+                    this.currentHoverBadge = null;
                 }
             }
             
@@ -738,73 +815,6 @@
                 }
                 
                 return `${name}<br/>€${totalEur} from ${totalDonors} donor${totalDonors !== 1 ? 's' : ''}`;
-            }
-            
-            addFlagBadges(countriesData) {
-                // Remove existing badges
-                document.querySelectorAll('.flag-badge').forEach(badge => badge.remove());
-                
-                // Add badges for countries with donations
-                countriesData.forEach(country => {
-                    const totalEur = country.properties.total_eur || 0;
-                    if (totalEur > 0) {
-                        this.createFlagBadge(country);
-                    }
-                });
-            }
-            
-            createFlagBadge(country) {
-                const totalEur = country.properties.total_eur || 0;
-                const totalDonors = country.properties.total_donors || 0;
-                const countryCode = country.properties.iso;
-                const countryName = country.properties.name;
-                
-                // Get country center coordinates
-                const coordinates = this.getCountryCenter(country);
-                if (!coordinates) return;
-                
-                // Create badge element
-                const badge = document.createElement('div');
-                badge.className = 'flag-badge';
-                
-                // Determine badge class based on donation amount
-                if (totalEur >= 1000) badge.classList.add('premium');
-                else if (totalEur >= 500) badge.classList.add('high');
-                else if (totalEur >= 100) badge.classList.add('medium');
-                else badge.classList.add('basic');
-                
-                // Get flag icon
-                const flagIcon = this.getCountryFlag(countryCode);
-                
-                // Create badge content
-                badge.innerHTML = `
-                    <span class="flag-icon">${flagIcon}</span>
-                    <span class="donation-amount">€${totalEur}</span>
-                    <span class="donor-count">${totalDonors} donor${totalDonors !== 1 ? 's' : ''}</span>
-                `;
-                
-                // Position badge on globe
-                const globeContainer = document.getElementById('globe');
-                globeContainer.appendChild(badge);
-                
-                // Convert lat/lng to screen coordinates
-                const screenPos = this.latLngToScreen(coordinates.lat, coordinates.lng);
-                badge.style.left = `${screenPos.x}px`;
-                badge.style.top = `${screenPos.y}px`;
-                
-                // Show badge with animation
-                setTimeout(() => {
-                    badge.classList.add('show');
-                }, 100);
-                
-                // Add hover effects
-                badge.addEventListener('mouseenter', () => {
-                    badge.style.transform = 'translateY(0) scale(1.1)';
-                });
-                
-                badge.addEventListener('mouseleave', () => {
-                    badge.style.transform = 'translateY(0) scale(1)';
-                });
             }
             
             getCountryCenter(country) {
@@ -1170,7 +1180,7 @@
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
                     console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
-                    // Reload country data to update colors and flag badges
+                    // Reload country data to update colors
                     this.loadCountryData();
                 }
             }
