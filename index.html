@@ -169,6 +169,8 @@
             opacity: 0;
             transform: translateY(-10px) scale(0.9);
             white-space: nowrap;
+            text-align: center;
+            min-width: 120px;
         }
         
         .country-hover-badge.show {
@@ -202,6 +204,7 @@
             font-weight: 600;
             margin-bottom: 2px;
             display: block;
+            text-align: center;
         }
         
         .country-hover-badge.premium {
@@ -620,7 +623,7 @@
                             side: 2
                         })
                         .polygonStrokeColor(d => d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc')
-                        .polygonLabel(d => this.getCountryTooltip(d))
+                        .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
@@ -769,10 +772,12 @@
                 
                 // Create badge content
                 badge.innerHTML = `
-                    <span class="country-name">${countryName}</span>
-                    <span class="flag-icon">${flagIcon}</span>
-                    <span class="donation-amount">€${totalEur}</span>
-                    <span class="donor-count">${totalDonors} donor${totalDonors !== 1 ? 's' : ''}</span>
+                    <div class="country-name">${countryName}</div>
+                    <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+                        <span class="flag-icon">${flagIcon}</span>
+                        <span class="donation-amount">€${totalEur}</span>
+                        <span class="donor-count">${totalDonors} donor${totalDonors !== 1 ? 's' : ''}</span>
+                    </div>
                 `;
                 
                 // Position badge near mouse cursor
@@ -783,8 +788,8 @@
                 const coordinates = this.getCountryCenter(country);
                 if (coordinates) {
                     const screenPos = this.latLngToScreen(coordinates.lat, coordinates.lng);
-                    badge.style.left = `${screenPos.x + 20}px`;
-                    badge.style.top = `${screenPos.y - 20}px`;
+                    badge.style.left = `${screenPos.x - 50}px`; // Center horizontally
+                    badge.style.top = `${screenPos.y - 40}px`; // Position above country
                 }
                 
                 // Show badge with animation
