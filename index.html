@@ -1143,6 +1143,7 @@
                     
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
+                    this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
                     console.log('Stats loaded:', this.stats.countryData);
@@ -1204,6 +1205,57 @@
                 
                 console.log('Final HTML content:', htmlContent);
                 leadersList.innerHTML = htmlContent;
+            }
+            
+            updateCaptainsList(data) {
+                console.log('updateCaptainsList called with data:', data);
+                const captainsList = document.getElementById('captains-list');
+                
+                if (data.length === 0) {
+                    captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
+                    return;
+                }
+                
+                // Sort by total_eur descending and take top 5
+                const sortedData = data
+                    .filter(country => country.total_eur > 0)
+                    .sort((a, b) => b.total_eur - a.total_eur)
+                    .slice(0, 5);
+                
+                console.log('Sorted data for captains:', sortedData);
+                
+                if (sortedData.length === 0) {
+                    captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
+                    return;
+                }
+                
+                const htmlContent = sortedData.map((country, index) => {
+                    const flag = this.getCountryFlag(country.iso);
+                    const html = `
+                        <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center text-sm font-bold">
+                                    ${index + 1}
+                                </div>
+                                <div>
+                                    <div class="font-semibold">
+                                        <span class="country-flag">${flag}</span>
+                                        ${country.name}
+                                    </div>
+                                    <div class="text-xs text-gray-400">${country.total_donors} donors • €${country.total_eur}</div>
+                                </div>
+                            </div>
+                            <button class="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name}')">
+                                Captain
+                            </button>
+                        </div>
+                    `;
+                    console.log('Generated HTML for captain', country.iso, ':', html);
+                    return html;
+                }).join('');
+                
+                console.log('Final captains HTML content:', htmlContent);
+                captainsList.innerHTML = htmlContent;
             }
             
             updateGlobeColors() {
