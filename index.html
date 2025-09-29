@@ -1209,8 +1209,8 @@
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
                     console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
-                    // Reload country data to update colors
-                    this.loadCountryData();
+                    // Update polygon colors without reloading data
+                    this.globe.polygonsData(this.globe.polygonsData());
                 }
             }
             
