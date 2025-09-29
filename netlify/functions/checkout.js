@@ -33,6 +33,9 @@ exports.handler = async (event) => {
     const country_name = (body.country_name || "").toString().trim() || country_iso || "TapTheMap";
     const ref    = (body.ref || "").toString().slice(0, 64);
     const handle = (body.handle || "").toString().slice(0, 64);
+    
+    // Izdvoji influencer_ref iz ref parametra (ukloni ?ref= prefix)
+    const influencer_ref = ref.replace(/^\?ref=/, '').replace(/^ref=/, '').trim();
 
     // 3) UZMI IZNOS iz više mogućih ključeva: amount, amount_eur, amt, value
     const candidates = [body.amount, body.amount_eur, body.amt, body.value];
@@ -72,7 +75,15 @@ exports.handler = async (event) => {
       ],
       success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?paid=1`,
       cancel_url:  `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?cancel=1`,
-      metadata: { country_iso, country_name, ref, handle, amount_eur: String(amountEur) }
+      metadata: { 
+        country_iso, 
+        country_name, 
+        ref, 
+        handle, 
+        amount_eur: String(amountEur),
+        influencer_ref: influencer_ref,  // Ispravljen influencer_ref
+        commission_rate: "0.25"  // Dodaj commission_rate
+      }
     });
 
     return {
