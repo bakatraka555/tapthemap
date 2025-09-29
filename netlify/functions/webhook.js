@@ -257,6 +257,15 @@ exports.handler = async (event) => {
     const donorHashValue = donorHash(pseudoId, salt);
     console.log("WEBHOOK: Generated donor_hash:", donorHashValue, "from pseudoId:", pseudoId);
     
+    const influencer_ref = meta.influencer_ref || null;
+    const commission_rate = parseFloat(meta.commission_rate || "0.25");
+    const commission_amount = influencer_ref ? Math.round(amount_eur * commission_rate * 100) / 100 : 0;
+    
+    console.log("DEBUG - meta.influencer_ref:", meta.influencer_ref);
+    console.log("DEBUG - meta:", meta);
+    console.log("DEBUG - influencer_ref:", influencer_ref);
+    console.log("DEBUG - commission_amount:", commission_amount);
+
     const row = {
       created_at: new Date().toISOString(),
       country_iso,
@@ -266,6 +275,10 @@ exports.handler = async (event) => {
       ref: meta.ref || null,
       donor_hash: donorHashValue,
       stripe_pi: String(session.payment_intent || session.id || ""),
+      // Revenue sharing columns
+      influencer_ref,
+      commission_rate,
+      commission_amount
     };
 
     const { error } = await supa()
