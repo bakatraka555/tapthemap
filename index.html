@@ -154,15 +154,15 @@
         /* Hover effect for countries */
         .country-hover-badge {
             position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 12px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
             font-weight: 600;
             color: white;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
             z-index: 1000;
             pointer-events: none;
@@ -170,7 +170,7 @@
             transform: translateY(-10px) scale(0.9);
             white-space: nowrap;
             text-align: center;
-            min-width: 120px;
+            min-width: 140px;
         }
         
         .country-hover-badge.show {
@@ -420,6 +420,7 @@
                 this.map = null;
                 this.globe = null;
                 this.zoomLevel = 1.0;
+                this.mousePosition = { x: 0, y: 0 };
                 this.currentHoverBadge = null;
                 this.stats = {
                     totalDonations: 0,
@@ -491,6 +492,11 @@
                     } else {
                         this.zoomOut();
                     }
+                });
+                
+                // Track mouse position for tooltip positioning
+                document.getElementById('globe').addEventListener('mousemove', (e) => {
+                    this.mousePosition = { x: e.clientX, y: e.clientY };
                 });
             }
             
@@ -784,13 +790,13 @@
                 const globeContainer = document.getElementById('globe');
                 globeContainer.appendChild(badge);
                 
-                // Get country center coordinates
-                const coordinates = this.getCountryCenter(country);
-                if (coordinates) {
-                    const screenPos = this.latLngToScreen(coordinates.lat, coordinates.lng);
-                    badge.style.left = `${screenPos.x - 50}px`; // Center horizontally
-                    badge.style.top = `${screenPos.y - 40}px`; // Position above country
-                }
+                // Position tooltip near mouse cursor
+                const rect = globeContainer.getBoundingClientRect();
+                const x = this.mousePosition.x - rect.left;
+                const y = this.mousePosition.y - rect.top;
+                
+                badge.style.left = `${x + 15}px`; // Offset to the right of cursor
+                badge.style.top = `${y - 50}px`; // Position above cursor
                 
                 // Show badge with animation
                 setTimeout(() => {
