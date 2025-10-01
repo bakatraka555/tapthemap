@@ -2,7 +2,7 @@
 // Vraća top captains (influencers) s podacima o njihovim followerima i zastavicama
 const { createClient } = require("@supabase/supabase-js");
 
-const supa = createClient(
+const supa = () => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_PUBLIC, {
     auth: { persistSession: false }
