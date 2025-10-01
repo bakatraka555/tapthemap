@@ -255,8 +255,8 @@
                 
                 <nav class="hidden md:flex items-center space-x-6">
                     <a href="#map" class="hover:text-blue-400 transition-colors">Map</a>
-                    <a href="#leaders" class="hover:text-blue-400 transition-colors">Leaders</a>
-                    <a href="#about" class="hover:text-blue-400 transition-colors">About</a>
+                    <a href="#leaders" class="hover:text-blue-400 transition-colors">Top Countries</a>
+                    <a href="#about" class="hover:text-blue-400 transition-colors">How it works</a>
                 </nav>
                 
                 <div id="referral-badge" class="hidden items-center space-x-2 bg-green-500/20 px-3 py-1 rounded-full border border-green-400/30">
@@ -360,10 +360,10 @@
             
             <!-- Sidebar -->
             <div class="space-y-6">
-                <!-- Today's Leaders -->
+                <!-- Top Countries -->
                 <div class="glass-effect rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        🔥 Today's Leaders
+                        🏆 Top Countries
                     </h3>
                     <div id="leaders-list" class="space-y-3">
                         <div class="text-center text-gray-400 py-4">Loading leaders...</div>
@@ -409,6 +409,72 @@
                     <div id="captains-list" class="space-y-3">
                         <div class="text-center text-gray-400 py-4">Loading captains...</div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- How it works Section -->
+        <div id="about" class="mt-16">
+            <div class="glass-effect rounded-xl p-8">
+                <h2 class="text-3xl font-bold text-center mb-8">How TapTheMap Works</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Step 1 -->
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                            1
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Choose Your Country</h3>
+                        <p class="text-gray-400">Click on any country on the interactive 3D globe to select where you want to make a difference.</p>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                            2
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Select Amount</h3>
+                        <p class="text-gray-400">Choose your donation amount from €5 to €500. Every contribution makes a real impact.</p>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                            3
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Make a Difference</h3>
+                        <p class="text-gray-400">Your donation is processed securely and helps support causes in your chosen country.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <h3 class="text-2xl font-semibold mb-4">Why TapTheMap?</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        <div class="text-left">
+                            <h4 class="font-semibold text-blue-400 mb-2">🌍 Global Impact</h4>
+                            <p class="text-gray-400">Support causes worldwide with a simple, transparent donation process.</p>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="font-semibold text-green-400 mb-2">💚 Direct Support</h4>
+                            <p class="text-gray-400">Your donations go directly to verified organizations in your chosen country.</p>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="font-semibold text-yellow-400 mb-2">📊 Real-time Tracking</h4>
+                            <p class="text-gray-400">See live statistics and track the impact of global donations.</p>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="font-semibold text-purple-400 mb-2">🔒 Secure & Trusted</h4>
+                            <p class="text-gray-400">Powered by Stripe for secure payments and transparent transactions.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <h3 class="text-2xl font-semibold mb-4">Join the Movement</h3>
+                    <p class="text-gray-400 mb-6">Be part of a global community making a difference, one donation at a time.</p>
+                    <a href="#map" class="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 rounded-lg font-semibold transition-all transform hover:scale-105">
+                        Start Donating Now
+                    </a>
                 </div>
             </div>
         </div>
