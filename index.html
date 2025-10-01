@@ -870,8 +870,7 @@
                         <div class="country-name">${countryName}</div>
                         <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
                             <span class="flag-icon">${flagIcon}</span>
-                            <span class="donation-amount">${totalEur} ❤️</span>
-                            <span class="donor-count">${totalDonors} heart${totalDonors !== 1 ? 's' : ''}</span>
+                            <span class="donation-amount">${totalEur} ❤️ given</span>
                         </div>
                     `;
                 }
@@ -915,7 +914,7 @@
                     return `${name}<br/>No hearts yet`;
                 }
                 
-                return `${name}<br/>${totalEur} ❤️ from ${totalDonors} heart${totalDonors !== 1 ? 's' : ''}`;
+                return `${name}<br/>${totalEur} ❤️ given`;
             }
             
             getCountryCenter(country) {
@@ -1263,7 +1262,7 @@
                                     <span class="country-flag">${flag}</span>
                                     ${country.name || country.iso}
                                 </div>
-                                <div class="text-xs text-gray-400">${country.total_donors || country.donors_24h || 0} hearts • ${(country.total_eur || 0).toFixed(0)} ❤️</div>
+                                <div class="text-xs text-gray-400">${(country.total_eur || 0).toFixed(0)} ❤️ given</div>
                             </div>
                         </div>
                         <button class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name || country.iso}')">
@@ -1316,10 +1315,7 @@
                                             @${captain.handle}
                                         </div>
                                         <div class="text-xs text-gray-400">
-                                            ${captain.total_donors} hearts • ${captain.total_donations.toFixed(0)} ❤️ total
-                                        </div>
-                                        <div class="text-xs text-yellow-400 mt-1">
-                                            Earned: €${captain.total_earned.toFixed(2)}
+                                            ${captain.total_donations.toFixed(0)} ❤️ given total
                                         </div>
                                         <div class="flex items-center mt-1">
                                             ${flagsHtml}
