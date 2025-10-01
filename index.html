@@ -529,6 +529,12 @@
                 this.updateDonateButton();
             }
             
+            selectCaptain(handle) {
+                console.log('Selected captain:', handle);
+                // Možeš dodati funkcionalnost za prikaz detalja o captainu
+                alert(`Captain @${handle} selected! This could show their profile or statistics.`);
+            }
+            
             selectAmount(amount) {
                 this.selectedAmount = amount;
                 
@@ -1207,55 +1213,69 @@
                 leadersList.innerHTML = htmlContent;
             }
             
-            updateCaptainsList(data) {
+            async updateCaptainsList(data) {
                 console.log('updateCaptainsList called with data:', data);
                 const captainsList = document.getElementById('captains-list');
                 
-                if (data.length === 0) {
-                    captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
-                    return;
-                }
-                
-                // Sort by total_eur descending and take top 5
-                const sortedData = data
-                    .filter(country => country.total_eur > 0)
-                    .sort((a, b) => b.total_eur - a.total_eur)
-                    .slice(0, 5);
-                
-                console.log('Sorted data for captains:', sortedData);
-                
-                if (sortedData.length === 0) {
-                    captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
-                    return;
-                }
-                
-                const htmlContent = sortedData.map((country, index) => {
-                    const flag = this.getCountryFlag(country.iso);
-                    const html = `
-                        <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center text-sm font-bold">
-                                    ${index + 1}
-                                </div>
-                                <div>
-                                    <div class="font-semibold">
-                                        <span class="country-flag">${flag}</span>
-                                        ${country.name}
+                try {
+                    // Dohvati captains podatke
+                    const response = await fetch('/.netlify/functions/captains');
+                    const captains = await response.json();
+                    
+                    console.log('Captains data:', captains);
+                    
+                    if (captains.length === 0) {
+                        captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
+                        return;
+                    }
+                    
+                    // Uzmi top 5 captains
+                    const topCaptains = captains.slice(0, 5);
+                    
+                    const htmlContent = topCaptains.map((captain, index) => {
+                        // Generiraj zastavice za top zemlje
+                        const flagsHtml = captain.country_flags.map(flag => {
+                            const flagImg = this.getCountryFlag(flag.iso);
+                            return `<span class="inline-block mr-1" title="${flag.iso}: ${flag.count} donations">${flagImg}</span>`;
+                        }).join('');
+                        
+                        const html = `
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full flex items-center justify-center text-sm font-bold">
+                                        ${index + 1}
                                     </div>
-                                    <div class="text-xs text-gray-400">${country.total_donors} donors • €${country.total_eur}</div>
+                                    <div>
+                                        <div class="font-semibold">
+                                            @${captain.handle}
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            ${captain.total_donors} donors • €${captain.total_donations.toFixed(0)} total
+                                        </div>
+                                        <div class="text-xs text-yellow-400 mt-1">
+                                            Earned: €${captain.total_earned.toFixed(2)}
+                                        </div>
+                                        <div class="flex items-center mt-1">
+                                            ${flagsHtml}
+                                        </div>
+                                    </div>
                                 </div>
+                                <button class="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-700 rounded transition-colors" onclick="app.selectCaptain('${captain.handle}')">
+                                    Captain
+                                </button>
                             </div>
-                            <button class="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name}')">
-                                Captain
-                            </button>
-                        </div>
-                    `;
-                    console.log('Generated HTML for captain', country.iso, ':', html);
-                    return html;
-                }).join('');
-                
-                console.log('Final captains HTML content:', htmlContent);
-                captainsList.innerHTML = htmlContent;
+                        `;
+                        console.log('Generated HTML for captain', captain.handle, ':', html);
+                        return html;
+                    }).join('');
+                    
+                    console.log('Final captains HTML content:', htmlContent);
+                    captainsList.innerHTML = htmlContent;
+                    
+                } catch (error) {
+                    console.error('Error loading captains:', error);
+                    captainsList.innerHTML = '<div class="text-center text-red-400 py-4">Error loading captains</div>';
+                }
             }
             
             updateGlobeColors() {
