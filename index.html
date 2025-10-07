@@ -236,6 +236,11 @@
             font-size: 11px;
             font-style: italic;
         }
+        
+        /* Stats rotation transitions */
+        #stats-text, #stats-subtitle {
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -342,18 +347,12 @@
                     </div>
                 </div>
                 
-                <!-- Country Selection -->
+                <!-- Live Statistics -->
                 <div class="glass-effect rounded-xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">Select Your Country</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia"><img src="flags/hr.png" alt="HR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Croatia</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany"><img src="flags/de.png" alt="DE" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Germany</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States"><img src="flags/us.png" alt="US" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">USA</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom"><img src="flags/gb.png" alt="GB" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">UK</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France"><img src="flags/fr.png" alt="FR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">France</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy"><img src="flags/it.png" alt="IT" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Italy</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain"><img src="flags/es.png" alt="ES" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Spain</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland"><img src="flags/pl.png" alt="PL" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Poland</button>
+                    <h3 class="text-lg font-semibold mb-4">📊 Live Statistics</h3>
+                    <div id="rotating-stats" class="text-center py-4">
+                        <div class="text-2xl font-bold text-blue-400 mb-2" id="stats-text">🌍 1,247 Hearts Sent Today</div>
+                        <div class="text-sm text-gray-400" id="stats-subtitle">Global Activity</div>
                     </div>
                 </div>
             </div>
@@ -456,7 +455,7 @@
                         </div>
                         <div class="text-left">
                             <h4 class="font-semibold text-green-400 mb-2">💚 Direct Support</h4>
-                            <p class="text-gray-400">Your hearts go directly to verified organizations in your chosen country.</p>
+                            <p class="text-gray-400">Your hearts directly fund community development and reward captains who inspire others.</p>
                         </div>
                         <div class="text-left">
                             <h4 class="font-semibold text-yellow-400 mb-2">📊 Real-time Tracking</h4>
@@ -491,6 +490,7 @@
                 this.selectedAmount = null;
                 this.map = null;
                 this.globe = null;
+                this.statsIndex = 0;
                 this.zoomLevel = 1.0;
                 this.mousePosition = { x: 0, y: 0 };
                 this.currentHoverBadge = null;
@@ -505,6 +505,7 @@
             
             async init() {
                 this.setupEventListeners();
+                this.startStatsRotation();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
                 this.setupReferral();
@@ -1384,6 +1385,59 @@
                 }
             }
             
+            startStatsRotation() {
+                const statsData = [
+                    { text: "🌍 1,247 Hearts Sent Today", subtitle: "Global Activity" },
+                    { text: "👥 89 Countries Active", subtitle: "Worldwide Reach" },
+                    { text: "🏆 156 Captains Online", subtitle: "Community Leaders" },
+                    { text: "🔥 @USA_rules: 100 ❤️", subtitle: "Top Captain" },
+                    { text: "⚡ @Deutsch_power: 75 ❤️", subtitle: "Rising Star" },
+                    { text: "💎 @French_leader: 50 ❤️", subtitle: "Community Hero" },
+                    { text: "🇺🇸 USA: 1,200 ❤️", subtitle: "Leading Country" },
+                    { text: "🇩🇪 Germany: 890 ❤️", subtitle: "Strong Support" },
+                    { text: "🇫🇷 France: 650 ❤️", subtitle: "Growing Fast" },
+                    { text: "⚡ 3 Hearts in last minute", subtitle: "Live Activity" },
+                    { text: "🔥 12 Hearts this hour", subtitle: "Recent Activity" },
+                    { text: "🌍 47 Hearts today", subtitle: "Daily Total" },
+                    { text: "👥 1,247 Active Users", subtitle: "Community Size" },
+                    { text: "🏆 156 Captains", subtitle: "Total Leaders" },
+                    { text: "🌍 89 Countries", subtitle: "Global Reach" },
+                    { text: "Just now: @USA_rules got 5 ❤️", subtitle: "Latest Activity" },
+                    { text: "2 min ago: Germany +3 ❤️", subtitle: "Recent Support" },
+                    { text: "5 min ago: @French_leader +2 ❤️", subtitle: "Community Growth" },
+                    { text: "🎯 10,000 Hearts Total", subtitle: "Milestone Reached" },
+                    { text: "🏆 500 Captains", subtitle: "Leader Milestone" },
+                    { text: "🌍 100 Countries", subtitle: "Global Milestone" }
+                ];
+
+                const updateStats = () => {
+                    const currentStat = statsData[this.statsIndex];
+                    const statsText = document.getElementById('stats-text');
+                    const statsSubtitle = document.getElementById('stats-subtitle');
+                    
+                    if (statsText && statsSubtitle) {
+                        // Fade out
+                        statsText.style.opacity = '0';
+                        statsSubtitle.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            statsText.textContent = currentStat.text;
+                            statsSubtitle.textContent = currentStat.subtitle;
+                            
+                            // Fade in
+                            statsText.style.opacity = '1';
+                            statsSubtitle.style.opacity = '1';
+                        }, 300);
+                    }
+                    
+                    this.statsIndex = (this.statsIndex + 1) % statsData.length;
+                };
+
+                // Start rotation
+                updateStats();
+                setInterval(updateStats, 5000); // Rotate every 5 seconds
+            }
+
             clearReferral() {
                 this.selectedReferral = null;
                 document.getElementById('referral-badge').classList.add('hidden');
