@@ -349,10 +349,10 @@
                 
                 <!-- Live Statistics -->
                 <div class="glass-effect rounded-xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">📊 Live Statistics</h3>
+                    <h3 class="text-lg font-semibold mb-4">📊 Live Activity</h3>
                     <div id="rotating-stats" class="text-center py-4">
-                        <div class="text-2xl font-bold text-blue-400 mb-2" id="stats-text">🌍 1,247 Hearts Sent Today</div>
-                        <div class="text-sm text-gray-400" id="stats-subtitle">Global Activity</div>
+                        <div class="text-2xl font-bold text-blue-400 mb-2" id="stats-text">Loading...</div>
+                        <div class="text-sm text-gray-400" id="stats-subtitle">Real-time data</div>
                     </div>
                 </div>
             </div>
@@ -490,7 +490,6 @@
                 this.selectedAmount = null;
                 this.map = null;
                 this.globe = null;
-                this.statsIndex = 0;
                 this.zoomLevel = 1.0;
                 this.mousePosition = { x: 0, y: 0 };
                 this.currentHoverBadge = null;
@@ -505,7 +504,7 @@
             
             async init() {
                 this.setupEventListeners();
-                this.startStatsRotation();
+                this.startRealStatsRotation();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
                 this.setupReferral();
@@ -1385,52 +1384,79 @@
                 }
             }
             
-            startStatsRotation() {
-                const statsData = [
-                    { text: "🌍 1,247 Hearts Sent Today", subtitle: "Global Activity" },
-                    { text: "👥 89 Countries Active", subtitle: "Worldwide Reach" },
-                    { text: "🏆 156 Captains Online", subtitle: "Community Leaders" },
-                    { text: "🔥 @USA_rules: 100 ❤️", subtitle: "Top Captain" },
-                    { text: "⚡ @Deutsch_power: 75 ❤️", subtitle: "Rising Star" },
-                    { text: "💎 @French_leader: 50 ❤️", subtitle: "Community Hero" },
-                    { text: "🇺🇸 USA: 1,200 ❤️", subtitle: "Leading Country" },
-                    { text: "🇩🇪 Germany: 890 ❤️", subtitle: "Strong Support" },
-                    { text: "🇫🇷 France: 650 ❤️", subtitle: "Growing Fast" },
-                    { text: "⚡ 3 Hearts in last minute", subtitle: "Live Activity" },
-                    { text: "🔥 12 Hearts this hour", subtitle: "Recent Activity" },
-                    { text: "🌍 47 Hearts today", subtitle: "Daily Total" },
-                    { text: "👥 1,247 Active Users", subtitle: "Community Size" },
-                    { text: "🏆 156 Captains", subtitle: "Total Leaders" },
-                    { text: "🌍 89 Countries", subtitle: "Global Reach" },
-                    { text: "Just now: @USA_rules got 5 ❤️", subtitle: "Latest Activity" },
-                    { text: "2 min ago: Germany +3 ❤️", subtitle: "Recent Support" },
-                    { text: "5 min ago: @French_leader +2 ❤️", subtitle: "Community Growth" },
-                    { text: "🎯 10,000 Hearts Total", subtitle: "Milestone Reached" },
-                    { text: "🏆 500 Captains", subtitle: "Leader Milestone" },
-                    { text: "🌍 100 Countries", subtitle: "Global Milestone" }
-                ];
 
-                const updateStats = () => {
-                    const currentStat = statsData[this.statsIndex];
-                    const statsText = document.getElementById('stats-text');
-                    const statsSubtitle = document.getElementById('stats-subtitle');
-                    
-                    if (statsText && statsSubtitle) {
-                        // Fade out
-                        statsText.style.opacity = '0';
-                        statsSubtitle.style.opacity = '0';
+            async startRealStatsRotation() {
+                const updateStats = async () => {
+                    try {
+                        // Dohvati stvarne podatke
+                        const [statsResponse, captainsResponse] = await Promise.all([
+                            fetch('/.netlify/functions/stats'),
+                            fetch('/.netlify/functions/captains')
+                        ]);
                         
-                        setTimeout(() => {
-                            statsText.textContent = currentStat.text;
-                            statsSubtitle.textContent = currentStat.subtitle;
+                        const stats = await statsResponse.json();
+                        const captains = await captainsResponse.json();
+                        
+                        // Izračunaj stvarne podatke
+                        const totalHearts = stats.reduce((sum, country) => sum + country.total_eur, 0);
+                        const totalCountries = stats.length;
+                        const totalCaptains = captains.length;
+                        const todayHearts = stats.reduce((sum, country) => sum + country.donors_24h, 0);
+                        
+                        // Motivacijski tekstovi
+                        const motivationalTexts = [
+                            "Join the Movement",
+                            "Make Your Mark", 
+                            "Light Up the World",
+                            "Choose Your Champion",
+                            "Back Your Captain",
+                            "Rally Your Hearts",
+                            "Show Your Pride",
+                            "Lead the Charge"
+                        ];
+                        
+                        // Kombinirane statistike
+                        const combinedStats = [
+                            { text: `🌍 ${totalHearts.toFixed(0)} Hearts Sent Total`, subtitle: "Global Impact" },
+                            { text: `👥 ${totalCountries} Countries Active`, subtitle: "Worldwide Reach" },
+                            { text: `🏆 ${totalCaptains} Active Captains`, subtitle: "Community Leaders" },
+                            { text: `⚡ ${todayHearts} Hearts Today`, subtitle: "Daily Activity" },
+                            { text: motivationalTexts[Math.floor(Math.random() * motivationalTexts.length)], subtitle: "Your Turn" },
+                            { text: "Choose Your Champion", subtitle: "Pick Your Side" },
+                            { text: "Light Up the Map", subtitle: "Make It Glow" },
+                            { text: "Back Your Captain", subtitle: "Support Your Team" }
+                        ];
+                        
+                        // Rotiraj kroz statistike
+                        const currentStat = combinedStats[Math.floor(Math.random() * combinedStats.length)];
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        
+                        if (statsText && statsSubtitle) {
+                            // Fade out
+                            statsText.style.opacity = '0';
+                            statsSubtitle.style.opacity = '0';
                             
-                            // Fade in
-                            statsText.style.opacity = '1';
-                            statsSubtitle.style.opacity = '1';
-                        }, 300);
+                            setTimeout(() => {
+                                statsText.textContent = currentStat.text;
+                                statsSubtitle.textContent = currentStat.subtitle;
+                                
+                                // Fade in
+                                statsText.style.opacity = '1';
+                                statsSubtitle.style.opacity = '1';
+                            }, 300);
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error loading real stats:', error);
+                        // Fallback na motivacijski tekst
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        if (statsText && statsSubtitle) {
+                            statsText.textContent = "Join the Movement";
+                            statsSubtitle.textContent = "Be Part of Something Big";
+                        }
                     }
-                    
-                    this.statsIndex = (this.statsIndex + 1) % statsData.length;
                 };
 
                 // Start rotation
