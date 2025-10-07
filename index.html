@@ -573,7 +573,6 @@
             }
             
             selectCountry(country, name) {
-                console.log('selectCountry called:', country, name);
                 this.selectedCountry = { code: country, name: name };
                 
                 // Update UI
@@ -596,7 +595,6 @@
             }
             
             selectCaptain(handle) {
-                console.log('Selected captain:', handle);
                 // Postavi captain handle u referral input
                 const referralInput = document.getElementById('referral-input');
                 if (referralInput) {
@@ -638,10 +636,6 @@
             }
             
             async processHearts() {
-                console.log('processHearts called:', {
-                    selectedCountry: this.selectedCountry,
-                    selectedAmount: this.selectedAmount
-                });
                 
                 if (!this.selectedCountry || !this.selectedAmount) {
                     alert('Please select a country and amount');
@@ -680,13 +674,11 @@
                         throw new Error('No checkout URL returned');
                     }
                 } catch (error) {
-                    console.error('Heart error:', error);
                     alert('Error processing hearts: ' + error.message);
                 }
             }
             
             async initializeGlobe() {
-                console.log('Initializing 3D globe...');
                 document.getElementById('map-status').textContent = 'Loading globe...';
                 
                 try {
@@ -722,31 +714,26 @@
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
                     
-                    console.log('Globe created, mounting to container...');
                     
                     // Mount globe to container (correct way for Globe.gl)
                     const container = document.getElementById('globe');
                     container.innerHTML = '';
                     this.globe(container);
                     
-                console.log('Globe mounted, loading country data...');
                 document.getElementById('map-status').textContent = 'Loading countries...';
                 
                 // Load country data (stats already loaded in init)
                 await this.loadCountryData();
                 
-                console.log('Globe initialization complete');
                 document.getElementById('map-status').textContent = 'Globe loaded ✓';
                 
             } catch (error) {
-                console.error('Globe initialization error:', error);
                 document.getElementById('map-status').textContent = 'Globe failed to load';
             }
             }
             
             async loadCountryData() {
                 try {
-                    console.log('Loading country data...');
                     
                     // Use fastest, most reliable source first
                     const sources = [
@@ -757,17 +744,14 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
-                            console.log('Trying source:', source);
                             const response = await fetch(source, {
                                 timeout: 10000 // 10 second timeout
                             });
                             if (response.ok) {
                                 geoData = await response.json();
-                                console.log('Successfully loaded from:', source);
                                 break;
                             }
                         } catch (e) {
-                            console.log('Failed to load from:', source, e.message);
                         }
                     }
                     
@@ -775,13 +759,10 @@
                         throw new Error('All sources failed');
                     }
                     
-                    console.log('Processing country data...');
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
-                    console.log('Available stats:', this.stats.countryData);
                     
                 // Process GeoJSON data for 3D globe
-                console.log('Starting to process', geoData.features.length, 'countries...');
                 const countriesData = geoData.features.map(feature => {
                             const countryCode = this.getCountryCode(feature.properties);
                             const countryName = this.getCountryName(feature.properties);
@@ -792,9 +773,6 @@
                     const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
                     
                     // Log countries with donations
-                    if (totalEur > 0) {
-                        console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
-                    }
                     
                     return {
                         ...feature,
@@ -808,18 +786,13 @@
                     };
                 });
                 
-                console.log('Finished processing countries. Countries with hearts:', 
-                    countriesData.filter(c => c.properties.total_eur > 0).length);
                 
-                console.log('Updating globe with', countriesData.length, 'countries...');
                 
                 // Update globe with country data
                 this.globe.polygonsData(countriesData);
                     
-                    console.log('Country data loaded successfully');
                     
                 } catch (error) {
-                    console.error('Error loading country data:', error);
                     document.getElementById('map-status').textContent = 'Globe failed to load';
                 }
             }
@@ -833,7 +806,6 @@
 
             handleCountryHover(country) {
                 if (country && country.properties) {
-                    console.log('Hovering over:', country.properties.name);
                     this.showHoverBadge(country);
                 } else {
                     this.hideHoverBadge();
@@ -1137,7 +1109,6 @@
             }
             
             getCountryFlag(countryCode) {
-                console.log('getCountryFlag called with:', countryCode);
                 
                 // PNG zastavice za Chrome Windows kompatibilnost
                 const countryToFileName = {
@@ -1193,13 +1164,11 @@
                 // Koristi PNG zastavice iz /flags/ direktorija
                 const fileName = countryToFileName[countryCode];
                 if (fileName) {
-                    console.log('Using PNG flag for:', countryCode, '->', fileName);
                     return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;">`;
                 }
                 
                 // Fallback na emoji ako nema PNG
                 const flag = '🏳️';
-                console.warn('No PNG flag found for country:', countryCode, '- using fallback');
                 return flag;
             }
             
@@ -1227,12 +1196,8 @@
                     this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
-                    console.log('Stats loaded:', this.stats.countryData);
-                    console.log('Raw stats data:', data);
-                    console.log('Sample country with hearts:', data.find(c => c.total_eur > 0));
                     
                 } catch (error) {
-                    console.error('Error loading stats:', error);
                 }
             }
             
@@ -1243,7 +1208,6 @@
             }
             
             updateLeadersList(data) {
-                console.log('updateLeadersList called with data:', data);
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -1255,12 +1219,9 @@
                     .sort((a, b) => (b.donors_24h || 0) - (a.donors_24h || 0))
                     .slice(0, 5);
                 
-                console.log('Sorted data for leaders:', sortedData);
                 
                 const htmlContent = sortedData.map((country, index) => {
-                    console.log('Processing country for leaders:', country);
                     const flag = this.getCountryFlag(country.iso);
-                    console.log('Flag for', country.iso, ':', flag);
                     const html = `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
@@ -1280,16 +1241,13 @@
                         </button>
                     </div>
                 `;
-                    console.log('Generated HTML for', country.iso, ':', html);
                     return html;
                 }).join('');
                 
-                console.log('Final HTML content:', htmlContent);
                 leadersList.innerHTML = htmlContent;
             }
             
             async updateCaptainsList(data) {
-                console.log('updateCaptainsList called with data:', data);
                 const captainsList = document.getElementById('captains-list');
                 
                 try {
@@ -1297,7 +1255,6 @@
                     const response = await fetch('/.netlify/functions/captains');
                     const captains = await response.json();
                     
-                    console.log('Captains data:', captains);
                     
                     if (captains.length === 0) {
                         captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
@@ -1337,22 +1294,18 @@
                                 </button>
                             </div>
                         `;
-                        console.log('Generated HTML for captain', captain.handle, ':', html);
                         return html;
                     }).join('');
                     
-                    console.log('Final captains HTML content:', htmlContent);
                     captainsList.innerHTML = htmlContent;
                     
                 } catch (error) {
-                    console.error('Error loading captains:', error);
                     captainsList.innerHTML = '<div class="text-center text-red-400 py-4">Error loading captains</div>';
                 }
             }
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
                     // Update polygon colors without reloading data
                     this.globe.polygonsData(this.globe.polygonsData());
                 }
@@ -1448,7 +1401,6 @@
                         }
                         
                     } catch (error) {
-                        console.error('Error loading real stats:', error);
                         // Fallback na motivacijski tekst
                         const statsText = document.getElementById('stats-text');
                         const statsSubtitle = document.getElementById('stats-subtitle');
