@@ -443,7 +443,7 @@
                             3
                         </div>
                         <h3 class="text-xl font-semibold mb-3">Make a Difference</h3>
-                        <p class="text-gray-400">Your hearts are processed securely and help support causes in your chosen country.</p>
+                        <p class="text-gray-400">Your hearts help grow the TapTheMap community and support captains who inspire others to join.</p>
                     </div>
                 </div>
                 
@@ -597,8 +597,18 @@
             
             selectCaptain(handle) {
                 console.log('Selected captain:', handle);
-                // Možeš dodati funkcionalnost za prikaz detalja o captainu
-                alert(`Captain @${handle} selected! This could show their profile or statistics.`);
+                // Postavi captain handle u referral input
+                const referralInput = document.getElementById('referral-input');
+                if (referralInput) {
+                    referralInput.value = handle;
+                    referralInput.placeholder = `Send hearts to @${handle} (optional)`;
+                }
+                
+                // Scroll to form
+                document.getElementById('donation-form').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
             
             selectAmount(amount) {
