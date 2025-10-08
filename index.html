@@ -719,6 +719,11 @@
             }
             
             async processHearts() {
+                console.log('processHearts called:', {
+                    selectedCountry: this.selectedCountry,
+                    selectedAmount: this.selectedAmount
+                });
+                
                 if (!this.selectedCountry || !this.selectedAmount) {
                     this.showNotification('Please select a country and amount first.', 'warning');
                     return;
@@ -1327,9 +1332,25 @@
             }
             
             updateStatsDisplay() {
-                document.getElementById('total-donations').textContent = `${this.stats.totalDonations.toFixed(0)} ❤️`;
-                document.getElementById('total-countries').textContent = this.stats.totalCountries;
-                document.getElementById('total-donors').textContent = this.stats.totalDonors;
+                const totalDonationsEl = document.getElementById('total-donations');
+                const totalCountriesEl = document.getElementById('total-countries');
+                const totalDonorsEl = document.getElementById('total-donors');
+                
+                if (totalDonationsEl) {
+                    totalDonationsEl.textContent = `${this.stats.totalDonations.toFixed(0)} ❤️`;
+                }
+                if (totalCountriesEl) {
+                    totalCountriesEl.textContent = this.stats.totalCountries;
+                }
+                if (totalDonorsEl) {
+                    totalDonorsEl.textContent = this.stats.totalDonors;
+                }
+                
+                console.log('Stats updated:', {
+                    totalDonations: this.stats.totalDonations,
+                    totalCountries: this.stats.totalCountries,
+                    totalDonors: this.stats.totalDonors
+                });
             }
             
             showLoadingState(component) {
