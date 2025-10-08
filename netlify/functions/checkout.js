@@ -54,7 +54,7 @@ exports.handler = async (event) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card", "link"], // možeš ostaviti samo "card" ako želiš
+      payment_method_types: ["card", "link", "paypal"], // dodao PayPal
       currency: "eur",
       line_items: [
         {
