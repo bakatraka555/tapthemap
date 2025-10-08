@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .favicon-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .favicon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background: linear-gradient(45deg, #3b82f6, #22c55e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            font-weight: bold;
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>TapTheMap Favicon Generator</h1>
+    
+    <div class="instructions">
+        <h3>Kako kreirati favicon fajlove:</h3>
+        <ol>
+            <li>Koristi <a href="https://favicon.io/favicon-generator/" target="_blank">favicon.io</a></li>
+            <li>Upload sliku ili koristi text "TT" sa fontom Inter</li>
+            <li>Background: Linear gradient (#3b82f6 to #22c55e)</li>
+            <li>Text color: White</li>
+            <li>Download sve veličine</li>
+        </ol>
+    </div>
+    
+    <div class="favicon-container">
+        <div>
+            <div class="favicon">TT</div>
+            <div class="size">16x16</div>
+        </div>
+        <div>
+            <div class="favicon">TT</div>
+            <div class="size">32x32</div>
+        </div>
+        <div>
+            <div class="favicon">TT</div>
+            <div class="size">180x180</div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>Potrebni fajlovi:</h3>
+        <ul>
+            <li><code>favicon.ico</code> - 16x16, 32x32</li>
+            <li><code>favicon-16x16.png</code></li>
+            <li><code>favicon-32x32.png</code></li>
+            <li><code>apple-touch-icon.png</code> - 180x180</li>
+            <li><code>site.webmanifest</code></li>
+        </ul>
+    </div>
+</body>
+</html>

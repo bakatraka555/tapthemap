@@ -3,8 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TapTheMap - Light Up Your Country</title>
-    <meta name="description" content="Donate to light up your country on the global heat map. Support your nation and compete with others worldwide.">
+    <title>TapTheMap - Light Up Your Country | Global Heart Map</title>
+    <meta name="description" content="Send hearts to light up your country on the interactive global map. Support your nation, compete with others worldwide, and watch your country glow in real-time. Join the global community of supporters!">
+    <meta name="keywords" content="global map, country support, hearts, donations, interactive map, world map, national pride, global community">
+    <meta name="author" content="TapTheMap">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://tapthemap.world">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tapthemap.world">
+    <meta property="og:title" content="TapTheMap - Light Up Your Country">
+    <meta property="og:description" content="Send hearts to light up your country on the interactive global map. Support your nation and compete with others worldwide!">
+    <meta property="og:image" content="https://tapthemap.world/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="TapTheMap">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://tapthemap.world">
+    <meta property="twitter:title" content="TapTheMap - Light Up Your Country">
+    <meta property="twitter:description" content="Send hearts to light up your country on the interactive global map. Support your nation and compete with others worldwide!">
+    <meta property="twitter:image" content="https://tapthemap.world/og-image.jpg">
+    <meta property="twitter:creator" content="@tapthemap">
+    <meta property="twitter:site" content="@tapthemap">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="msapplication-TileColor" content="#1e40af">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X8ND8N3MVE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-X8ND8N3MVE', {
+            page_title: 'TapTheMap - Light Up Your Country',
+            page_location: window.location.href,
+            custom_map: {
+                'custom_parameter_1': 'country_support',
+                'custom_parameter_2': 'global_map'
+            }
+        });
+    </script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TapTheMap",
+        "description": "Interactive global map where users can send hearts to light up their countries and compete with others worldwide.",
+        "url": "https://tapthemap.world",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "TapTheMap"
+        },
+        "featureList": [
+            "Interactive 3D Globe",
+            "Real-time Country Statistics", 
+            "Global Leaderboards",
+            "Heart Donation System",
+            "Captain Support Program"
+        ]
+    }
+    </script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -236,6 +316,11 @@
             font-size: 11px;
             font-style: italic;
         }
+        
+        /* Stats rotation transitions */
+        #stats-text, #stats-subtitle {
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -276,25 +361,28 @@
                 Light Up Your Country
             </h2>
             <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                Donate to your country and watch it glow on the global heat map. 
+                Send hearts to captains or countries and watch them glow on the global heat map. 
                 Compete with other nations and show your national pride!
             </p>
             
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto mb-8">
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-blue-400" id="total-donations">0 ❤️</div>
+                    <div class="text-2xl font-bold text-blue-400" id="total-donations" data-loading="stats">0 ❤️</div>
                     <div class="text-sm text-gray-400">Total Hearts</div>
                 </div>
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-green-400" id="total-countries">0</div>
+                    <div class="text-2xl font-bold text-green-400" id="total-countries" data-loading="stats">0</div>
                     <div class="text-sm text-gray-400">Active Countries</div>
                 </div>
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-yellow-400" id="total-donors">0</div>
+                    <div class="text-2xl font-bold text-yellow-400" id="total-donors" data-loading="stats">0</div>
                     <div class="text-sm text-gray-400">Total Hearts</div>
                 </div>
             </div>
+            
+            <!-- Error Container -->
+            <div id="stats-error" class="hidden max-w-2xl mx-auto mb-8"></div>
     </section>
 
         <!-- Map and Sidebar -->
@@ -342,18 +430,12 @@
                     </div>
                 </div>
                 
-                <!-- Country Selection -->
+                <!-- Live Statistics -->
                 <div class="glass-effect rounded-xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">Select Your Country</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="HRV" data-name="Croatia"><img src="flags/hr.png" alt="HR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Croatia</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="DEU" data-name="Germany"><img src="flags/de.png" alt="DE" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Germany</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="USA" data-name="United States"><img src="flags/us.png" alt="US" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">USA</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="GBR" data-name="United Kingdom"><img src="flags/gb.png" alt="GB" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">UK</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="FRA" data-name="France"><img src="flags/fr.png" alt="FR" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">France</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ITA" data-name="Italy"><img src="flags/it.png" alt="IT" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Italy</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="ESP" data-name="Spain"><img src="flags/es.png" alt="ES" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Spain</button>
-                        <button class="country-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors" data-country="POL" data-name="Poland"><img src="flags/pl.png" alt="PL" width="20" height="15" style="border-radius: 2px; margin-right: 8px; vertical-align: middle;">Poland</button>
+                    <h3 class="text-lg font-semibold mb-4">📊 Live Activity</h3>
+                    <div id="rotating-stats" class="text-center py-4">
+                        <div class="text-2xl font-bold text-blue-400 mb-2" id="stats-text">Loading...</div>
+                        <div class="text-sm text-gray-400" id="stats-subtitle">Real-time data</div>
                     </div>
                 </div>
             </div>
@@ -393,7 +475,7 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium mb-2">Send hearts to influencer (optional)</label>
+                            <label class="block text-sm font-medium mb-2">Send hearts to captain (optional)</label>
                             <input type="text" id="referral-input" placeholder="@username" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
                         </div>
                         
@@ -443,7 +525,7 @@
                             3
                         </div>
                         <h3 class="text-xl font-semibold mb-3">Make a Difference</h3>
-                        <p class="text-gray-400">Your hearts are processed securely and help support causes in your chosen country.</p>
+                        <p class="text-gray-400">Your hearts help grow the TapTheMap community and support captains who inspire others to join.</p>
                     </div>
                 </div>
                 
@@ -456,7 +538,7 @@
                         </div>
                         <div class="text-left">
                             <h4 class="font-semibold text-green-400 mb-2">💚 Direct Support</h4>
-                            <p class="text-gray-400">Your hearts go directly to verified organizations in your chosen country.</p>
+                            <p class="text-gray-400">Your hearts directly fund community development and reward captains who inspire others.</p>
                         </div>
                         <div class="text-left">
                             <h4 class="font-semibold text-yellow-400 mb-2">📊 Real-time Tracking</h4>
@@ -505,6 +587,7 @@
             
             async init() {
                 this.setupEventListeners();
+                this.startRealStatsRotation();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
                 this.setupReferral();
@@ -573,7 +656,6 @@
             }
             
             selectCountry(country, name) {
-                console.log('selectCountry called:', country, name);
                 this.selectedCountry = { code: country, name: name };
                 
                 // Update UI
@@ -596,9 +678,18 @@
             }
             
             selectCaptain(handle) {
-                console.log('Selected captain:', handle);
-                // Možeš dodati funkcionalnost za prikaz detalja o captainu
-                alert(`Captain @${handle} selected! This could show their profile or statistics.`);
+                // Postavi captain handle u referral input
+                const referralInput = document.getElementById('referral-input');
+                if (referralInput) {
+                    referralInput.value = handle;
+                    referralInput.placeholder = `Send hearts to @${handle} (optional)`;
+                }
+                
+                // Scroll to form
+                document.getElementById('donation-form').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
             
             selectAmount(amount) {
@@ -628,19 +719,20 @@
             }
             
             async processHearts() {
-                console.log('processHearts called:', {
-                    selectedCountry: this.selectedCountry,
-                    selectedAmount: this.selectedAmount
-                });
-                
                 if (!this.selectedCountry || !this.selectedAmount) {
-                    alert('Please select a country and amount');
+                    this.showNotification('Please select a country and amount first.', 'warning');
                     return;
                 }
                 
+                const submitButton = document.getElementById('submit-hearts');
+                const originalText = submitButton.textContent;
                 const referral = document.getElementById('referral-input').value.trim();
                 
                 try {
+                    // Show loading state
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+                    
                     const response = await fetch('/.netlify/functions/checkout', {
                         method: 'POST',
                         headers: {
@@ -662,6 +754,21 @@
                     }
                     
                     const data = await response.json();
+                    
+                    // Track conversion
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'begin_checkout', {
+                            currency: 'EUR',
+                            value: this.selectedAmount,
+                            items: [{
+                                item_id: this.selectedCountry.code,
+                                item_name: this.selectedCountry.name,
+                                category: 'country_support',
+                                quantity: 1,
+                                price: this.selectedAmount
+                            }]
+                        });
+                    }
                     if (data.url) {
                         // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
@@ -670,13 +777,16 @@
                         throw new Error('No checkout URL returned');
                     }
                 } catch (error) {
-                    console.error('Heart error:', error);
-                    alert('Error processing hearts: ' + error.message);
+                    this.showNotification('Error processing hearts: ' + error.message, 'error');
+                    console.error('Heart processing error:', error);
+                } finally {
+                    // Restore button state
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
                 }
             }
             
             async initializeGlobe() {
-                console.log('Initializing 3D globe...');
                 document.getElementById('map-status').textContent = 'Loading globe...';
                 
                 try {
@@ -712,31 +822,26 @@
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
                     
-                    console.log('Globe created, mounting to container...');
                     
                     // Mount globe to container (correct way for Globe.gl)
                     const container = document.getElementById('globe');
                     container.innerHTML = '';
                     this.globe(container);
                     
-                console.log('Globe mounted, loading country data...');
                 document.getElementById('map-status').textContent = 'Loading countries...';
                 
                 // Load country data (stats already loaded in init)
                 await this.loadCountryData();
                 
-                console.log('Globe initialization complete');
                 document.getElementById('map-status').textContent = 'Globe loaded ✓';
                 
             } catch (error) {
-                console.error('Globe initialization error:', error);
                 document.getElementById('map-status').textContent = 'Globe failed to load';
             }
             }
             
             async loadCountryData() {
                 try {
-                    console.log('Loading country data...');
                     
                     // Use fastest, most reliable source first
                     const sources = [
@@ -747,17 +852,14 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
-                            console.log('Trying source:', source);
                             const response = await fetch(source, {
                                 timeout: 10000 // 10 second timeout
                             });
                             if (response.ok) {
                                 geoData = await response.json();
-                                console.log('Successfully loaded from:', source);
                                 break;
                             }
                         } catch (e) {
-                            console.log('Failed to load from:', source, e.message);
                         }
                     }
                     
@@ -765,13 +867,10 @@
                         throw new Error('All sources failed');
                     }
                     
-                    console.log('Processing country data...');
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
-                    console.log('Available stats:', this.stats.countryData);
                     
                 // Process GeoJSON data for 3D globe
-                console.log('Starting to process', geoData.features.length, 'countries...');
                 const countriesData = geoData.features.map(feature => {
                             const countryCode = this.getCountryCode(feature.properties);
                             const countryName = this.getCountryName(feature.properties);
@@ -782,9 +881,6 @@
                     const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
                     
                     // Log countries with donations
-                    if (totalEur > 0) {
-                        console.log(`✅ Processing ${countryName} (${countryCode}): ${totalEur} EUR`);
-                    }
                     
                     return {
                         ...feature,
@@ -798,18 +894,13 @@
                     };
                 });
                 
-                console.log('Finished processing countries. Countries with hearts:', 
-                    countriesData.filter(c => c.properties.total_eur > 0).length);
                 
-                console.log('Updating globe with', countriesData.length, 'countries...');
                 
                 // Update globe with country data
                 this.globe.polygonsData(countriesData);
                     
-                    console.log('Country data loaded successfully');
                     
                 } catch (error) {
-                    console.error('Error loading country data:', error);
                     document.getElementById('map-status').textContent = 'Globe failed to load';
                 }
             }
@@ -823,7 +914,6 @@
 
             handleCountryHover(country) {
                 if (country && country.properties) {
-                    console.log('Hovering over:', country.properties.name);
                     this.showHoverBadge(country);
                 } else {
                     this.hideHoverBadge();
@@ -1127,7 +1217,6 @@
             }
             
             getCountryFlag(countryCode) {
-                console.log('getCountryFlag called with:', countryCode);
                 
                 // PNG zastavice za Chrome Windows kompatibilnost
                 const countryToFileName = {
@@ -1183,20 +1272,30 @@
                 // Koristi PNG zastavice iz /flags/ direktorija
                 const fileName = countryToFileName[countryCode];
                 if (fileName) {
-                    console.log('Using PNG flag for:', countryCode, '->', fileName);
                     return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;">`;
                 }
                 
                 // Fallback na emoji ako nema PNG
                 const flag = '🏳️';
-                console.warn('No PNG flag found for country:', countryCode, '- using fallback');
                 return flag;
             }
             
             async loadStats() {
                 try {
+                    // Show loading state
+                    this.showLoadingState('stats');
+                    
                     const response = await fetch('/.netlify/functions/stats');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const data = await response.json();
+                    
+                    if (!Array.isArray(data)) {
+                        throw new Error('Invalid data format received');
+                    }
                     
                     this.stats.countryData = {};
                     let totalDonations = 0;
@@ -1217,11 +1316,12 @@
                     this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
-                    console.log('Stats loaded:', this.stats.countryData);
-                    console.log('Raw stats data:', data);
-                    console.log('Sample country with hearts:', data.find(c => c.total_eur > 0));
+                    // Hide loading state
+                    this.hideLoadingState('stats');
                     
                 } catch (error) {
+                    this.hideLoadingState('stats');
+                    this.showErrorState('stats', 'Failed to load statistics. Please refresh the page.');
                     console.error('Error loading stats:', error);
                 }
             }
@@ -1232,8 +1332,80 @@
                 document.getElementById('total-donors').textContent = this.stats.totalDonors;
             }
             
+            showLoadingState(component) {
+                const loadingElements = document.querySelectorAll(`[data-loading="${component}"]`);
+                loadingElements.forEach(el => {
+                    el.innerHTML = '<div class="animate-pulse bg-gray-700 rounded h-4 w-20"></div>';
+                });
+            }
+            
+            hideLoadingState(component) {
+                const loadingElements = document.querySelectorAll(`[data-loading="${component}"]`);
+                loadingElements.forEach(el => {
+                    el.innerHTML = el.getAttribute('data-original-content') || '';
+                });
+            }
+            
+            showErrorState(component, message) {
+                const errorContainer = document.getElementById(`${component}-error`);
+                if (errorContainer) {
+                    errorContainer.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                            <div class="text-red-400 mb-2">⚠️ ${message}</div>
+                            <button onclick="location.reload()" class="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                    errorContainer.classList.remove('hidden');
+                }
+            }
+            
+            hideErrorState(component) {
+                const errorContainer = document.getElementById(`${component}-error`);
+                if (errorContainer) {
+                    errorContainer.classList.add('hidden');
+                }
+            }
+            
+            showNotification(message, type = 'info') {
+                // Remove existing notifications
+                const existing = document.querySelector('.notification');
+                if (existing) existing.remove();
+                
+                const colors = {
+                    success: 'bg-green-600',
+                    error: 'bg-red-600', 
+                    warning: 'bg-yellow-600',
+                    info: 'bg-blue-600'
+                };
+                
+                const notification = document.createElement('div');
+                notification.className = `notification fixed top-4 right-4 z-50 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+                notification.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">×</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.classList.add('translate-x-full');
+                        setTimeout(() => notification.remove(), 300);
+                    }
+                }, 5000);
+            }
+            
             updateLeadersList(data) {
-                console.log('updateLeadersList called with data:', data);
                 const leadersList = document.getElementById('leaders-list');
                 
                 if (data.length === 0) {
@@ -1245,12 +1417,9 @@
                     .sort((a, b) => (b.donors_24h || 0) - (a.donors_24h || 0))
                     .slice(0, 5);
                 
-                console.log('Sorted data for leaders:', sortedData);
                 
                 const htmlContent = sortedData.map((country, index) => {
-                    console.log('Processing country for leaders:', country);
                     const flag = this.getCountryFlag(country.iso);
-                    console.log('Flag for', country.iso, ':', flag);
                     const html = `
                     <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div class="flex items-center space-x-3">
@@ -1270,16 +1439,13 @@
                         </button>
                     </div>
                 `;
-                    console.log('Generated HTML for', country.iso, ':', html);
                     return html;
                 }).join('');
                 
-                console.log('Final HTML content:', htmlContent);
                 leadersList.innerHTML = htmlContent;
             }
             
             async updateCaptainsList(data) {
-                console.log('updateCaptainsList called with data:', data);
                 const captainsList = document.getElementById('captains-list');
                 
                 try {
@@ -1287,7 +1453,6 @@
                     const response = await fetch('/.netlify/functions/captains');
                     const captains = await response.json();
                     
-                    console.log('Captains data:', captains);
                     
                     if (captains.length === 0) {
                         captainsList.innerHTML = '<div class="text-center text-gray-400 py-4">No captains yet. Be the first!</div>';
@@ -1327,22 +1492,18 @@
                                 </button>
                             </div>
                         `;
-                        console.log('Generated HTML for captain', captain.handle, ':', html);
                         return html;
                     }).join('');
                     
-                    console.log('Final captains HTML content:', htmlContent);
                     captainsList.innerHTML = htmlContent;
                     
                 } catch (error) {
-                    console.error('Error loading captains:', error);
                     captainsList.innerHTML = '<div class="text-center text-red-400 py-4">Error loading captains</div>';
                 }
             }
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    console.log('🔄 Updating globe colors with stats:', this.stats.countryData);
                     // Update polygon colors without reloading data
                     this.globe.polygonsData(this.globe.polygonsData());
                 }
@@ -1374,6 +1535,85 @@
                 }
             }
             
+
+            async startRealStatsRotation() {
+                const updateStats = async () => {
+                    try {
+                        // Dohvati stvarne podatke
+                        const [statsResponse, captainsResponse] = await Promise.all([
+                            fetch('/.netlify/functions/stats'),
+                            fetch('/.netlify/functions/captains')
+                        ]);
+                        
+                        const stats = await statsResponse.json();
+                        const captains = await captainsResponse.json();
+                        
+                        // Izračunaj stvarne podatke
+                        const totalHearts = stats.reduce((sum, country) => sum + country.total_eur, 0);
+                        const totalCountries = stats.length;
+                        const totalCaptains = captains.length;
+                        const todayHearts = stats.reduce((sum, country) => sum + country.donors_24h, 0);
+                        
+                        // Motivacijski tekstovi
+                        const motivationalTexts = [
+                            "Join the Movement",
+                            "Make Your Mark", 
+                            "Light Up the World",
+                            "Choose Your Champion",
+                            "Back Your Captain",
+                            "Rally Your Hearts",
+                            "Show Your Pride",
+                            "Lead the Charge"
+                        ];
+                        
+                        // Kombinirane statistike
+                        const combinedStats = [
+                            { text: `🌍 ${totalHearts.toFixed(0)} Hearts Sent Total`, subtitle: "Global Impact" },
+                            { text: `👥 ${totalCountries} Countries Active`, subtitle: "Worldwide Reach" },
+                            { text: `🏆 ${totalCaptains} Active Captains`, subtitle: "Community Leaders" },
+                            { text: `⚡ ${todayHearts} Hearts Today`, subtitle: "Daily Activity" },
+                            { text: motivationalTexts[Math.floor(Math.random() * motivationalTexts.length)], subtitle: "Your Turn" },
+                            { text: "Choose Your Champion", subtitle: "Pick Your Side" },
+                            { text: "Light Up the Map", subtitle: "Make It Glow" },
+                            { text: "Back Your Captain", subtitle: "Support Your Team" }
+                        ];
+                        
+                        // Rotiraj kroz statistike
+                        const currentStat = combinedStats[Math.floor(Math.random() * combinedStats.length)];
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        
+                        if (statsText && statsSubtitle) {
+                            // Fade out
+                            statsText.style.opacity = '0';
+                            statsSubtitle.style.opacity = '0';
+                            
+                            setTimeout(() => {
+                                statsText.textContent = currentStat.text;
+                                statsSubtitle.textContent = currentStat.subtitle;
+                                
+                                // Fade in
+                                statsText.style.opacity = '1';
+                                statsSubtitle.style.opacity = '1';
+                            }, 300);
+                        }
+                        
+                    } catch (error) {
+                        // Fallback na motivacijski tekst
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        if (statsText && statsSubtitle) {
+                            statsText.textContent = "Join the Movement";
+                            statsSubtitle.textContent = "Be Part of Something Big";
+                        }
+                    }
+                };
+
+                // Start rotation
+                updateStats();
+                setInterval(updateStats, 5000); // Rotate every 5 seconds
+            }
+
             clearReferral() {
                 this.selectedReferral = null;
                 document.getElementById('referral-badge').classList.add('hidden');
