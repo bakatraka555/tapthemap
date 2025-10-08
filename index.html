@@ -47,14 +47,10 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-X8ND8N3MVE', {
-            page_title: 'TapTheMap - Light Up Your Country',
-            page_location: window.location.href,
-            custom_map: {
-                'custom_parameter_1': 'country_support',
-                'custom_parameter_2': 'global_map'
-            }
-        });
+        gtag('config', 'G-X8ND8N3MVE');
+        
+        // Debug: provjeri da li je gtag učitano
+        console.log('Google Analytics loaded:', typeof gtag);
     </script>
     
     <!-- Structured Data -->
