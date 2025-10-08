@@ -1287,16 +1287,17 @@
             
             async loadStats() {
                 try {
-                    // Show loading state
-                    this.showLoadingState('stats');
+                    console.log('Loading stats...');
                     
                     const response = await fetch('/.netlify/functions/stats');
+                    console.log('Stats response:', response);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     
                     const data = await response.json();
+                    console.log('Stats data:', data);
                     
                     if (!Array.isArray(data)) {
                         throw new Error('Invalid data format received');
@@ -1316,18 +1317,20 @@
                     this.stats.totalCountries = data.length;
                     this.stats.totalDonors = totalDonors;
                     
+                    console.log('Calculated stats:', this.stats);
+                    
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
                     this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
-                    // Hide loading state
-                    this.hideLoadingState('stats');
-                    
                 } catch (error) {
-                    this.hideLoadingState('stats');
-                    this.showErrorState('stats', 'Failed to load statistics. Please refresh the page.');
                     console.error('Error loading stats:', error);
+                    // Fallback values
+                    this.stats.totalDonations = 0;
+                    this.stats.totalCountries = 0;
+                    this.stats.totalDonors = 0;
+                    this.updateStatsDisplay();
                 }
             }
             
