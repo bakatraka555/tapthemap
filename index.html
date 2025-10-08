@@ -3,8 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TapTheMap - Light Up Your Country</title>
-    <meta name="description" content="Donate to light up your country on the global heat map. Support your nation and compete with others worldwide.">
+    <title>TapTheMap - Light Up Your Country | Global Heart Map</title>
+    <meta name="description" content="Send hearts to light up your country on the interactive global map. Support your nation, compete with others worldwide, and watch your country glow in real-time. Join the global community of supporters!">
+    <meta name="keywords" content="global map, country support, hearts, donations, interactive map, world map, national pride, global community">
+    <meta name="author" content="TapTheMap">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://tapthemap.world">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tapthemap.world">
+    <meta property="og:title" content="TapTheMap - Light Up Your Country">
+    <meta property="og:description" content="Send hearts to light up your country on the interactive global map. Support your nation and compete with others worldwide!">
+    <meta property="og:image" content="https://tapthemap.world/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="TapTheMap">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://tapthemap.world">
+    <meta property="twitter:title" content="TapTheMap - Light Up Your Country">
+    <meta property="twitter:description" content="Send hearts to light up your country on the interactive global map. Support your nation and compete with others worldwide!">
+    <meta property="twitter:image" content="https://tapthemap.world/og-image.jpg">
+    <meta property="twitter:creator" content="@tapthemap">
+    <meta property="twitter:site" content="@tapthemap">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="msapplication-TileColor" content="#1e40af">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID', {
+            page_title: 'TapTheMap - Light Up Your Country',
+            page_location: window.location.href,
+            custom_map: {
+                'custom_parameter_1': 'country_support',
+                'custom_parameter_2': 'global_map'
+            }
+        });
+    </script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TapTheMap",
+        "description": "Interactive global map where users can send hearts to light up their countries and compete with others worldwide.",
+        "url": "https://tapthemap.world",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "TapTheMap"
+        },
+        "featureList": [
+            "Interactive 3D Globe",
+            "Real-time Country Statistics", 
+            "Global Leaderboards",
+            "Heart Donation System",
+            "Captain Support Program"
+        ]
+    }
+    </script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -288,18 +368,21 @@
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto mb-8">
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-blue-400" id="total-donations">0 ❤️</div>
+                    <div class="text-2xl font-bold text-blue-400" id="total-donations" data-loading="stats">0 ❤️</div>
                     <div class="text-sm text-gray-400">Total Hearts</div>
                 </div>
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-green-400" id="total-countries">0</div>
+                    <div class="text-2xl font-bold text-green-400" id="total-countries" data-loading="stats">0</div>
                     <div class="text-sm text-gray-400">Active Countries</div>
                 </div>
                 <div class="glass-effect rounded-lg p-4">
-                    <div class="text-2xl font-bold text-yellow-400" id="total-donors">0</div>
+                    <div class="text-2xl font-bold text-yellow-400" id="total-donors" data-loading="stats">0</div>
                     <div class="text-sm text-gray-400">Total Hearts</div>
                 </div>
             </div>
+            
+            <!-- Error Container -->
+            <div id="stats-error" class="hidden max-w-2xl mx-auto mb-8"></div>
     </section>
 
         <!-- Map and Sidebar -->
@@ -636,15 +719,20 @@
             }
             
             async processHearts() {
-                
                 if (!this.selectedCountry || !this.selectedAmount) {
-                    alert('Please select a country and amount');
+                    this.showNotification('Please select a country and amount first.', 'warning');
                     return;
                 }
                 
+                const submitButton = document.getElementById('submit-hearts');
+                const originalText = submitButton.textContent;
                 const referral = document.getElementById('referral-input').value.trim();
                 
                 try {
+                    // Show loading state
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+                    
                     const response = await fetch('/.netlify/functions/checkout', {
                         method: 'POST',
                         headers: {
@@ -666,6 +754,21 @@
                     }
                     
                     const data = await response.json();
+                    
+                    // Track conversion
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'begin_checkout', {
+                            currency: 'EUR',
+                            value: this.selectedAmount,
+                            items: [{
+                                item_id: this.selectedCountry.code,
+                                item_name: this.selectedCountry.name,
+                                category: 'country_support',
+                                quantity: 1,
+                                price: this.selectedAmount
+                            }]
+                        });
+                    }
                     if (data.url) {
                         // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
@@ -674,7 +777,12 @@
                         throw new Error('No checkout URL returned');
                     }
                 } catch (error) {
-                    alert('Error processing hearts: ' + error.message);
+                    this.showNotification('Error processing hearts: ' + error.message, 'error');
+                    console.error('Heart processing error:', error);
+                } finally {
+                    // Restore button state
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
                 }
             }
             
@@ -1174,8 +1282,20 @@
             
             async loadStats() {
                 try {
+                    // Show loading state
+                    this.showLoadingState('stats');
+                    
                     const response = await fetch('/.netlify/functions/stats');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const data = await response.json();
+                    
+                    if (!Array.isArray(data)) {
+                        throw new Error('Invalid data format received');
+                    }
                     
                     this.stats.countryData = {};
                     let totalDonations = 0;
@@ -1196,8 +1316,13 @@
                     this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
+                    // Hide loading state
+                    this.hideLoadingState('stats');
                     
                 } catch (error) {
+                    this.hideLoadingState('stats');
+                    this.showErrorState('stats', 'Failed to load statistics. Please refresh the page.');
+                    console.error('Error loading stats:', error);
                 }
             }
             
@@ -1205,6 +1330,79 @@
                 document.getElementById('total-donations').textContent = `${this.stats.totalDonations.toFixed(0)} ❤️`;
                 document.getElementById('total-countries').textContent = this.stats.totalCountries;
                 document.getElementById('total-donors').textContent = this.stats.totalDonors;
+            }
+            
+            showLoadingState(component) {
+                const loadingElements = document.querySelectorAll(`[data-loading="${component}"]`);
+                loadingElements.forEach(el => {
+                    el.innerHTML = '<div class="animate-pulse bg-gray-700 rounded h-4 w-20"></div>';
+                });
+            }
+            
+            hideLoadingState(component) {
+                const loadingElements = document.querySelectorAll(`[data-loading="${component}"]`);
+                loadingElements.forEach(el => {
+                    el.innerHTML = el.getAttribute('data-original-content') || '';
+                });
+            }
+            
+            showErrorState(component, message) {
+                const errorContainer = document.getElementById(`${component}-error`);
+                if (errorContainer) {
+                    errorContainer.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                            <div class="text-red-400 mb-2">⚠️ ${message}</div>
+                            <button onclick="location.reload()" class="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                    errorContainer.classList.remove('hidden');
+                }
+            }
+            
+            hideErrorState(component) {
+                const errorContainer = document.getElementById(`${component}-error`);
+                if (errorContainer) {
+                    errorContainer.classList.add('hidden');
+                }
+            }
+            
+            showNotification(message, type = 'info') {
+                // Remove existing notifications
+                const existing = document.querySelector('.notification');
+                if (existing) existing.remove();
+                
+                const colors = {
+                    success: 'bg-green-600',
+                    error: 'bg-red-600', 
+                    warning: 'bg-yellow-600',
+                    info: 'bg-blue-600'
+                };
+                
+                const notification = document.createElement('div');
+                notification.className = `notification fixed top-4 right-4 z-50 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+                notification.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">×</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.classList.add('translate-x-full');
+                        setTimeout(() => notification.remove(), 300);
+                    }
+                }, 5000);
             }
             
             updateLeadersList(data) {
