@@ -70,7 +70,7 @@ exports.handler = async (event) => {
           quantity: 1
         }
       ],
-      success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?paid=1`,
+      success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?payment=success&amount=${amountEur}&country=${encodeURIComponent(country_name)}&captain=${encodeURIComponent(ref || '')}`,
       cancel_url:  `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?cancel=1`,
       metadata: { 
         country_iso, 
