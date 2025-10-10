@@ -329,6 +329,15 @@
             animation: floatIn 0.5s ease-out;
             max-width: 90vw;
             width: 400px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .thank-you-float:hover {
+            transform: translate(-50%, -50%) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 30px rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         @keyframes floatIn {
@@ -829,20 +838,11 @@
                         });
                     }
                     if (data.url) {
-                        // Show thank you float BEFORE redirect
-                        this.showThankYouFloat({
-                            amount: this.selectedAmount,
-                            country: this.selectedCountry.name,
-                            captain: referral || null
-                        });
-                        
                         // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
                         
-                        // Redirect after 2 seconds (so user sees the float)
-                        setTimeout(() => {
-                            window.location.href = data.url;
-                        }, 2000);
+                        // Redirect to Stripe immediately
+                        window.location.href = data.url;
                     } else {
                         throw new Error('No checkout URL returned');
                     }
@@ -1760,6 +1760,27 @@
         
         // Initialize app
         const app = new TapTheMapApp();
+        
+        // Check for payment success on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('payment') === 'success') {
+                const amount = urlParams.get('amount');
+                const country = urlParams.get('country');
+                const captain = urlParams.get('captain');
+                
+                // Show thank you float
+                app.showThankYouFloat({
+                    amount: amount,
+                    country: country,
+                    captain: captain || null
+                });
+                
+                // Clean URL (remove parameters)
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
         
         // Auto-refresh stats every 30 seconds
         setInterval(() => {
