@@ -48,9 +48,6 @@
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-X8ND8N3MVE');
-        
-        // Debug: provjeri da li je gtag učitano
-        console.log('Google Analytics loaded:', typeof gtag);
     </script>
     
     <!-- Structured Data -->
@@ -109,8 +106,7 @@
         }
     </script>
     
-        <!-- Three.js and Globe.gl for 3D globe -->
-        <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+        <!-- Globe.gl for 3D globe (includes Three.js) -->
         <script src="https://unpkg.com/globe.gl"></script>
     
     <!-- Google Fonts -->
@@ -373,7 +369,7 @@
                 </div>
                 <div class="glass-effect rounded-lg p-4">
                     <div class="text-2xl font-bold text-yellow-400" id="total-donors" data-loading="stats">0</div>
-                    <div class="text-sm text-gray-400">Total Hearts</div>
+                    <div class="text-sm text-gray-400">Total Supporters</div>
                 </div>
             </div>
             
@@ -395,10 +391,10 @@
                     <div id="globe" class="globe-container rounded-lg overflow-hidden relative">
                         <!-- Zoom Controls -->
                         <div class="absolute top-4 right-4 z-10 flex flex-col space-y-2">
-                            <button id="zoom-in" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
+                            <button id="zoom-in" class="w-12 h-12 md:w-10 md:h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-2xl md:text-xl font-bold transition-colors">
                                 +
                             </button>
-                            <button id="zoom-out" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
+                            <button id="zoom-out" class="w-12 h-12 md:w-10 md:h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-2xl md:text-xl font-bold transition-colors">
                                 −
                             </button>
                         </div>
@@ -1297,17 +1293,13 @@
             
             async loadStats() {
                 try {
-                    console.log('Loading stats...');
-                    
                     const response = await fetch('/.netlify/functions/stats');
-                    console.log('Stats response:', response);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     
                     const data = await response.json();
-                    console.log('Stats data:', data);
                     
                     if (!Array.isArray(data)) {
                         throw new Error('Invalid data format received');
@@ -1326,8 +1318,6 @@
                     this.stats.totalDonations = totalDonations;
                     this.stats.totalCountries = data.length;
                     this.stats.totalDonors = totalDonors;
-                    
-                    console.log('Calculated stats:', this.stats);
                     
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
@@ -1358,12 +1348,6 @@
                 if (totalDonorsEl) {
                     totalDonorsEl.textContent = this.stats.totalDonors;
                 }
-                
-                console.log('Stats updated:', {
-                    totalDonations: this.stats.totalDonations,
-                    totalCountries: this.stats.totalCountries,
-                    totalDonors: this.stats.totalDonors
-                });
             }
             
             showLoadingState(component) {
@@ -1586,7 +1570,7 @@
                         const totalHearts = stats.reduce((sum, country) => sum + country.total_eur, 0);
                         const totalCountries = stats.length;
                         const totalCaptains = captains.length;
-                        const todayHearts = stats.reduce((sum, country) => sum + country.donors_24h, 0);
+                        const todayHearts = stats.reduce((sum, country) => sum + (country.donors_24h || 0), 0);
                         
                         // Motivacijski tekstovi
                         const motivationalTexts = [
@@ -1601,16 +1585,34 @@
                         ];
                         
                         // Kombinirane statistike
-                        const combinedStats = [
-                            { text: `🌍 ${totalHearts.toFixed(0)} Hearts Sent Total`, subtitle: "Global Impact" },
-                            { text: `👥 ${totalCountries} Countries Active`, subtitle: "Worldwide Reach" },
-                            { text: `🏆 ${totalCaptains} Active Captains`, subtitle: "Community Leaders" },
-                            { text: `⚡ ${todayHearts} Hearts Today`, subtitle: "Daily Activity" },
+                        const combinedStats = [];
+                        
+                        // Dodaj real stats samo ako postoje
+                        if (totalHearts > 0) {
+                            combinedStats.push({ text: `🌍 ${totalHearts.toFixed(0)} Hearts Sent Total`, subtitle: "Global Impact" });
+                        }
+                        if (totalCountries > 0) {
+                            combinedStats.push({ text: `👥 ${totalCountries} Countries Active`, subtitle: "Worldwide Reach" });
+                        }
+                        if (totalCaptains > 0) {
+                            combinedStats.push({ text: `🏆 ${totalCaptains} Active Captains`, subtitle: "Community Leaders" });
+                        }
+                        if (todayHearts > 0) {
+                            combinedStats.push({ text: `⚡ ${todayHearts} Hearts Today`, subtitle: "Daily Activity" });
+                        }
+                        
+                        // Dodaj motivacijske tekstove
+                        combinedStats.push(
                             { text: motivationalTexts[Math.floor(Math.random() * motivationalTexts.length)], subtitle: "Your Turn" },
                             { text: "Choose Your Champion", subtitle: "Pick Your Side" },
                             { text: "Light Up the Map", subtitle: "Make It Glow" },
                             { text: "Back Your Captain", subtitle: "Support Your Team" }
-                        ];
+                        );
+                        
+                        // Fallback ako nema podataka
+                        if (combinedStats.length === 0) {
+                            combinedStats.push({ text: "🌍 Global Movement Starting", subtitle: "Be the first to send hearts!" });
+                        }
                         
                         // Rotiraj kroz statistike
                         const currentStat = combinedStats[Math.floor(Math.random() * combinedStats.length)];
@@ -1633,12 +1635,13 @@
                         }
                         
                     } catch (error) {
+                        console.error('Error loading real stats:', error);
                         // Fallback na motivacijski tekst
                         const statsText = document.getElementById('stats-text');
                         const statsSubtitle = document.getElementById('stats-subtitle');
                         if (statsText && statsSubtitle) {
-                            statsText.textContent = "Join the Movement";
-                            statsSubtitle.textContent = "Be Part of Something Big";
+                            statsText.textContent = "🌍 Global Movement";
+                            statsSubtitle.textContent = "Join the Community";
                         }
                     }
                 };
