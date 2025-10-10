@@ -340,6 +340,17 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
+        /* Mobile hover effect (touch) */
+        .thank-you-float:active {
+            transform: translate(-50%, -50%) scale(0.98);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+        
+        /* Always show some glow effect */
+        .thank-you-float {
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+        
         @keyframes floatIn {
             0% { 
                 opacity: 0; 
@@ -1506,21 +1517,38 @@
                             <p>Your support helps grow our global community!</p>
                             <p class="mt-2">Share with friends to spread the love ❤️</p>
                         </div>
+                        
+                        <div class="text-xs opacity-60 mt-3">
+                            <p>Click anywhere to close</p>
+                        </div>
                     </div>
                 `;
                 
                 // Add to page
                 document.body.appendChild(float);
                 
-                // Auto-remove after 5 seconds
-                setTimeout(() => {
+                // Click to close functionality
+                let autoCloseTimer;
+                const closeFloat = () => {
                     float.style.animation = 'floatOut 0.5s ease-in forwards';
                     setTimeout(() => {
                         if (float.parentElement) {
                             document.body.removeChild(float);
                         }
                     }, 500);
-                }, 5000);
+                };
+                
+                // Auto-remove after 8 seconds (increased from 5)
+                autoCloseTimer = setTimeout(closeFloat, 8000);
+                
+                // Click anywhere to close
+                float.addEventListener('click', () => {
+                    clearTimeout(autoCloseTimer);
+                    closeFloat();
+                });
+                
+                // Add hover effect indicator
+                float.style.cursor = 'pointer';
             }
             
             updateLeadersList(data) {
