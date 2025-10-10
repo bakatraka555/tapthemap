@@ -33,9 +33,6 @@ exports.handler = async (event) => {
     const country_name = (body.country_name || "").toString().trim() || country_iso || "TapTheMap";
     const ref    = (body.ref || "").toString().slice(0, 64);
     const handle = (body.handle || "").toString().slice(0, 64);
-    
-    // Izdvoji influencer_ref iz ref parametra (ukloni ?ref= prefix)
-    const influencer_ref = ref.replace(/^\?ref=/, '').replace(/^ref=/, '').trim();
 
     // 3) UZMI IZNOS iz više mogućih ključeva: amount, amount_eur, amt, value
     const candidates = [body.amount, body.amount_eur, body.amt, body.value];
@@ -57,7 +54,7 @@ exports.handler = async (event) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card", "link"], // možeš ostaviti samo "card" ako želiš
+      payment_method_types: ["card", "link", "paypal"], // dodao PayPal
       currency: "eur",
       line_items: [
         {
@@ -73,7 +70,7 @@ exports.handler = async (event) => {
           quantity: 1
         }
       ],
-      success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?paid=1`,
+      success_url: `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?payment=success&amount=${amountEur}&country=${encodeURIComponent(country_name)}&captain=${encodeURIComponent(ref || '')}`,
       cancel_url:  `${process.env.SITE_BASE_URL || "https://tapthemap.world"}/?cancel=1`,
       metadata: { 
         country_iso, 
@@ -81,7 +78,7 @@ exports.handler = async (event) => {
         ref, 
         handle, 
         amount_eur: String(amountEur),
-        influencer_ref: influencer_ref,  // Ispravljen influencer_ref
+        influencer_ref: ref,  // Dodaj influencer_ref
         commission_rate: "0.25"  // Dodaj commission_rate
       }
     });
