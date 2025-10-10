@@ -313,6 +313,54 @@
         #stats-text, #stats-subtitle {
             transition: opacity 0.3s ease-in-out;
         }
+        
+        /* Thank You Float Overlay */
+        .thank-you-float {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            z-index: 9999;
+            animation: floatIn 0.5s ease-out;
+            max-width: 90vw;
+            width: 400px;
+        }
+        
+        @keyframes floatIn {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+        }
+        
+        @keyframes floatOut {
+            0% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8); 
+            }
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 640px) {
+            .thank-you-float {
+                padding: 1.5rem;
+                width: 90vw;
+                max-width: 350px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -781,9 +829,20 @@
                         });
                     }
                     if (data.url) {
+                        // Show thank you float BEFORE redirect
+                        this.showThankYouFloat({
+                            amount: this.selectedAmount,
+                            country: this.selectedCountry.name,
+                            captain: referral || null
+                        });
+                        
                         // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
-                        window.location.href = data.url;
+                        
+                        // Redirect after 2 seconds (so user sees the float)
+                        setTimeout(() => {
+                            window.location.href = data.url;
+                        }, 2000);
                     } else {
                         throw new Error('No checkout URL returned');
                     }
@@ -1423,6 +1482,47 @@
                 }, 5000);
             }
             
+            showThankYouFloat(paymentData) {
+                // Remove existing float if any
+                const existing = document.querySelector('.thank-you-float');
+                if (existing) existing.remove();
+                
+                // Create float element
+                const float = document.createElement('div');
+                float.className = 'thank-you-float';
+                float.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h2 class="text-2xl font-bold mb-2">Thank You!</h2>
+                        <p class="text-lg mb-4">Your hearts have been sent successfully!</p>
+                        
+                        <div class="bg-white/20 rounded-lg p-3 mb-4">
+                            <p class="text-sm">💰 <strong>€${paymentData.amount}</strong> sent to <strong>${paymentData.country}</strong></p>
+                            ${paymentData.captain ? `<p class="text-sm">👑 Captain: <strong>@${paymentData.captain}</strong></p>` : ''}
+                            <p class="text-sm">❤️ <strong>${paymentData.amount} hearts</strong> added to the map</p>
+                        </div>
+                        
+                        <div class="text-sm opacity-80">
+                            <p>Your support helps grow our global community!</p>
+                            <p class="mt-2">Share with friends to spread the love ❤️</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to page
+                document.body.appendChild(float);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    float.style.animation = 'floatOut 0.5s ease-in forwards';
+                    setTimeout(() => {
+                        if (float.parentElement) {
+                            document.body.removeChild(float);
+                        }
+                    }, 500);
+                }, 5000);
+            }
+            
             updateLeadersList(data) {
                 const leadersList = document.getElementById('leaders-list');
                 
@@ -1650,7 +1750,7 @@
                 updateStats();
                 setInterval(updateStats, 5000); // Rotate every 5 seconds
             }
-
+            
             clearReferral() {
                 this.selectedReferral = null;
                 document.getElementById('referral-badge').classList.add('hidden');
