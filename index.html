@@ -333,6 +333,73 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
         }
+
+        /* FLOATING DONATION PANEL */
+        .floating-donation-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 320px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .floating-donation-panel.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .floating-donation-panel.hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-50%) translateX(20px);
+        }
+
+        /* COUNTRY BLINKING ANIMATION */
+        .country-blink {
+            animation: countryBlink 1s ease-in-out 3;
+        }
+
+        @keyframes countryBlink {
+            0%, 100% { 
+                opacity: 1; 
+                filter: brightness(1);
+            }
+            50% { 
+                opacity: 0.3; 
+                filter: brightness(2);
+            }
+        }
+
+        /* RESPONSIVE PANEL */
+        @media (max-width: 768px) {
+            .floating-donation-panel {
+                right: 10px;
+                left: 10px;
+                width: auto;
+                top: auto;
+                bottom: 20px;
+                transform: none;
+            }
+            
+            .floating-donation-panel.show {
+                transform: translateY(0);
+            }
+            
+            .floating-donation-panel.hide {
+                transform: translateY(20px);
+            }
+        }
         
         .thank-you-float:hover {
             transform: translate(-50%, -50%) scale(1.02);
@@ -651,6 +718,78 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Floating Donation Panel -->
+                    <div id="floating-donation-panel" class="floating-donation-panel">
+                        <div class="text-white">
+                            <h3 class="text-xl font-bold mb-2 text-blue-400">💝 Send Hearts</h3>
+                            <p class="text-gray-300 text-sm mb-4">Support your country or captain</p>
+                            
+                            <!-- Selected Country Display -->
+                            <div id="selected-country-display" class="mb-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div id="selected-country-name" class="font-medium">Select a country</div>
+                                        <div id="selected-country-flag" class="text-2xl">🌍</div>
+                                    </div>
+                                    <button id="change-country" class="text-blue-400 hover:text-blue-300 text-sm">
+                                        Change
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Captain Selection -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Captain (optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="captain-input" 
+                                    placeholder="Enter captain name or @username"
+                                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                                >
+                                <div id="captain-suggestions" class="mt-2 space-y-1 hidden">
+                                    <!-- Captain suggestions will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Amount Selection -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Amount</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="25">€25</button>
+                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="50">€50</button>
+                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="75">€75</button>
+                                </div>
+                                <div class="mt-2">
+                                    <input 
+                                        type="number" 
+                                        id="custom-amount" 
+                                        placeholder="Custom amount"
+                                        min="5"
+                                        max="1000"
+                                        class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <!-- Send Button -->
+                            <button 
+                                id="send-hearts-btn" 
+                                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                disabled
+                            >
+                                Send Hearts ❤️
+                            </button>
+                            
+                            <!-- Close Panel Button -->
+                            <button 
+                                id="close-panel" 
+                                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
                     
                     <!-- Legend -->
                     <div class="mt-4 flex items-center justify-between text-sm">
@@ -845,6 +984,7 @@
             
             async init() {
                 this.setupEventListeners();
+                this.setupFloatingPanelEvents();
                 this.startRealStatsRotation();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
@@ -979,25 +1119,33 @@
                 }
             }
             
-            async processHearts() {
+            async processHearts(data = null) {
+                // Support both old and new calling patterns
+                const country = data?.selectedCountry || this.selectedCountry;
+                const amount = data?.selectedAmount || this.selectedAmount;
+                const captain = data?.selectedCaptain || '';
+                
                 console.log('processHearts called:', {
-                    selectedCountry: this.selectedCountry,
-                    selectedAmount: this.selectedAmount
+                    selectedCountry: country,
+                    selectedAmount: amount,
+                    selectedCaptain: captain
                 });
                 
-                if (!this.selectedCountry || !this.selectedAmount) {
+                if (!country || !amount) {
                     this.showNotification('Please select a country and amount first.', 'warning');
                     return;
                 }
                 
                 const submitButton = document.getElementById('donate-btn');
-                const originalText = submitButton.textContent;
-                const referral = document.getElementById('referral-input').value.trim();
+                const originalText = submitButton ? submitButton.textContent : 'Send Hearts';
+                const referral = document.getElementById('referral-input') ? document.getElementById('referral-input').value.trim() : '';
                 
                 try {
                     // Show loading state
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+                    }
                     
                     const response = await fetch('/.netlify/functions/checkout', {
                         method: 'POST',
@@ -1005,11 +1153,11 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            amount: this.selectedAmount,
-                            amount_eur: this.selectedAmount,
-                            country_iso: this.selectedCountry.code,
-                            country_name: this.selectedCountry.name,
-                            ref: referral || '',
+                            amount: amount,
+                            amount_eur: amount,
+                            country_iso: country.code || country.properties?.iso,
+                            country_name: country.name || country.properties?.name,
+                            ref: captain || referral || '',
                             email: null
                         })
                     });
@@ -1049,8 +1197,10 @@
                     console.error('Heart processing error:', error);
                 } finally {
                     // Restore button state
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalText;
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                    }
                 }
             }
             
@@ -1182,8 +1332,8 @@
                     // Select country with enhanced UX
                     this.selectCountry(country.properties.iso, country.properties.name);
                     
-                    // Auto-scroll to donation form
-                    this.scrollToDonationForm();
+                    // Show floating panel instead of scrolling
+                    this.showFloatingPanel(country);
                 }
             }
 
