@@ -48,6 +48,7 @@
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-X8ND8N3MVE');
+        console.log('🔧 Google Analytics script loaded');
     </script>
     
     <!-- Structured Data -->
@@ -106,8 +107,15 @@
         }
     </script>
     
-        <!-- Globe.gl for 3D globe (includes Three.js) -->
-        <script src="https://unpkg.com/globe.gl" onload="console.log('✅ Globe.gl library loaded')" onerror="console.error('❌ Globe.gl library failed to load')"></script>
+    <!-- Globe.gl for 3D globe (includes Three.js) -->
+    <script src="https://unpkg.com/globe.gl" onload="console.log('✅ Globe.gl library loaded')" onerror="console.error('❌ Globe.gl library failed to load')"></script>
+    
+    <!-- SIMPLE TEST SCRIPT -->
+    <script>
+        console.log('🔧 SIMPLE TEST SCRIPT - this should appear');
+        console.log('🔧 Current time:', new Date().toISOString());
+        console.log('🔧 Window object exists:', typeof window !== 'undefined');
+    </script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
