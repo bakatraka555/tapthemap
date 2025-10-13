@@ -977,31 +977,31 @@
             console.log('🔧 JavaScript is working - basic test');
             
             // Global error handler
-        window.addEventListener('error', function(e) {
-            console.error('❌ Global JavaScript error:', e.error);
-            console.error('❌ Error details:', e.filename, e.lineno, e.colno);
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('❌ Unhandled promise rejection:', e.reason);
-        });
-        
-        console.log('🔧 Script tag loaded, about to create app...');
-        
-        // Test basic JavaScript
-        console.log('🔧 Basic JavaScript test - this should appear');
-        
-        // Test if we can create a simple object
-        try {
-            const testObj = { test: 'value' };
-            console.log('🔧 Object creation test passed:', testObj);
-        } catch (e) {
-            console.error('❌ Object creation test failed:', e);
-        }
-        
-        console.log('🔧 About to define TapTheMapApp class...');
-        
-        class TapTheMapApp {
+            window.addEventListener('error', function(e) {
+                console.error('❌ Global JavaScript error:', e.error);
+                console.error('❌ Error details:', e.filename, e.lineno, e.colno);
+            });
+            
+            window.addEventListener('unhandledrejection', function(e) {
+                console.error('❌ Unhandled promise rejection:', e.reason);
+            });
+            
+            console.log('🔧 Script tag loaded, about to create app...');
+            
+            // Test basic JavaScript
+            console.log('🔧 Basic JavaScript test - this should appear');
+            
+            // Test if we can create a simple object
+            try {
+                const testObj = { test: 'value' };
+                console.log('🔧 Object creation test passed:', testObj);
+            } catch (e) {
+                console.error('❌ Object creation test failed:', e);
+            }
+            
+            console.log('🔧 About to define TapTheMapApp class...');
+            
+            class TapTheMapApp {
             constructor() {
                 console.log('🏗️ TapTheMapApp constructor called');
                 this.selectedCountry = null;
