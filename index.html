@@ -35,7 +35,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <!-- <link rel="manifest" href="/site.webmanifest"> -->
+    <link rel="manifest" href="/site.webmanifest">
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#1e40af">
@@ -48,7 +48,9 @@
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-X8ND8N3MVE');
-        console.log('🔧 Google Analytics script loaded');
+        
+        // Debug: provjeri da li je gtag učitano
+        console.log('Google Analytics loaded:', typeof gtag);
     </script>
     
     <!-- Structured Data -->
@@ -107,9 +109,9 @@
         }
     </script>
     
-    <!-- Globe.gl for 3D globe (includes Three.js) -->
-    <script src="https://unpkg.com/globe.gl" onload="console.log('✅ Globe.gl library loaded')" onerror="console.error('❌ Globe.gl library failed to load')"></script>
-    
+        <!-- Three.js and Globe.gl for 3D globe -->
+        <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+        <script src="https://unpkg.com/globe.gl"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -315,325 +317,6 @@
         #stats-text, #stats-subtitle {
             transition: opacity 0.3s ease-in-out;
         }
-        
-        /* Thank You Float Overlay */
-        .thank-you-float {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-            z-index: 9999;
-            animation: floatIn 0.5s ease-out;
-            max-width: 90vw;
-            width: 400px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        /* FLOATING DONATION PANEL */
-        .floating-donation-panel {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 320px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .floating-donation-panel.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(-50%) translateX(0);
-        }
-
-        .floating-donation-panel.hide {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-50%) translateX(20px);
-        }
-
-        /* COUNTRY BLINKING ANIMATION */
-        .country-blink {
-            animation: countryBlink 1s ease-in-out 3;
-        }
-
-        @keyframes countryBlink {
-            0%, 100% { 
-                opacity: 1; 
-                filter: brightness(1);
-            }
-            50% { 
-                opacity: 0.3; 
-                filter: brightness(2);
-            }
-        }
-
-        /* RESPONSIVE PANEL */
-        @media (max-width: 768px) {
-            .floating-donation-panel {
-                right: 10px;
-                left: 10px;
-                width: auto;
-                top: auto;
-                bottom: 20px;
-                transform: none;
-            }
-            
-            .floating-donation-panel.show {
-                transform: translateY(0);
-            }
-            
-            .floating-donation-panel.hide {
-                transform: translateY(20px);
-            }
-        }
-        
-        .thank-you-float:hover {
-            transform: translate(-50%, -50%) scale(1.02);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 30px rgba(16, 185, 129, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Mobile hover effect (touch) */
-        .thank-you-float:active {
-            transform: translate(-50%, -50%) scale(0.98);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(16, 185, 129, 0.2);
-        }
-        
-        /* Always show some glow effect */
-        .thank-you-float {
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 0 20px rgba(16, 185, 129, 0.1);
-        }
-        
-        @keyframes floatIn {
-            0% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(0.8); 
-            }
-            100% { 
-                opacity: 1; 
-                transform: translate(-50%, -50%) scale(1); 
-            }
-        }
-        
-        @keyframes floatOut {
-            0% { 
-                opacity: 1; 
-                transform: translate(-50%, -50%) scale(1); 
-            }
-            100% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(0.8); 
-            }
-        }
-        
-        /* Mobile responsive */
-        @media (max-width: 640px) {
-            .thank-you-float {
-                padding: 1.5rem;
-                width: 90vw;
-                max-width: 350px;
-            }
-        }
-        
-        /* NEW UX ENHANCEMENT STYLES */
-        
-        /* Country Tooltip */
-        .country-tooltip {
-            position: fixed;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px 16px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            pointer-events: none;
-            opacity: 0;
-            transform: translateY(-10px) scale(0.9);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap;
-            max-width: 200px;
-        }
-        
-        .country-tooltip.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        
-        .tooltip-content {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .tooltip-flag {
-            font-size: 16px;
-            line-height: 1;
-        }
-        
-        .tooltip-text {
-            flex: 1;
-        }
-        
-        .tooltip-title {
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-        
-        .tooltip-stats {
-            font-size: 12px;
-            color: #22c55e;
-            font-weight: 500;
-        }
-        
-        /* Floating Card */
-        .floating-card {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            z-index: 1001;
-            background: rgba(0, 0, 0, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 24px;
-            color: white;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 90vw;
-            width: 400px;
-        }
-        
-        .floating-card.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        
-        .floating-card-content {
-            text-align: center;
-        }
-        
-        .floating-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            position: relative;
-        }
-        
-        .floating-card-flag {
-            font-size: 24px;
-            line-height: 1;
-        }
-        
-        .floating-card-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0;
-        }
-        
-        .floating-card-close {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        
-        .floating-card-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-        
-        .floating-card-text {
-            font-size: 16px;
-            color: #d1d5db;
-            margin-bottom: 20px;
-        }
-        
-        .floating-card-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-        
-        .floating-card-btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        
-        .floating-card-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-        
-        .floating-card-btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Mobile responsive for new elements */
-        @media (max-width: 640px) {
-            .country-tooltip {
-                font-size: 12px;
-                padding: 8px 12px;
-                max-width: 150px;
-            }
-            
-            .floating-card {
-                padding: 20px;
-                width: 90vw;
-                max-width: 350px;
-            }
-            
-            .floating-card-title {
-                font-size: 18px;
-            }
-            
-            .floating-card-text {
-                font-size: 14px;
-            }
-        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -674,8 +357,8 @@
                 Light Up Your Country
             </h2>
             <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                Join our global community. Send hearts to countries and captains, 
-                watch the world glow on our interactive map. Celebrate your national pride!
+                Send hearts to captains or countries and watch them glow on the global heat map. 
+                Compete with other nations and show your national pride!
             </p>
             
             <!-- Quick Stats -->
@@ -690,7 +373,7 @@
                 </div>
                 <div class="glass-effect rounded-lg p-4">
                     <div class="text-2xl font-bold text-yellow-400" id="total-donors" data-loading="stats">0</div>
-                    <div class="text-sm text-gray-400">Total Supporters</div>
+                    <div class="text-sm text-gray-400">Total Hearts</div>
                 </div>
             </div>
             
@@ -712,83 +395,11 @@
                     <div id="globe" class="globe-container rounded-lg overflow-hidden relative">
                         <!-- Zoom Controls -->
                         <div class="absolute top-4 right-4 z-10 flex flex-col space-y-2">
-                            <button id="zoom-in" class="w-12 h-12 md:w-10 md:h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-2xl md:text-xl font-bold transition-colors">
+                            <button id="zoom-in" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
                                 +
                             </button>
-                            <button id="zoom-out" class="w-12 h-12 md:w-10 md:h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-2xl md:text-xl font-bold transition-colors">
+                            <button id="zoom-out" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
                                 −
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Floating Donation Panel -->
-                    <div id="floating-donation-panel" class="floating-donation-panel">
-                        <div class="text-white">
-                            <h3 class="text-xl font-bold mb-2 text-blue-400">💝 Send Hearts</h3>
-                            <p class="text-gray-300 text-sm mb-4">Support your country or captain</p>
-                            
-                            <!-- Selected Country Display -->
-                            <div id="selected-country-display" class="mb-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div id="selected-country-name" class="font-medium">Select a country</div>
-                                        <div id="selected-country-flag" class="text-2xl">🌍</div>
-                                    </div>
-                                    <button id="change-country" class="text-blue-400 hover:text-blue-300 text-sm">
-                                        Change
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Captain Selection -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Captain (optional)</label>
-                                <input 
-                                    type="text" 
-                                    id="captain-input" 
-                                    placeholder="Enter captain name or @username"
-                                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                                >
-                                <div id="captain-suggestions" class="mt-2 space-y-1 hidden">
-                                    <!-- Captain suggestions will be populated here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Amount Selection -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Amount</label>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="25">€25</button>
-                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="50">€50</button>
-                                    <button class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="75">€75</button>
-                                </div>
-                                <div class="mt-2">
-                                    <input 
-                                        type="number" 
-                                        id="custom-amount" 
-                                        placeholder="Custom amount"
-                                        min="5"
-                                        max="1000"
-                                        class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                                    >
-                                </div>
-                            </div>
-                            
-                            <!-- Send Button -->
-                            <button 
-                                id="send-hearts-btn" 
-                                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                disabled
-                            >
-                                Send Hearts ❤️
-                            </button>
-                            
-                            <!-- Close Panel Button -->
-                            <button 
-                                id="close-panel" 
-                                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-                            >
-                                ✕
                             </button>
                         </div>
                     </div>
@@ -909,8 +520,8 @@
                         <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
                             3
                         </div>
-                        <h3 class="text-xl font-semibold mb-3">Join the Movement</h3>
-                        <p class="text-gray-400">Your hearts support our global community and reward captains who inspire others to participate.</p>
+                        <h3 class="text-xl font-semibold mb-3">Make a Difference</h3>
+                        <p class="text-gray-400">Your hearts help grow the TapTheMap community and support captains who inspire others to join.</p>
                     </div>
                 </div>
                 
@@ -938,7 +549,7 @@
                 
                 <div class="mt-12 text-center">
                     <h3 class="text-2xl font-semibold mb-4">Join the Movement</h3>
-                    <p class="text-gray-400 mb-6">Be part of a global community supporting countries and captains, one heart at a time.</p>
+                    <p class="text-gray-400 mb-6">Be part of a global community making a difference, one heart at a time.</p>
                     <a href="#map" class="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 rounded-lg font-semibold transition-all transform hover:scale-105">
                         Send Hearts Now
                     </a>
@@ -947,34 +558,11 @@
         </div>
   </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900/50 border-t border-slate-800 py-8 mt-16">
-        <div class="container mx-auto px-4">
-            <div class="text-center">
-                <p class="text-gray-400 mb-4">© 2024 TapTheMap. All rights reserved.</p>
-                <div class="flex justify-center space-x-6 text-sm">
-                    <a href="/terms.html" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-                    <a href="/privacy.html" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-                    <a href="/beta-info.html" class="text-gray-500 hover:text-gray-300 transition-colors opacity-50">Platform Status</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Main App Script -->
     <script>
-        // Global error handler
-        window.addEventListener('error', function(e) {
-            console.error('❌ Global JavaScript error:', e.error);
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('❌ Unhandled promise rejection:', e.reason);
-        });
-            
         class TapTheMapApp {
             constructor() {
                 this.selectedCountry = null;
@@ -995,7 +583,6 @@
             
             async init() {
                 this.setupEventListeners();
-                this.setupFloatingPanelEvents();
                 this.startRealStatsRotation();
             await this.loadStats(); // Load stats first
             await this.initializeGlobe(); // Then initialize globe with stats
@@ -1083,9 +670,6 @@
                     }
                 });
                 
-                // Show floating confirmation card
-                this.showFloatingCard(country, name);
-                
                 this.updateDonateButton();
             }
             
@@ -1130,33 +714,25 @@
                 }
             }
             
-            async processHearts(data = null) {
-                // Support both old and new calling patterns
-                const country = data?.selectedCountry || this.selectedCountry;
-                const amount = data?.selectedAmount || this.selectedAmount;
-                const captain = data?.selectedCaptain || '';
-                
+            async processHearts() {
                 console.log('processHearts called:', {
-                    selectedCountry: country,
-                    selectedAmount: amount,
-                    selectedCaptain: captain
+                    selectedCountry: this.selectedCountry,
+                    selectedAmount: this.selectedAmount
                 });
                 
-                if (!country || !amount) {
+                if (!this.selectedCountry || !this.selectedAmount) {
                     this.showNotification('Please select a country and amount first.', 'warning');
                     return;
                 }
                 
                 const submitButton = document.getElementById('donate-btn');
-                const originalText = submitButton ? submitButton.textContent : 'Send Hearts';
-                const referral = document.getElementById('referral-input') ? document.getElementById('referral-input').value.trim() : '';
+                const originalText = submitButton.textContent;
+                const referral = document.getElementById('referral-input').value.trim();
                 
                 try {
                     // Show loading state
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
-                    }
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
                     
                     const response = await fetch('/.netlify/functions/checkout', {
                         method: 'POST',
@@ -1164,11 +740,11 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            amount: amount,
-                            amount_eur: amount,
-                            country_iso: country.code || country.properties?.iso,
-                            country_name: country.name || country.properties?.name,
-                            ref: captain || referral || '',
+                            amount: this.selectedAmount,
+                            amount_eur: this.selectedAmount,
+                            country_iso: this.selectedCountry.code,
+                            country_name: this.selectedCountry.name,
+                            ref: referral || '',
                             email: null
                         })
                     });
@@ -1197,8 +773,6 @@
                     if (data.url) {
                         // Ažuriraj stats pre nego što odeš na Stripe
                         await this.loadStats();
-                        
-                        // Redirect to Stripe immediately
                         window.location.href = data.url;
                     } else {
                         throw new Error('No checkout URL returned');
@@ -1208,27 +782,21 @@
                     console.error('Heart processing error:', error);
                 } finally {
                     // Restore button state
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.textContent = originalText;
-                    }
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
                 }
             }
             
             async initializeGlobe() {
-                console.log('🌍 Starting globe initialization...');
                 document.getElementById('map-status').textContent = 'Loading globe...';
                 
                 try {
                     // Wait for Globe.gl to be available
                     if (typeof Globe === 'undefined') {
-                        console.error('❌ Globe.gl library not loaded');
                         throw new Error('Globe.gl library not loaded');
                     }
-                    console.log('✅ Globe.gl library is available');
                     
                     // Initialize 3D globe with simple country overlays
-                    console.log('🔧 Creating Globe instance...');
                     this.globe = Globe()
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
@@ -1257,35 +825,23 @@
                     
                     
                     // Mount globe to container (correct way for Globe.gl)
-                    console.log('🔧 Mounting globe to container...');
                     const container = document.getElementById('globe');
-                    if (!container) {
-                        console.error('❌ Globe container not found');
-                        throw new Error('Globe container not found');
-                    }
-                    console.log('✅ Globe container found');
                     container.innerHTML = '';
                     this.globe(container);
-                    console.log('✅ Globe mounted to container');
                     
                 document.getElementById('map-status').textContent = 'Loading countries...';
-                console.log('📊 Loading country data...');
                 
                 // Load country data (stats already loaded in init)
                 await this.loadCountryData();
-                console.log('✅ Country data loaded');
                 
                 document.getElementById('map-status').textContent = 'Globe loaded ✓';
-                console.log('🎉 Globe initialization completed successfully');
                 
             } catch (error) {
-                console.error('❌ Globe initialization failed:', error);
                 document.getElementById('map-status').textContent = 'Globe failed to load';
             }
             }
             
             async loadCountryData() {
-                console.log('📊 Starting loadCountryData...');
                 try {
                     
                     // Use fastest, most reliable source first
@@ -1297,33 +853,25 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
-                            console.log(`🌐 Trying to fetch from: ${source}`);
                             const response = await fetch(source, {
                                 timeout: 10000 // 10 second timeout
                             });
                             if (response.ok) {
-                                console.log(`✅ Successfully fetched from: ${source}`);
                                 geoData = await response.json();
                                 break;
-                            } else {
-                                console.log(`❌ Failed to fetch from: ${source} (${response.status})`);
                             }
                         } catch (e) {
-                            console.log(`❌ Error fetching from: ${source}`, e);
                         }
                     }
                     
                     if (!geoData) {
-                        console.error('❌ All geo data sources failed');
                         throw new Error('All sources failed');
                     }
-                    console.log('✅ Geo data loaded successfully');
                     
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
                     
                 // Process GeoJSON data for 3D globe
-                console.log(`📊 Processing ${geoData.features.length} countries...`);
                 const countriesData = geoData.features.map(feature => {
                             const countryCode = this.getCountryCode(feature.properties);
                             const countryName = this.getCountryName(feature.properties);
@@ -1350,43 +898,26 @@
                 
                 
                 // Update globe with country data
-                console.log(`🌍 Updating globe with ${countriesData.length} countries...`);
                 this.globe.polygonsData(countriesData);
-                console.log('✅ Globe updated with country data');
                     
                     
                 } catch (error) {
-                    console.error('❌ loadCountryData failed:', error);
                     document.getElementById('map-status').textContent = 'Globe failed to load';
                 }
             }
             
             
             handleCountryClick(country) {
-                console.log('🌍 Country clicked:', country);
                 if (country && country.properties) {
-                    console.log('✅ Country has properties, processing...');
-                    // Add visual feedback
-                    this.showClickFeedback(country);
-                    
-                    // Select country with enhanced UX
                     this.selectCountry(country.properties.iso, country.properties.name);
-                    
-                    // Show floating panel instead of scrolling
-                    this.showFloatingPanel(country);
-                    console.log('✅ Floating panel should be shown');
-                } else {
-                    console.log('❌ Country missing properties');
                 }
             }
 
             handleCountryHover(country) {
                 if (country && country.properties) {
                     this.showHoverBadge(country);
-                    this.showHoverTooltip(country);
                 } else {
                     this.hideHoverBadge();
-                    this.hideHoverTooltip();
                 }
             }
             
@@ -1752,13 +1283,17 @@
             
             async loadStats() {
                 try {
+                    console.log('Loading stats...');
+                    
                     const response = await fetch('/.netlify/functions/stats');
+                    console.log('Stats response:', response);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     
                     const data = await response.json();
+                    console.log('Stats data:', data);
                     
                     if (!Array.isArray(data)) {
                         throw new Error('Invalid data format received');
@@ -1777,6 +1312,8 @@
                     this.stats.totalDonations = totalDonations;
                     this.stats.totalCountries = data.length;
                     this.stats.totalDonors = totalDonors;
+                    
+                    console.log('Calculated stats:', this.stats);
                     
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
@@ -1807,6 +1344,12 @@
                 if (totalDonorsEl) {
                     totalDonorsEl.textContent = this.stats.totalDonors;
                 }
+                
+                console.log('Stats updated:', {
+                    totalDonations: this.stats.totalDonations,
+                    totalCountries: this.stats.totalCountries,
+                    totalDonors: this.stats.totalDonors
+                });
             }
             
             showLoadingState(component) {
@@ -1880,67 +1423,6 @@
                         setTimeout(() => notification.remove(), 300);
                     }
                 }, 5000);
-            }
-            
-            showThankYouFloat(paymentData) {
-                console.log('showThankYouFloat called with:', paymentData);
-                
-                // Remove existing float if any
-                const existing = document.querySelector('.thank-you-float');
-                if (existing) existing.remove();
-                
-                // Create float element
-                const float = document.createElement('div');
-                float.className = 'thank-you-float';
-                float.innerHTML = `
-                    <div class="text-center">
-                        <div class="text-6xl mb-4">🎉</div>
-                        <h2 class="text-2xl font-bold mb-2">Thank You!</h2>
-                        <p class="text-lg mb-4">Your hearts have been sent successfully!</p>
-                        
-                        <div class="bg-white/20 rounded-lg p-3 mb-4">
-                            <p class="text-sm">💰 <strong>€${paymentData.amount}</strong> sent to <strong>${paymentData.country}</strong></p>
-                            ${paymentData.captain ? `<p class="text-sm">👑 Captain: <strong>@${paymentData.captain}</strong></p>` : ''}
-                            <p class="text-sm">❤️ <strong>${paymentData.amount} hearts</strong> added to the map</p>
-                        </div>
-                        
-                        <div class="text-sm opacity-80">
-                            <p>Your support helps grow our global community!</p>
-                            <p class="mt-2">Share with friends to spread the love ❤️</p>
-                        </div>
-                        
-                        <div class="text-xs opacity-60 mt-3">
-                            <p>Click anywhere to close</p>
-                        </div>
-                    </div>
-                `;
-                
-                // Add to page
-                document.body.appendChild(float);
-                console.log('Float added to page:', float);
-                
-                // Click to close functionality
-                let autoCloseTimer;
-                const closeFloat = () => {
-                    float.style.animation = 'floatOut 0.5s ease-in forwards';
-                    setTimeout(() => {
-                        if (float.parentElement) {
-                            document.body.removeChild(float);
-                        }
-                    }, 500);
-                };
-                
-                // Auto-remove after 8 seconds (increased from 5)
-                autoCloseTimer = setTimeout(closeFloat, 8000);
-                
-                // Click anywhere to close
-                float.addEventListener('click', () => {
-                    clearTimeout(autoCloseTimer);
-                    closeFloat();
-                });
-                
-                // Add hover effect indicator
-                float.style.cursor = 'pointer';
             }
             
             updateLeadersList(data) {
@@ -2020,3 +1502,152 @@
                                         <div class="text-xs text-gray-400">
                                             ${captain.total_donations.toFixed(0)} ❤️ given total
                                         </div>
+                                        <div class="flex items-center mt-1">
+                                            ${flagsHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-700 rounded transition-colors" onclick="app.selectCaptain('${captain.handle}')">
+                                    Captain
+                                </button>
+                            </div>
+                        `;
+                        return html;
+                    }).join('');
+                    
+                    captainsList.innerHTML = htmlContent;
+                    
+                } catch (error) {
+                    captainsList.innerHTML = '<div class="text-center text-red-400 py-4">Error loading captains</div>';
+                }
+            }
+            
+            updateGlobeColors() {
+                if (this.globe && this.globe.polygonsData) {
+                    // Update polygon colors without reloading data
+                    this.globe.polygonsData(this.globe.polygonsData());
+                }
+            }
+            
+            zoomIn() {
+                if (this.globe && this.zoomLevel < 3.0) {
+                    this.zoomLevel += 0.2;
+                    this.globe.pointOfView({ lat: 0, lng: 0, altitude: 2.5 / this.zoomLevel });
+                }
+            }
+            
+            zoomOut() {
+                if (this.globe && this.zoomLevel > 0.5) {
+                    this.zoomLevel -= 0.2;
+                    this.globe.pointOfView({ lat: 0, lng: 0, altitude: 2.5 / this.zoomLevel });
+                }
+            }
+            
+            setupReferral() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const referral = urlParams.get('r') || urlParams.get('ref');
+                
+                if (referral && referral !== 'yourhandle') {
+                    this.selectedReferral = referral;
+                    document.getElementById('referral-name').textContent = `@${referral}`;
+                    document.getElementById('referral-badge').classList.remove('hidden');
+                    document.getElementById('referral-input').value = referral;
+                }
+            }
+            
+
+            async startRealStatsRotation() {
+                const updateStats = async () => {
+                    try {
+                        // Dohvati stvarne podatke
+                        const [statsResponse, captainsResponse] = await Promise.all([
+                            fetch('/.netlify/functions/stats'),
+                            fetch('/.netlify/functions/captains')
+                        ]);
+                        
+                        const stats = await statsResponse.json();
+                        const captains = await captainsResponse.json();
+                        
+                        // Izračunaj stvarne podatke
+                        const totalHearts = stats.reduce((sum, country) => sum + country.total_eur, 0);
+                        const totalCountries = stats.length;
+                        const totalCaptains = captains.length;
+                        const todayHearts = stats.reduce((sum, country) => sum + country.donors_24h, 0);
+                        
+                        // Motivacijski tekstovi
+                        const motivationalTexts = [
+                            "Join the Movement",
+                            "Make Your Mark", 
+                            "Light Up the World",
+                            "Choose Your Champion",
+                            "Back Your Captain",
+                            "Rally Your Hearts",
+                            "Show Your Pride",
+                            "Lead the Charge"
+                        ];
+                        
+                        // Kombinirane statistike
+                        const combinedStats = [
+                            { text: `🌍 ${totalHearts.toFixed(0)} Hearts Sent Total`, subtitle: "Global Impact" },
+                            { text: `👥 ${totalCountries} Countries Active`, subtitle: "Worldwide Reach" },
+                            { text: `🏆 ${totalCaptains} Active Captains`, subtitle: "Community Leaders" },
+                            { text: `⚡ ${todayHearts} Hearts Today`, subtitle: "Daily Activity" },
+                            { text: motivationalTexts[Math.floor(Math.random() * motivationalTexts.length)], subtitle: "Your Turn" },
+                            { text: "Choose Your Champion", subtitle: "Pick Your Side" },
+                            { text: "Light Up the Map", subtitle: "Make It Glow" },
+                            { text: "Back Your Captain", subtitle: "Support Your Team" }
+                        ];
+                        
+                        // Rotiraj kroz statistike
+                        const currentStat = combinedStats[Math.floor(Math.random() * combinedStats.length)];
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        
+                        if (statsText && statsSubtitle) {
+                            // Fade out
+                            statsText.style.opacity = '0';
+                            statsSubtitle.style.opacity = '0';
+                            
+                            setTimeout(() => {
+                                statsText.textContent = currentStat.text;
+                                statsSubtitle.textContent = currentStat.subtitle;
+                                
+                                // Fade in
+                                statsText.style.opacity = '1';
+                                statsSubtitle.style.opacity = '1';
+                            }, 300);
+                        }
+                        
+                    } catch (error) {
+                        // Fallback na motivacijski tekst
+                        const statsText = document.getElementById('stats-text');
+                        const statsSubtitle = document.getElementById('stats-subtitle');
+                        if (statsText && statsSubtitle) {
+                            statsText.textContent = "Join the Movement";
+                            statsSubtitle.textContent = "Be Part of Something Big";
+                        }
+                    }
+                };
+
+                // Start rotation
+                updateStats();
+                setInterval(updateStats, 5000); // Rotate every 5 seconds
+            }
+
+            clearReferral() {
+                this.selectedReferral = null;
+                document.getElementById('referral-badge').classList.add('hidden');
+                document.getElementById('referral-input').value = '';
+            }
+        }
+        
+        // Initialize app
+        const app = new TapTheMapApp();
+        
+        // Auto-refresh stats every 30 seconds
+        setInterval(() => {
+            app.loadStats();
+        }, 30000);
+    </script>
+</body>
+</html>
