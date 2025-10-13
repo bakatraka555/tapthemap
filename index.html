@@ -1213,15 +1213,19 @@
             }
             
             async initializeGlobe() {
+                console.log('🌍 Starting globe initialization...');
                 document.getElementById('map-status').textContent = 'Loading globe...';
                 
                 try {
                     // Wait for Globe.gl to be available
                     if (typeof Globe === 'undefined') {
+                        console.error('❌ Globe.gl library not loaded');
                         throw new Error('Globe.gl library not loaded');
                     }
+                    console.log('✅ Globe.gl library is available');
                     
                     // Initialize 3D globe with simple country overlays
+                    console.log('🔧 Creating Globe instance...');
                     this.globe = Globe()
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
@@ -1250,23 +1254,35 @@
                     
                     
                     // Mount globe to container (correct way for Globe.gl)
+                    console.log('🔧 Mounting globe to container...');
                     const container = document.getElementById('globe');
+                    if (!container) {
+                        console.error('❌ Globe container not found');
+                        throw new Error('Globe container not found');
+                    }
+                    console.log('✅ Globe container found');
                     container.innerHTML = '';
                     this.globe(container);
+                    console.log('✅ Globe mounted to container');
                     
                 document.getElementById('map-status').textContent = 'Loading countries...';
+                console.log('📊 Loading country data...');
                 
                 // Load country data (stats already loaded in init)
                 await this.loadCountryData();
+                console.log('✅ Country data loaded');
                 
                 document.getElementById('map-status').textContent = 'Globe loaded ✓';
+                console.log('🎉 Globe initialization completed successfully');
                 
             } catch (error) {
+                console.error('❌ Globe initialization failed:', error);
                 document.getElementById('map-status').textContent = 'Globe failed to load';
             }
             }
             
             async loadCountryData() {
+                console.log('📊 Starting loadCountryData...');
                 try {
                     
                     // Use fastest, most reliable source first
@@ -1278,25 +1294,33 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
+                            console.log(`🌐 Trying to fetch from: ${source}`);
                             const response = await fetch(source, {
                                 timeout: 10000 // 10 second timeout
                             });
                             if (response.ok) {
+                                console.log(`✅ Successfully fetched from: ${source}`);
                                 geoData = await response.json();
                                 break;
+                            } else {
+                                console.log(`❌ Failed to fetch from: ${source} (${response.status})`);
                             }
                         } catch (e) {
+                            console.log(`❌ Error fetching from: ${source}`, e);
                         }
                     }
                     
                     if (!geoData) {
+                        console.error('❌ All geo data sources failed');
                         throw new Error('All sources failed');
                     }
+                    console.log('✅ Geo data loaded successfully');
                     
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
                     
                 // Process GeoJSON data for 3D globe
+                console.log(`📊 Processing ${geoData.features.length} countries...`);
                 const countriesData = geoData.features.map(feature => {
                             const countryCode = this.getCountryCode(feature.properties);
                             const countryName = this.getCountryName(feature.properties);
@@ -1323,10 +1347,13 @@
                 
                 
                 // Update globe with country data
+                console.log(`🌍 Updating globe with ${countriesData.length} countries...`);
                 this.globe.polygonsData(countriesData);
+                console.log('✅ Globe updated with country data');
                     
                     
                 } catch (error) {
+                    console.error('❌ loadCountryData failed:', error);
                     document.getElementById('map-status').textContent = 'Globe failed to load';
                 }
             }
