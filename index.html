@@ -110,13 +110,6 @@
     <!-- Globe.gl for 3D globe (includes Three.js) -->
     <script src="https://unpkg.com/globe.gl" onload="console.log('✅ Globe.gl library loaded')" onerror="console.error('❌ Globe.gl library failed to load')"></script>
     
-    <!-- SIMPLE TEST SCRIPT -->
-    <script>
-        console.log('🔧 SIMPLE TEST SCRIPT - this should appear');
-        console.log('🔧 Current time:', new Date().toISOString());
-        console.log('🔧 Window object exists:', typeof window !== 'undefined');
-        console.log('🔧 About to load main script...');
-    </script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -973,39 +966,17 @@
     
     <!-- Main App Script -->
     <script>
-        console.log('🔧 MAIN SCRIPT TAG LOADED - this should appear');
-        try {
-            console.log('🔧 SCRIPT TAG STARTED - this should appear immediately');
-            console.log('🔧 JavaScript is working - basic test');
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('❌ Global JavaScript error:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('❌ Unhandled promise rejection:', e.reason);
+        });
             
-            // Global error handler
-            window.addEventListener('error', function(e) {
-                console.error('❌ Global JavaScript error:', e.error);
-                console.error('❌ Error details:', e.filename, e.lineno, e.colno);
-            });
-            
-            window.addEventListener('unhandledrejection', function(e) {
-                console.error('❌ Unhandled promise rejection:', e.reason);
-            });
-            
-            console.log('🔧 Script tag loaded, about to create app...');
-            
-            // Test basic JavaScript
-            console.log('🔧 Basic JavaScript test - this should appear');
-            
-            // Test if we can create a simple object
-            try {
-                const testObj = { test: 'value' };
-                console.log('🔧 Object creation test passed:', testObj);
-            } catch (e) {
-                console.error('❌ Object creation test failed:', e);
-            }
-            
-            console.log('🔧 About to define TapTheMapApp class...');
-            
-            class TapTheMapApp {
+        class TapTheMapApp {
             constructor() {
-                console.log('🏗️ TapTheMapApp constructor called');
                 this.selectedCountry = null;
                 this.selectedAmount = null;
                 this.map = null;
@@ -1019,26 +990,16 @@
                     totalDonors: 0
                 };
                 
-                console.log('🏗️ Constructor completed, calling init...');
                 this.init();
-                console.log('🏗️ Constructor finished');
             }
             
             async init() {
-                console.log('🚀 App init started');
                 this.setupEventListeners();
-                console.log('✅ Event listeners setup');
                 this.setupFloatingPanelEvents();
-                console.log('✅ Floating panel events setup');
                 this.startRealStatsRotation();
-                console.log('✅ Stats rotation started');
             await this.loadStats(); // Load stats first
-            console.log('✅ Stats loaded');
             await this.initializeGlobe(); // Then initialize globe with stats
-            console.log('✅ Globe initialized');
                 this.setupReferral();
-                console.log('✅ Referral setup complete');
-                console.log('🎉 App init completed successfully');
             }
             
             setupEventListeners() {
