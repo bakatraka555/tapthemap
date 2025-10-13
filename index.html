@@ -107,7 +107,7 @@
     </script>
     
         <!-- Globe.gl for 3D globe (includes Three.js) -->
-        <script src="https://unpkg.com/globe.gl"></script>
+        <script src="https://unpkg.com/globe.gl" onload="console.log('✅ Globe.gl library loaded')" onerror="console.error('❌ Globe.gl library failed to load')"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -964,8 +964,18 @@
     
     <!-- Main App Script -->
     <script>
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('❌ Global JavaScript error:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('❌ Unhandled promise rejection:', e.reason);
+        });
+        
         class TapTheMapApp {
             constructor() {
+                console.log('🏗️ TapTheMapApp constructor called');
                 this.selectedCountry = null;
                 this.selectedAmount = null;
                 this.map = null;
@@ -979,7 +989,9 @@
                     totalDonors: 0
                 };
                 
+                console.log('🏗️ Constructor completed, calling init...');
                 this.init();
+                console.log('🏗️ Constructor finished');
             }
             
             async init() {
