@@ -983,12 +983,20 @@
             }
             
             async init() {
+                console.log('🚀 App init started');
                 this.setupEventListeners();
+                console.log('✅ Event listeners setup');
                 this.setupFloatingPanelEvents();
+                console.log('✅ Floating panel events setup');
                 this.startRealStatsRotation();
+                console.log('✅ Stats rotation started');
             await this.loadStats(); // Load stats first
+            console.log('✅ Stats loaded');
             await this.initializeGlobe(); // Then initialize globe with stats
+            console.log('✅ Globe initialized');
                 this.setupReferral();
+                console.log('✅ Referral setup complete');
+                console.log('🎉 App init completed successfully');
             }
             
             setupEventListeners() {
@@ -1325,7 +1333,9 @@
             
             
             handleCountryClick(country) {
+                console.log('🌍 Country clicked:', country);
                 if (country && country.properties) {
+                    console.log('✅ Country has properties, processing...');
                     // Add visual feedback
                     this.showClickFeedback(country);
                     
@@ -1334,6 +1344,9 @@
                     
                     // Show floating panel instead of scrolling
                     this.showFloatingPanel(country);
+                    console.log('✅ Floating panel should be shown');
+                } else {
+                    console.log('❌ Country missing properties');
                 }
             }
 
