@@ -35,7 +35,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <!-- <link rel="manifest" href="/site.webmanifest"> -->
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#1e40af">
@@ -967,11 +967,14 @@
         // Global error handler
         window.addEventListener('error', function(e) {
             console.error('❌ Global JavaScript error:', e.error);
+            console.error('❌ Error details:', e.filename, e.lineno, e.colno);
         });
         
         window.addEventListener('unhandledrejection', function(e) {
             console.error('❌ Unhandled promise rejection:', e.reason);
         });
+        
+        console.log('🔧 Script tag loaded, about to create app...');
         
         class TapTheMapApp {
             constructor() {
