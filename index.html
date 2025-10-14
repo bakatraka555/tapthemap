@@ -357,9 +357,29 @@
                 Light Up Your Country
             </h2>
             <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                Send hearts to captains or countries and watch them glow on the global heat map. 
-                Compete with other nations and show your national pride!
+                <span class="text-2xl">🌍</span> Click any country on the map below, choose your heart amount, and make your impact! 
+                <span class="text-green-400 font-semibold">It's that simple.</span>
             </p>
+            
+            <!-- Simple Instructions -->
+            <div class="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-6 mb-8 max-w-2xl mx-auto">
+                <div class="flex items-center justify-center space-x-6 text-center">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">1️⃣</span>
+                        <span class="text-sm">Click Country</span>
+                    </div>
+                    <div class="text-gray-500">→</div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">2️⃣</span>
+                        <span class="text-sm">Choose Hearts</span>
+                    </div>
+                    <div class="text-gray-500">→</div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">3️⃣</span>
+                        <span class="text-sm">Send Impact</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto mb-8">
@@ -422,29 +442,47 @@
                         </div>
                     </div>
                     
-                    <!-- Hearts Amount Selection -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-300 mb-2">Hearts Amount</h4>
-                        <div class="grid grid-cols-4 gap-2">
-                            <button type="button" class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="5">5 ❤️</button>
-                            <button type="button" class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="20">20 ❤️</button>
-                            <button type="button" class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="50">50 ❤️</button>
-                            <button type="button" class="amount-btn px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white hover:bg-slate-600/50 hover:border-blue-500 transition-colors" data-amount="100">100 ❤️</button>
+                    <!-- Simplified Hearts Selection -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-300 mb-3">Choose Your Impact</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button type="button" class="amount-btn px-4 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-500 rounded-xl text-white font-semibold hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105" data-amount="20">
+                                <div class="text-lg">20 ❤️</div>
+                                <div class="text-xs opacity-80">Quick Support</div>
+                            </button>
+                            <button type="button" class="amount-btn px-4 py-4 bg-gradient-to-r from-green-600 to-green-700 border-2 border-green-500 rounded-xl text-white font-semibold hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105" data-amount="50">
+                                <div class="text-lg">50 ❤️</div>
+                                <div class="text-xs opacity-80">Strong Support</div>
+                            </button>
+                            <button type="button" class="amount-btn px-4 py-4 bg-gradient-to-r from-purple-600 to-purple-700 border-2 border-purple-500 rounded-xl text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105" data-amount="100">
+                                <div class="text-lg">100 ❤️</div>
+                                <div class="text-xs opacity-80">Champion</div>
+                            </button>
                         </div>
-                        <div class="mt-2">
-                            <input type="number" id="custom-amount" placeholder="Custom amount" min="5" max="1000" class="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <div class="mt-3">
+                            <input type="number" id="custom-amount" placeholder="Custom amount (5-1000)" min="5" max="1000" class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-center">
                         </div>
                     </div>
                     
-                    <!-- Captain Selection -->
-                    <div class="mb-4">
-                        <h4 class="text-sm font-medium text-gray-300 mb-2">Captain (optional)</h4>
-                        <input type="text" id="referral-input" placeholder="@username" class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <!-- Captain Selection - Simplified -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-300">Support a Captain (optional)</h4>
+                            <span class="text-xs text-gray-500">Skip if unsure</span>
+                        </div>
+                        <input type="text" id="referral-input" placeholder="Enter @username or leave empty" class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <div class="text-xs text-gray-500 mt-1">💡 Captains help grow the community and get rewards</div>
                     </div>
                     
-                    <!-- Send Button -->
-                    <button type="submit" id="donate-btn" class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" disabled>
-                        Send Hearts ❤️
+                    <!-- Main Action Button -->
+                    <button type="submit" id="donate-btn" class="w-full px-8 py-6 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 hover:from-green-700 hover:via-blue-700 hover:to-purple-700 text-white font-bold text-xl rounded-2xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-2xl hover:shadow-green-500/25" disabled>
+                        <div class="flex items-center justify-center space-x-3">
+                            <span class="text-2xl">💝</span>
+                            <div>
+                                <div class="text-lg">Send Hearts</div>
+                                <div class="text-sm opacity-80" id="donate-subtitle">Select country & amount first</div>
+                            </div>
+                        </div>
                     </button>
                 </div>
                 
@@ -727,13 +765,23 @@
             
             updateDonateButton() {
                 const donateBtn = document.getElementById('donate-btn');
+                const donateSubtitle = document.getElementById('donate-subtitle');
                 const isReady = this.selectedCountry && this.selectedAmount;
                 
                 donateBtn.disabled = !isReady;
+                
                 if (isReady) {
-                    donateBtn.textContent = `Send ${this.selectedAmount} ❤️`;
+                    donateSubtitle.textContent = `Send ${this.selectedAmount} hearts to ${this.selectedCountry.name}`;
+                    donateBtn.classList.remove('opacity-50');
                 } else {
-                    donateBtn.textContent = 'Select Country & Amount';
+                    if (!this.selectedCountry) {
+                        donateSubtitle.textContent = 'Click a country on the map above';
+                    } else if (!this.selectedAmount) {
+                        donateSubtitle.textContent = 'Choose your heart amount';
+                    } else {
+                        donateSubtitle.textContent = 'Select country & amount first';
+                    }
+                    donateBtn.classList.add('opacity-50');
                 }
             }
             
@@ -932,7 +980,37 @@
             
             handleCountryClick(country) {
                 if (country && country.properties) {
+                    // INSTANT VISUAL FEEDBACK
+                    this.showCountryPulse(country);
                     this.selectCountry(country.properties.iso, country.properties.name);
+                    
+                    // Scroll to form smoothly
+                    setTimeout(() => {
+                        document.querySelector('.glass-effect.rounded-xl.p-6').scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 500);
+                }
+            }
+            
+            showCountryPulse(country) {
+                // Create pulse effect on selected country
+                if (this.globe) {
+                    const countryCode = country.properties.iso;
+                    
+                    // Add glowing effect
+                    this.globe.polygonCapColor(d => {
+                        if (d.properties && d.properties.iso === countryCode) {
+                            return '#ff6b6b'; // Bright red for selection
+                        }
+                        return d.properties?.total_eur > 0 ? '#22c55e' : '#3b82f6';
+                    });
+                    
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        this.updateGlobeColors();
+                    }, 2000);
                 }
             }
 
