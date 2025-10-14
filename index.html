@@ -1027,28 +1027,23 @@
                             opacity: 0.8,
                             side: 2
                         })
-                        // Make borders more visible
+                        // Make borders more visible - use function approach
                         .polygonStrokeColor(d => {
                             if (d.properties?.total_eur > 0) {
                                 return '#ffffff'; // White borders for active countries
                             }
                             return '#666666'; // Gray borders for inactive countries
                         })
+                        .polygonStrokeWidth(2) // Use function approach
                         .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
                     
-                    // Set stroke width as property (not function)
-                    this.globe.polygonStrokeWidth = 1.5;
-                    
-                    // Force enable strokes
-                    this.globe.polygonStroke = true;
-                    
                     // Debug: Check if stroke properties are set
-                    console.log('Globe stroke width set to:', this.globe.polygonStrokeWidth);
-                    console.log('Globe stroke enabled:', this.globe.polygonStroke);
+                    console.log('Globe initialized with stroke width 2');
                     console.log('Globe stroke color function:', typeof this.globe.polygonStrokeColor);
+                    console.log('Globe stroke width function:', typeof this.globe.polygonStrokeWidth);
                     
                     // Mount globe to container
                     this.globe(container);
@@ -1155,6 +1150,16 @@
                         setTimeout(() => {
                             this.globe.polygonsData(this.globe.polygonsData());
                             console.log('Globe refreshed with borders');
+                            
+                            // Explicitly set stroke properties after data load
+                            this.globe.polygonStrokeWidth(2);
+                            this.globe.polygonStrokeColor(d => {
+                                if (d.properties?.total_eur > 0) {
+                                    return '#ffffff'; // White borders for active countries
+                                }
+                                return '#666666'; // Gray borders for inactive countries
+                            });
+                            console.log('Stroke properties explicitly set');
                         }, 1000);
                     }
                     
@@ -1231,9 +1236,8 @@
                         return d.properties?.total_eur > 0 ? '#ffffff' : '#666666';
                     });
                     
-                    // Set stroke width and enable strokes
-                    this.globe.polygonStrokeWidth = 1.5;
-                    this.globe.polygonStroke = true;
+                    // Set stroke width using function approach
+                    this.globe.polygonStrokeWidth(2);
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1871,9 +1875,8 @@
                         return '#666666'; // Gray borders for inactive countries
                     });
                     
-                    // Set stroke properties
-                    this.globe.polygonStrokeWidth = 1.5;
-                    this.globe.polygonStroke = true;
+                    // Set stroke width using function approach
+                    this.globe.polygonStrokeWidth(2);
                     
                     console.log('Updated globe colors and borders');
                     
