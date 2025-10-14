@@ -82,8 +82,14 @@
     }
     </script>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS - Production optimized -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind production warning
+        if (typeof tailwind !== 'undefined') {
+            console.log('Tailwind CSS loaded successfully');
+        }
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -109,9 +115,9 @@
         }
     </script>
     
-        <!-- Three.js and Globe.gl for 3D globe -->
-        <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-        <script src="https://unpkg.com/globe.gl"></script>
+        <!-- Three.js and Globe.gl for 3D globe - Updated versions -->
+        <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+        <script src="https://unpkg.com/globe.gl@2.28.0/dist/globe.gl.min.js"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -610,73 +616,101 @@
             }
             
             async init() {
-                this.setupEventListeners();
-                this.startRealStatsRotation();
-            await this.loadStats(); // Load stats first
-            await this.initializeGlobe(); // Then initialize globe with stats
-                this.setupReferral();
+                try {
+                    console.log('Initializing TapTheMap...');
+                    
+                    // Setup event listeners first
+                    this.setupEventListeners();
+                    
+                    // Start stats rotation
+                    this.startRealStatsRotation();
+                    
+                    // Load stats
+                    await this.loadStats();
+                    
+                    // Initialize globe
+                    await this.initializeGlobe();
+                    
+                    // Setup referral
+                    this.setupReferral();
+                    
+                    console.log('TapTheMap initialized successfully');
+                    
+                } catch (error) {
+                    console.error('Initialization error:', error);
+                    this.showNotification('Failed to initialize app. Please refresh the page.', 'error');
+                }
             }
             
             setupEventListeners() {
-                // Country selection
-                document.querySelectorAll('.country-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const country = e.target.dataset.country;
-                        const name = e.target.dataset.name;
-                        this.selectCountry(country, name);
-                    });
-                });
-                
-                // Amount selection
-                document.querySelectorAll('.amount-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                // Amount selection - use event delegation
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('amount-btn')) {
                         const amount = parseInt(e.target.dataset.amount);
                         this.selectAmount(amount);
+                    }
+                });
+                
+                // Custom amount - check if element exists
+                const customAmountEl = document.getElementById('custom-amount');
+                if (customAmountEl) {
+                    customAmountEl.addEventListener('input', (e) => {
+                        const amount = parseInt(e.target.value);
+                        if (amount > 0) {
+                            this.selectAmount(amount);
+                        }
                     });
-                });
+                }
                 
-                // Custom amount
-                document.getElementById('custom-amount').addEventListener('input', (e) => {
-                    const amount = parseInt(e.target.value);
-                    if (amount > 0) {
-                        this.selectAmount(amount);
+                // Donate button - use event delegation
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'donate-btn' || e.target.closest('#donate-btn')) {
+                        e.preventDefault();
+                        this.processHearts();
                     }
                 });
                 
-                // Heart form
-                document.getElementById('donation-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.processHearts();
-                });
+                // Clear referral - check if element exists
+                const clearReferralEl = document.getElementById('clear-referral');
+                if (clearReferralEl) {
+                    clearReferralEl.addEventListener('click', () => {
+                        this.clearReferral();
+                    });
+                }
                 
-                // Clear referral
-                document.getElementById('clear-referral').addEventListener('click', () => {
-                    this.clearReferral();
-                });
+                // Zoom controls - check if elements exist
+                const zoomInEl = document.getElementById('zoom-in');
+                const zoomOutEl = document.getElementById('zoom-out');
+                const globeEl = document.getElementById('globe');
                 
-                // Zoom controls
-                document.getElementById('zoom-in').addEventListener('click', () => {
-                    this.zoomIn();
-                });
-                
-                document.getElementById('zoom-out').addEventListener('click', () => {
-                    this.zoomOut();
-                });
-                
-                // Mouse wheel zoom
-                document.getElementById('globe').addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    if (e.deltaY < 0) {
+                if (zoomInEl) {
+                    zoomInEl.addEventListener('click', () => {
                         this.zoomIn();
-                    } else {
-                        this.zoomOut();
-                    }
-                });
+                    });
+                }
                 
-                // Track mouse position for tooltip positioning
-                document.getElementById('globe').addEventListener('mousemove', (e) => {
-                    this.mousePosition = { x: e.clientX, y: e.clientY };
-                });
+                if (zoomOutEl) {
+                    zoomOutEl.addEventListener('click', () => {
+                        this.zoomOut();
+                    });
+                }
+                
+                if (globeEl) {
+                    // Mouse wheel zoom
+                    globeEl.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        if (e.deltaY < 0) {
+                            this.zoomIn();
+                        } else {
+                            this.zoomOut();
+                        }
+                    });
+                    
+                    // Track mouse position for tooltip positioning
+                    globeEl.addEventListener('mousemove', (e) => {
+                        this.mousePosition = { x: e.clientX, y: e.clientY };
+                    });
+                }
             }
             
             selectCountry(country, name) {
@@ -859,20 +893,41 @@
             }
             
             async initializeGlobe() {
-                document.getElementById('map-status').textContent = 'Loading globe...';
+                const mapStatusEl = document.getElementById('map-status');
+                if (!mapStatusEl) {
+                    console.error('Map status element not found');
+                    return;
+                }
+                
+                mapStatusEl.textContent = 'Loading globe...';
                 
                 try {
-                    // Wait for Globe.gl to be available
-                    if (typeof Globe === 'undefined') {
-                        throw new Error('Globe.gl library not loaded');
+                    // Wait for Globe.gl to be available with timeout
+                    let attempts = 0;
+                    while (typeof Globe === 'undefined' && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
                     }
                     
-                    // Initialize 3D globe with simple country overlays
+                    if (typeof Globe === 'undefined') {
+                        throw new Error('Globe.gl library failed to load');
+                    }
+                    
+                    // Get container
+                    const container = document.getElementById('globe');
+                    if (!container) {
+                        throw new Error('Globe container not found');
+                    }
+                    
+                    // Clear container
+                    container.innerHTML = '';
+                    
+                    // Initialize 3D globe with error handling
                     this.globe = Globe()
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
                         .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                        .width(window.innerWidth * 0.95)
+                        .width(Math.min(window.innerWidth * 0.95, 1200))
                         .height(600)
                         .enablePointerInteraction(true)
                         .polygonsData([])
@@ -894,22 +949,37 @@
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
                     
-                    
-                    // Mount globe to container (correct way for Globe.gl)
-                    const container = document.getElementById('globe');
-                    container.innerHTML = '';
+                    // Mount globe to container
                     this.globe(container);
                     
-                document.getElementById('map-status').textContent = 'Loading countries...';
-                
-                // Load country data (stats already loaded in init)
-                await this.loadCountryData();
-                
-                document.getElementById('map-status').textContent = 'Globe loaded ✓';
-                
-            } catch (error) {
-                document.getElementById('map-status').textContent = 'Globe failed to load';
-            }
+                    mapStatusEl.textContent = 'Loading countries...';
+                    
+                    // Load country data
+                    await this.loadCountryData();
+                    
+                    mapStatusEl.textContent = 'Globe loaded ✓';
+                    
+                } catch (error) {
+                    console.error('Globe initialization error:', error);
+                    mapStatusEl.textContent = 'Globe failed to load';
+                    
+                    // Show fallback message
+                    const container = document.getElementById('globe');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="flex items-center justify-center h-full bg-gray-800 rounded-lg">
+                                <div class="text-center text-gray-400">
+                                    <div class="text-4xl mb-4">🌍</div>
+                                    <div class="text-lg font-semibold mb-2">Interactive Globe</div>
+                                    <div class="text-sm">Click countries to send hearts</div>
+                                    <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                        Retry Loading
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
             }
             
             async loadCountryData() {
