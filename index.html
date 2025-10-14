@@ -458,12 +458,16 @@
                         
                         <!-- Zoom Controls -->
                         <div class="absolute top-4 right-4 z-10 flex flex-col space-y-2">
-                            <button id="zoom-in" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
+                            <button id="zoom-in" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors" title="Zoom In">
                                 +
                             </button>
-                            <button id="zoom-out" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
+                            <button id="zoom-out" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors" title="Zoom Out">
                                 −
                             </button>
+                            <div class="text-xs text-gray-400 text-center mt-2">
+                                <div>Ctrl + Scroll</div>
+                                <div>to zoom</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -740,13 +744,17 @@
                 }
                 
                 if (globeEl) {
-                    // Mouse wheel zoom
+                    // Mouse wheel zoom with better control
                     globeEl.addEventListener('wheel', (e) => {
                         e.preventDefault();
-                        if (e.deltaY < 0) {
-                            this.zoomIn();
-                        } else {
-                            this.zoomOut();
+                        
+                        // Only zoom if Ctrl key is held (like Google Maps)
+                        if (e.ctrlKey) {
+                            if (e.deltaY < 0) {
+                                this.zoomIn();
+                            } else {
+                                this.zoomOut();
+                            }
                         }
                     });
                     
@@ -1034,8 +1042,12 @@
                     // Set stroke width as property (not function)
                     this.globe.polygonStrokeWidth = 1.5;
                     
+                    // Force enable strokes
+                    this.globe.polygonStroke = true;
+                    
                     // Debug: Check if stroke properties are set
                     console.log('Globe stroke width set to:', this.globe.polygonStrokeWidth);
+                    console.log('Globe stroke enabled:', this.globe.polygonStroke);
                     console.log('Globe stroke color function:', typeof this.globe.polygonStrokeColor);
                     
                     // Mount globe to container
@@ -1219,8 +1231,9 @@
                         return d.properties?.total_eur > 0 ? '#ffffff' : '#666666';
                     });
                     
-                    // Set stroke width
+                    // Set stroke width and enable strokes
                     this.globe.polygonStrokeWidth = 1.5;
+                    this.globe.polygonStroke = true;
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1858,8 +1871,11 @@
                         return '#666666'; // Gray borders for inactive countries
                     });
                     
-                    // Set stroke width
+                    // Set stroke properties
                     this.globe.polygonStrokeWidth = 1.5;
+                    this.globe.polygonStroke = true;
+                    
+                    console.log('Updated globe colors and borders');
                     
                     // Refresh the globe
                     this.globe.polygonsData(this.globe.polygonsData());
