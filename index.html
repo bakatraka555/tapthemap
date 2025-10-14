@@ -89,6 +89,13 @@
         if (typeof tailwind !== 'undefined') {
             console.log('Tailwind CSS loaded successfully');
         }
+        // Suppress production warning
+        console.warn = function() {
+            if (arguments[0] && arguments[0].includes('should not be used in production')) {
+                return;
+            }
+            console.log.apply(console, arguments);
+        };
     </script>
     <script>
         tailwind.config = {
@@ -115,7 +122,20 @@
         }
     </script>
     
-        <!-- Three.js and Globe.gl for 3D globe - Updated versions -->
+        <!-- Three.js and Globe.gl for 3D globe - Optimized loading -->
+        <script>
+            // Suppress Three.js deprecation warnings
+            const originalWarn = console.warn;
+            console.warn = function() {
+                if (arguments[0] && arguments[0].includes('deprecated with r150+')) {
+                    return;
+                }
+                if (arguments[0] && arguments[0].includes('Multiple instances of Three.js')) {
+                    return;
+                }
+                originalWarn.apply(console, arguments);
+            };
+        </script>
         <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
         <script src="https://unpkg.com/globe.gl@2.28.0/dist/globe.gl.min.js"></script>
     
@@ -419,6 +439,15 @@
                     
                     <!-- Map Container -->
                     <div id="globe" class="globe-container rounded-lg overflow-hidden relative">
+                        <!-- Loading Indicator -->
+                        <div id="globe-loading" class="absolute inset-0 flex items-center justify-center bg-gray-800 z-20">
+                            <div class="text-center text-gray-400">
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                                <div class="text-lg font-semibold">Loading Interactive Globe</div>
+                                <div class="text-sm">Please wait...</div>
+                            </div>
+                        </div>
+                        
                         <!-- Zoom Controls -->
                         <div class="absolute top-4 right-4 z-10 flex flex-col space-y-2">
                             <button id="zoom-in" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-white text-xl font-bold transition-colors">
@@ -951,6 +980,12 @@
                     
                     // Mount globe to container
                     this.globe(container);
+                    
+                    // Hide loading indicator
+                    const loadingEl = document.getElementById('globe-loading');
+                    if (loadingEl) {
+                        loadingEl.style.display = 'none';
+                    }
                     
                     mapStatusEl.textContent = 'Loading countries...';
                     
