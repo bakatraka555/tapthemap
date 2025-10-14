@@ -1025,11 +1025,13 @@
                             }
                             return '#666666'; // Gray borders for inactive countries
                         })
-                        .polygonStrokeWidth(1.5) // Thicker borders
                         .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
+                    
+                    // Set stroke width as property (not function)
+                    this.globe.polygonStrokeWidth = 1.5;
                     
                     // Mount globe to container
                     this.globe(container);
@@ -1205,6 +1207,9 @@
                         }
                         return d.properties?.total_eur > 0 ? '#ffffff' : '#666666';
                     });
+                    
+                    // Set stroke width
+                    this.globe.polygonStrokeWidth = 1.5;
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1838,6 +1843,9 @@
                         }
                         return '#666666'; // Gray borders for inactive countries
                     });
+                    
+                    // Set stroke width
+                    this.globe.polygonStrokeWidth = 1.5;
                     
                     // Refresh the globe
                     this.globe.polygonsData(this.globe.polygonsData());
