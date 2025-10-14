@@ -1034,8 +1034,6 @@
                             }
                             return '#999999'; // Lighter gray for inactive countries
                         })
-                        .polygonStrokeWidth(1) // Thinner borders
-                        .polygonAltitude(0.001) // Closer to surface
                         .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
@@ -1043,6 +1041,11 @@
                     
                     // Set stroke width as property after initialization
                     this.globe.polygonStrokeWidth = 1;
+                    
+                    // Try to set stroke properties if they exist
+                    if (typeof this.globe.polygonStrokeWidth === 'function') {
+                        this.globe.polygonStrokeWidth(1);
+                    }
                     
                     // Debug: Check if stroke properties are set
                     console.log('Globe initialized with stroke width 1');
@@ -1164,6 +1167,11 @@
                                 return '#999999'; // Lighter gray for inactive countries
                             });
                             
+                            // Try function approach if available
+                            if (typeof this.globe.polygonStrokeWidth === 'function') {
+                                this.globe.polygonStrokeWidth(1);
+                            }
+                            
                             // Force enable strokes
                             this.globe.polygonStroke = true;
                             
@@ -1268,6 +1276,11 @@
                     
                     // Set stroke width as property
                     this.globe.polygonStrokeWidth = 1;
+                    
+                    // Try function approach if available
+                    if (typeof this.globe.polygonStrokeWidth === 'function') {
+                        this.globe.polygonStrokeWidth(1);
+                    }
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1907,6 +1920,11 @@
                     
                     // Set stroke width as property
                     this.globe.polygonStrokeWidth = 1;
+                    
+                    // Try function approach if available
+                    if (typeof this.globe.polygonStrokeWidth === 'function') {
+                        this.globe.polygonStrokeWidth(1);
+                    }
                     
                     console.log('Updated globe colors and borders');
                     
