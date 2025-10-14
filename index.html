@@ -405,6 +405,14 @@
                         <span class="text-sm">Send Impact</span>
                     </div>
                 </div>
+                
+                <!-- Scroll indicator -->
+                <div id="scroll-indicator" class="hidden mt-4 text-center">
+                    <div class="inline-flex items-center space-x-2 text-blue-400 animate-bounce">
+                        <span class="text-sm">↓ Scroll down to continue</span>
+                        <span class="text-lg">👇</span>
+                    </div>
+                </div>
             </div>
             
             <!-- Quick Stats -->
@@ -466,13 +474,20 @@
                     <h3 class="text-lg font-semibold mb-4">💝 Send Hearts</h3>
                     
                     <!-- Selected Country Display -->
-                    <div class="mb-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div id="selected-country-display" class="mb-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600 transition-all duration-300">
                         <h4 class="text-sm font-medium text-gray-300 mb-2">Selected Country</h4>
                         <div class="flex items-center space-x-3">
                             <div id="selected-country-flag" class="text-2xl">🌍</div>
                             <div>
                                 <div id="selected-country-name" class="font-medium text-white">Click a country above</div>
                                 <div class="text-sm text-gray-400">Select a country to send hearts</div>
+                            </div>
+                        </div>
+                        <!-- Selection indicator -->
+                        <div id="selection-indicator" class="hidden mt-2 p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
+                            <div class="flex items-center space-x-2 text-green-400">
+                                <span class="text-sm">✓</span>
+                                <span class="text-sm font-medium">Country selected! Now choose your heart amount.</span>
                             </div>
                         </div>
                     </div>
@@ -748,6 +763,8 @@
                 // Update selected country display in new panel
                 const selectedCountryNameEl = document.getElementById('selected-country-name');
                 const selectedCountryFlagEl = document.getElementById('selected-country-flag');
+                const selectedCountryDisplay = document.getElementById('selected-country-display');
+                const selectionIndicator = document.getElementById('selection-indicator');
                 
                 if (selectedCountryNameEl) {
                     selectedCountryNameEl.textContent = name;
@@ -755,6 +772,16 @@
                 
                 if (selectedCountryFlagEl) {
                     selectedCountryFlagEl.textContent = this.getCountryFlag(country);
+                }
+                
+                // Show visual feedback
+                if (selectedCountryDisplay) {
+                    selectedCountryDisplay.style.borderColor = '#3b82f6';
+                    selectedCountryDisplay.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                }
+                
+                if (selectionIndicator) {
+                    selectionIndicator.classList.remove('hidden');
                 }
                 
                 // Add country blinking animation
@@ -815,13 +842,26 @@
             selectAmount(amount) {
                 this.selectedAmount = amount;
                 
-                // Update button states
+                // Update button states with animation
                 document.querySelectorAll('.amount-btn').forEach(btn => {
-                    btn.classList.remove('ring-2', 'ring-blue-400');
+                    btn.classList.remove('ring-2', 'ring-blue-400', 'ring-green-400', 'ring-purple-400');
                     if (parseInt(btn.dataset.amount) === amount) {
-                        btn.classList.add('ring-2', 'ring-blue-400');
+                        // Add appropriate ring color based on amount
+                        if (amount === 20) btn.classList.add('ring-2', 'ring-blue-400');
+                        else if (amount === 50) btn.classList.add('ring-2', 'ring-green-400');
+                        else if (amount === 100) btn.classList.add('ring-2', 'ring-purple-400');
+                        else btn.classList.add('ring-2', 'ring-blue-400');
+                        
+                        // Add pulse animation
+                        btn.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            btn.style.transform = '';
+                        }, 200);
                     }
                 });
+                
+                // Show success notification
+                this.showNotification(`Selected ${amount} hearts! Ready to send.`, 'success');
                 
                 this.updateDonateButton();
             }
@@ -951,7 +991,7 @@
                     // Clear container
                     container.innerHTML = '';
                     
-                    // Initialize 3D globe with error handling
+                    // Initialize 3D globe with proper country borders
                     this.globe = Globe()
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
@@ -960,19 +1000,32 @@
                         .height(600)
                         .enablePointerInteraction(true)
                         .polygonsData([])
-                        .polygonCapColor('rgba(255,255,255,0.1)')
+                        // Country styling with visible borders
+                        .polygonCapColor(d => {
+                            if (d.properties?.total_eur > 0) {
+                                return '#22c55e'; // Green for countries with hearts
+                            }
+                            return 'rgba(255,255,255,0.1)'; // Transparent for others
+                        })
                         .polygonSideColor('rgba(255,255,255,0.1)')
                         .polygonCapMaterial({ 
                             transparent: true, 
-                            opacity: 0.7,
+                            opacity: 0.8,
                             side: 2
                         })
                         .polygonSideMaterial({ 
                             transparent: true, 
-                            opacity: 0.7,
+                            opacity: 0.8,
                             side: 2
                         })
-                        .polygonStrokeColor(d => d.properties?.total_eur > 0 ? '#ffffff' : '#cccccc')
+                        // Make borders more visible
+                        .polygonStrokeColor(d => {
+                            if (d.properties?.total_eur > 0) {
+                                return '#ffffff'; // White borders for active countries
+                            }
+                            return '#666666'; // Gray borders for inactive countries
+                        })
+                        .polygonStrokeWidth(1.5) // Thicker borders
                         .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
@@ -1019,6 +1072,7 @@
             
             async loadCountryData() {
                 try {
+                    console.log('Loading country data...');
                     
                     // Use fastest, most reliable source first
                     const sources = [
@@ -1029,14 +1083,17 @@
                     let geoData = null;
                     for (const source of sources) {
                         try {
+                            console.log(`Trying source: ${source}`);
                             const response = await fetch(source, {
                                 timeout: 10000 // 10 second timeout
                             });
                             if (response.ok) {
                                 geoData = await response.json();
+                                console.log(`Successfully loaded from: ${source}`);
                                 break;
                             }
                         } catch (e) {
+                            console.log(`Failed to load from: ${source}`, e);
                         }
                     }
                     
@@ -1046,56 +1103,85 @@
                     
                     document.getElementById('map-status').textContent = 'Processing countries...';
                     
+                    // Process GeoJSON data for 3D globe
+                    const countriesData = geoData.features.map(feature => {
+                        const countryCode = this.getCountryCode(feature.properties);
+                        const countryName = this.getCountryName(feature.properties);
+                        const countryStats = this.stats.countryData?.[countryCode] || {};
+                        
+                        // Handle both object and number formats
+                        const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
+                        const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
+                        
+                        return {
+                            ...feature,
+                            properties: {
+                                ...feature.properties,
+                                iso: countryCode,
+                                name: countryName,
+                                total_eur: totalEur,
+                                total_donors: totalDonors
+                            }
+                        };
+                    });
                     
-                // Process GeoJSON data for 3D globe
-                const countriesData = geoData.features.map(feature => {
-                            const countryCode = this.getCountryCode(feature.properties);
-                            const countryName = this.getCountryName(feature.properties);
-                    const countryStats = this.stats.countryData?.[countryCode] || {};
+                    console.log(`Processed ${countriesData.length} countries`);
                     
-                    // Handle both object and number formats
-                    const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
-                    const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
-                    
-                    // Log countries with donations
-                    
-                    return {
-                        ...feature,
-                        properties: {
-                            ...feature.properties,
-                            iso: countryCode,
-                            name: countryName,
-                            total_eur: totalEur,
-                            total_donors: totalDonors
-                        }
-                    };
-                });
-                
-                
-                
-                // Update globe with country data
-                this.globe.polygonsData(countriesData);
-                    
+                    // Update globe with country data
+                    if (this.globe) {
+                        this.globe.polygonsData(countriesData);
+                        console.log('Countries loaded on globe with borders');
+                    }
                     
                 } catch (error) {
-                    document.getElementById('map-status').textContent = 'Globe failed to load';
+                    console.error('Error loading country data:', error);
+                    document.getElementById('map-status').textContent = 'Failed to load countries';
                 }
             }
             
             
             handleCountryClick(country) {
                 if (country && country.properties) {
+                    console.log('Country clicked:', country.properties.name);
+                    
                     // INSTANT VISUAL FEEDBACK
                     this.showCountryPulse(country);
                     this.selectCountry(country.properties.iso, country.properties.name);
                     
-                    // Scroll to form smoothly
+                    // Show notification
+                    this.showNotification(`Selected ${country.properties.name}! Choose your heart amount below.`, 'success');
+                    
+                    // Show scroll indicator
+                    const scrollIndicator = document.getElementById('scroll-indicator');
+                    if (scrollIndicator) {
+                        scrollIndicator.classList.remove('hidden');
+                    }
+                    
+                    // Scroll to form smoothly with better targeting
                     setTimeout(() => {
-                        document.querySelector('.glass-effect.rounded-xl.p-6').scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }, 500);
+                        const formSection = document.querySelector('.glass-effect.rounded-xl.p-6');
+                        if (formSection) {
+                            formSection.scrollIntoView({ 
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                            
+                            // Add highlight effect to form
+                            formSection.style.border = '2px solid #3b82f6';
+                            formSection.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
+                            
+                            // Hide scroll indicator after scroll
+                            if (scrollIndicator) {
+                                scrollIndicator.classList.add('hidden');
+                            }
+                            
+                            // Remove highlight after 3 seconds
+                            setTimeout(() => {
+                                formSection.style.border = '';
+                                formSection.style.boxShadow = '';
+                            }, 3000);
+                        }
+                    }, 300);
                 }
             }
             
@@ -1104,12 +1190,20 @@
                 if (this.globe) {
                     const countryCode = country.properties.iso;
                     
-                    // Add glowing effect
+                    // Add glowing effect with borders
                     this.globe.polygonCapColor(d => {
                         if (d.properties && d.properties.iso === countryCode) {
                             return '#ff6b6b'; // Bright red for selection
                         }
-                        return d.properties?.total_eur > 0 ? '#22c55e' : '#3b82f6';
+                        return d.properties?.total_eur > 0 ? '#22c55e' : 'rgba(255,255,255,0.1)';
+                    });
+                    
+                    // Make borders more visible during selection
+                    this.globe.polygonStrokeColor(d => {
+                        if (d.properties && d.properties.iso === countryCode) {
+                            return '#ffffff'; // White border for selected
+                        }
+                        return d.properties?.total_eur > 0 ? '#ffffff' : '#666666';
                     });
                     
                     // Reset after 2 seconds
@@ -1730,7 +1824,22 @@
             
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    // Update polygon colors without reloading data
+                    // Update polygon colors with proper borders
+                    this.globe.polygonCapColor(d => {
+                        if (d.properties?.total_eur > 0) {
+                            return '#22c55e'; // Green for countries with hearts
+                        }
+                        return 'rgba(255,255,255,0.1)'; // Transparent for others
+                    });
+                    
+                    this.globe.polygonStrokeColor(d => {
+                        if (d.properties?.total_eur > 0) {
+                            return '#ffffff'; // White borders for active countries
+                        }
+                        return '#666666'; // Gray borders for inactive countries
+                    });
+                    
+                    // Refresh the globe
                     this.globe.polygonsData(this.globe.polygonsData());
                 }
             }
