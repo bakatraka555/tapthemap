@@ -771,7 +771,8 @@
                 }
                 
                 if (selectedCountryFlagEl) {
-                    selectedCountryFlagEl.textContent = this.getCountryFlag(country);
+                    // Use innerHTML instead of textContent for flag images
+                    selectedCountryFlagEl.innerHTML = this.getCountryFlag(country);
                 }
                 
                 // Show visual feedback
@@ -1033,6 +1034,10 @@
                     // Set stroke width as property (not function)
                     this.globe.polygonStrokeWidth = 1.5;
                     
+                    // Debug: Check if stroke properties are set
+                    console.log('Globe stroke width set to:', this.globe.polygonStrokeWidth);
+                    console.log('Globe stroke color function:', typeof this.globe.polygonStrokeColor);
+                    
                     // Mount globe to container
                     this.globe(container);
                     
@@ -1133,6 +1138,12 @@
                     if (this.globe) {
                         this.globe.polygonsData(countriesData);
                         console.log('Countries loaded on globe with borders');
+                        
+                        // Force refresh to show borders
+                        setTimeout(() => {
+                            this.globe.polygonsData(this.globe.polygonsData());
+                            console.log('Globe refreshed with borders');
+                        }, 1000);
                     }
                     
                 } catch (error) {
@@ -1523,6 +1534,7 @@
             }
             
             getCountryFlag(countryCode) {
+                console.log('Getting flag for country:', countryCode);
                 
                 // PNG zastavice za Chrome Windows kompatibilnost
                 const countryToFileName = {
@@ -1578,12 +1590,14 @@
                 // Koristi PNG zastavice iz /flags/ direktorija
                 const fileName = countryToFileName[countryCode];
                 if (fileName) {
-                    return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;">`;
+                    console.log(`Using flag: flags/${fileName}.png`);
+                    return `<img src="flags/${fileName}.png" alt="${countryCode}" width="20" height="15" style="border-radius: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <span style="display:none;">🏳️</span>`;
                 }
                 
                 // Fallback na emoji ako nema PNG
-                const flag = '🏳️';
-                return flag;
+                console.log(`No flag found for ${countryCode}, using emoji`);
+                return '🏳️';
             }
             
             async loadStats() {
