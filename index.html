@@ -1027,23 +1027,25 @@
                             opacity: 0.8,
                             side: 2
                         })
-                        // Make borders more visible
+                        // Make borders more visible and closer to surface
                         .polygonStrokeColor(d => {
                             if (d.properties?.total_eur > 0) {
                                 return '#ffffff'; // White borders for active countries
                             }
-                            return '#666666'; // Gray borders for inactive countries
+                            return '#999999'; // Lighter gray for inactive countries
                         })
+                        .polygonStrokeWidth(1) // Thinner borders
+                        .polygonAltitude(0.001) // Closer to surface
                         .polygonLabel('')
                         .onPolygonClick(d => this.handleCountryClick(d))
                         .onPolygonHover(d => this.handleCountryHover(d))
                         .polygonAltitude(0.01);
                     
                     // Set stroke width as property after initialization
-                    this.globe.polygonStrokeWidth = 2;
+                    this.globe.polygonStrokeWidth = 1;
                     
                     // Debug: Check if stroke properties are set
-                    console.log('Globe initialized with stroke width 2');
+                    console.log('Globe initialized with stroke width 1');
                     console.log('Globe stroke color function:', typeof this.globe.polygonStrokeColor);
                     console.log('Globe stroke width property:', this.globe.polygonStrokeWidth);
                     
@@ -1154,12 +1156,12 @@
                             console.log('Globe refreshed with borders');
                             
                             // Explicitly set stroke properties after data load
-                            this.globe.polygonStrokeWidth = 2;
+                            this.globe.polygonStrokeWidth = 1;
                             this.globe.polygonStrokeColor(d => {
                                 if (d.properties?.total_eur > 0) {
                                     return '#ffffff'; // White borders for active countries
                                 }
-                                return '#666666'; // Gray borders for inactive countries
+                                return '#999999'; // Lighter gray for inactive countries
                             });
                             
                             // Force enable strokes
@@ -1170,8 +1172,8 @@
                             if (currentData && currentData.length > 0) {
                                 currentData.forEach(polygon => {
                                     if (polygon.properties) {
-                                        polygon.properties.strokeWidth = 2;
-                                        polygon.properties.strokeColor = polygon.properties.total_eur > 0 ? '#ffffff' : '#666666';
+                                        polygon.properties.strokeWidth = 1;
+                                        polygon.properties.strokeColor = polygon.properties.total_eur > 0 ? '#ffffff' : '#999999';
                                     }
                                 });
                                 this.globe.polygonsData(currentData);
@@ -1261,11 +1263,11 @@
                         if (d.properties && d.properties.iso === countryCode) {
                             return '#ffffff'; // White border for selected
                         }
-                        return d.properties?.total_eur > 0 ? '#ffffff' : '#666666';
+                        return d.properties?.total_eur > 0 ? '#ffffff' : '#999999';
                     });
                     
                     // Set stroke width as property
-                    this.globe.polygonStrokeWidth = 2;
+                    this.globe.polygonStrokeWidth = 1;
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1900,11 +1902,11 @@
                         if (d.properties?.total_eur > 0) {
                             return '#ffffff'; // White borders for active countries
                         }
-                        return '#666666'; // Gray borders for inactive countries
+                        return '#999999'; // Lighter gray for inactive countries
                     });
                     
                     // Set stroke width as property
-                    this.globe.polygonStrokeWidth = 2;
+                    this.globe.polygonStrokeWidth = 1;
                     
                     console.log('Updated globe colors and borders');
                     
