@@ -122,7 +122,7 @@
         }
     </script>
     
-        <!-- Three.js and Globe.gl for 3D globe - Optimized loading -->
+        <!-- Three.js and Globe.gl for 3D globe - Use working versions -->
         <script>
             // Suppress Three.js deprecation warnings
             const originalWarn = console.warn;
@@ -136,8 +136,8 @@
                 originalWarn.apply(console, arguments);
             };
         </script>
-        <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-        <script src="https://unpkg.com/globe.gl@2.28.0/dist/globe.gl.min.js"></script>
+        <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+        <script src="https://unpkg.com/globe.gl@2.24.0/dist/globe.gl.min.js"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1161,7 +1161,33 @@
                                 }
                                 return '#666666'; // Gray borders for inactive countries
                             });
-                            console.log('Stroke properties explicitly set');
+                            
+                            // Force enable strokes
+                            this.globe.polygonStroke = true;
+                            
+                            // Try alternative approach - set stroke on each polygon
+                            const currentData = this.globe.polygonsData();
+                            if (currentData && currentData.length > 0) {
+                                currentData.forEach(polygon => {
+                                    if (polygon.properties) {
+                                        polygon.properties.strokeWidth = 2;
+                                        polygon.properties.strokeColor = polygon.properties.total_eur > 0 ? '#ffffff' : '#666666';
+                                    }
+                                });
+                                this.globe.polygonsData(currentData);
+                            }
+                            
+                            console.log('Stroke properties explicitly set with alternative approach');
+                            
+                            // Final attempt - check if borders are visible
+                            setTimeout(() => {
+                                const testElement = document.querySelector('.globe-container canvas');
+                                if (testElement) {
+                                    console.log('Globe canvas found, borders should be visible');
+                                } else {
+                                    console.log('Globe canvas not found, borders may not be visible');
+                                }
+                            }, 2000);
                         }, 1000);
                     }
                     
