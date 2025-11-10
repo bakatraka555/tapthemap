@@ -658,13 +658,13 @@
                     </div>
                     <!-- Period Switcher -->
                     <div class="flex space-x-2 mb-4 bg-gray-800 rounded-lg p-1">
-                        <button id="leaders-24h" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white leaders-period-btn active" data-period="24h">
+                        <button id="leaders-24h" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors text-gray-300 hover:bg-gray-700 leaders-period-btn" data-period="24h">
                             24h
                         </button>
                         <button id="leaders-7d" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors text-gray-300 hover:bg-gray-700 leaders-period-btn" data-period="7d">
                             7d
                         </button>
-                        <button id="leaders-all" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors text-gray-300 hover:bg-gray-700 leaders-period-btn" data-period="all">
+                        <button id="leaders-all" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white leaders-period-btn active" data-period="all">
                             All Time
                         </button>
                     </div>
@@ -772,7 +772,7 @@
                     countryData: {},
                     countryHeatData: {}, // Store donors_24h for heat map
                     maxDonors24h: 0,
-                    leadersPeriod: '24h', // Current leaders period: 24h, 7d, all
+                    leadersPeriod: 'all', // Current leaders period: 24h, 7d, all (default: all)
                     leadersData: {
                         '24h': [],
                         '7d': [],
