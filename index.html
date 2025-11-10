@@ -343,6 +343,42 @@
         #stats-text, #stats-subtitle {
             transition: opacity 0.3s ease-in-out;
         }
+        
+        /* Heat map legend styling */
+        #heatmap-legend {
+            transition: opacity 0.5s ease-in, transform 0.3s ease;
+            opacity: 1;
+            max-width: 200px;
+            animation: fadeInLegend 0.5s ease-in;
+        }
+        
+        @keyframes fadeInLegend {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #heatmap-legend:hover {
+            background: rgba(17, 24, 39, 0.95);
+            transform: translateY(-2px);
+        }
+        
+        /* Responsive legend */
+        @media (max-width: 768px) {
+            #heatmap-legend {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                font-size: 12px;
+                padding: 12px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -441,7 +477,11 @@
             <div class="lg:col-span-2">
                 <div class="glass-effect rounded-xl p-6 mb-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold">Global Heat Map</h3>
+                        <h3 class="text-xl font-semibold flex items-center">
+                            <span class="mr-2">🔥</span>
+                            Global Heat Map
+                            <span id="heatmap-updating" class="ml-2 hidden text-xs text-green-400 animate-pulse">Updating...</span>
+                        </h3>
                         <div class="text-sm text-gray-400" id="map-status">Loading...</div>
                     </div>
                     
@@ -467,6 +507,39 @@
                             <div class="text-xs text-gray-400 text-center mt-2">
                                 <div>Ctrl + Scroll</div>
                                 <div>to zoom</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Heat Map Legend -->
+                        <div id="heatmap-legend" class="absolute bottom-4 left-4 z-10 bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-4 shadow-2xl" style="display: none;">
+                            <div class="text-sm font-semibold text-white mb-3 flex items-center">
+                                <span class="mr-2">🔥</span>
+                                Today's Heat (24h)
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded" style="background: rgba(239, 68, 68, 0.8); border: 1px solid #ef4444;"></div>
+                                    <span class="text-xs text-gray-300">31+ donors</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded" style="background: rgba(245, 158, 11, 0.8); border: 1px solid #f59e0b;"></div>
+                                    <span class="text-xs text-gray-300">16-30 donors</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded" style="background: rgba(34, 197, 94, 0.8); border: 1px solid #22c55e;"></div>
+                                    <span class="text-xs text-gray-300">6-15 donors</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded" style="background: rgba(59, 130, 246, 0.8); border: 1px solid #3b82f6;"></div>
+                                    <span class="text-xs text-gray-300">1-5 donors</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #666;"></div>
+                                    <span class="text-xs text-gray-400">No activity</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-gray-700">
+                                <div class="text-xs text-gray-400">Hover over countries to see details</div>
                             </div>
                         </div>
                     </div>
@@ -657,7 +730,10 @@
                 this.stats = {
                     totalDonations: 0,
                     totalCountries: 0,
-                    totalDonors: 0
+                    totalDonors: 0,
+                    countryData: {},
+                    countryHeatData: {}, // Store donors_24h for heat map
+                    maxDonors24h: 0
                 };
                 
                 this.init();
@@ -1066,6 +1142,20 @@
                     // Load country data
                     await this.loadCountryData();
                     
+                    // Show heat map legend after globe loads
+                    const legendEl = document.getElementById('heatmap-legend');
+                    if (legendEl) {
+                        legendEl.style.display = 'block';
+                        // Fade in animation
+                        setTimeout(() => {
+                            legendEl.style.opacity = '0';
+                            legendEl.style.transition = 'opacity 0.5s ease-in';
+                            setTimeout(() => {
+                                legendEl.style.opacity = '1';
+                            }, 50);
+                        }, 500);
+                    }
+                    
                     mapStatusEl.textContent = 'Globe loaded ✓';
                     
                 } catch (error) {
@@ -1128,20 +1218,28 @@
                     const countriesData = geoData.features.map(feature => {
                         const countryCode = this.getCountryCode(feature.properties);
                         const countryName = this.getCountryName(feature.properties);
-                        const countryStats = this.stats.countryData?.[countryCode] || {};
+                        const iso = countryCode.toUpperCase();
                         
-                        // Handle both object and number formats
-                        const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || 0);
-                        const totalDonors = typeof countryStats === 'object' ? (countryStats.total_donors || 0) : 1;
+                        // Get heat data (donors_24h) for heat map
+                        const heatData = this.stats.countryHeatData?.[iso] || {};
+                        const countryStats = this.stats.countryData?.[iso] || 0;
+                        
+                        // Handle both object and number formats for legacy support
+                        const totalEur = typeof countryStats === 'number' ? countryStats : (countryStats.total_eur || heatData.total_eur || 0);
+                        const totalDonors = heatData.total_donors || 0;
+                        const donors24h = heatData.donors_24h || 0;
+                        const donors7d = heatData.donors_7d || 0;
                         
                         return {
                             ...feature,
                             properties: {
                                 ...feature.properties,
-                                iso: countryCode,
+                                iso: iso,
                                 name: countryName,
                                 total_eur: totalEur,
-                                total_donors: totalDonors
+                                total_donors: totalDonors,
+                                donors_24h: donors24h,
+                                donors_7d: donors7d
                             }
                         };
                     });
@@ -1256,31 +1354,99 @@
             showCountryPulse(country) {
                 // Create pulse effect on selected country
                 if (this.globe) {
-                    const countryCode = country.properties.iso;
+                    const countryCode = country.properties.iso?.toUpperCase();
+                    const maxDonors = this.stats.maxDonors24h || 1;
                     
-                    // Add glowing effect with borders
+                    // Add glowing effect with borders (keep heat map colors but highlight selected)
                     this.globe.polygonCapColor(d => {
-                        if (d.properties && d.properties.iso === countryCode) {
+                        if (!d.properties || !d.properties.iso) {
+                            return 'rgba(255,255,255,0.1)';
+                        }
+                        
+                        const iso = d.properties.iso.toUpperCase();
+                        
+                        // Highlight selected country with bright color
+                        if (iso === countryCode) {
                             return '#ff6b6b'; // Bright red for selection
                         }
-                        return d.properties?.total_eur > 0 ? '#22c55e' : 'rgba(255,255,255,0.1)';
+                        
+                        // Use heat map colors for other countries
+                        const heatData = this.stats.countryHeatData?.[iso];
+                        if (heatData && heatData.donors_24h > 0) {
+                            const baseColor = this.getHeatMapColor(heatData.donors_24h);
+                            const opacity = this.getHeatMapOpacity(heatData.donors_24h, maxDonors);
+                            
+                            if (baseColor.startsWith('#')) {
+                                const hex = baseColor.slice(1);
+                                const r = parseInt(hex.slice(0, 2), 16);
+                                const g = parseInt(hex.slice(2, 4), 16);
+                                const b = parseInt(hex.slice(4, 6), 16);
+                                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                            }
+                            return baseColor;
+                        }
+                        
+                        // Fallback
+                        return d.properties?.total_eur > 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255,255,255,0.1)';
                     });
                     
                     // Make borders more visible during selection
                     this.globe.polygonStrokeColor(d => {
-                        if (d.properties && d.properties.iso === countryCode) {
+                        if (!d.properties || !d.properties.iso) {
+                            return '#666666';
+                        }
+                        
+                        const iso = d.properties.iso.toUpperCase();
+                        
+                        if (iso === countryCode) {
                             return '#ffffff'; // White border for selected
                         }
-                        return d.properties?.total_eur > 0 ? '#ffffff' : '#999999';
+                        
+                        // Use heat map borders
+                        const heatData = this.stats.countryHeatData?.[iso];
+                        if (heatData && heatData.donors_24h > 0) {
+                            if (heatData.donors_24h >= 16) {
+                                return '#ffffff';
+                            } else if (heatData.donors_24h >= 6) {
+                                return '#e5e7eb';
+                            } else {
+                                return '#9ca3af';
+                            }
+                        }
+                        
+                        return d.properties?.total_eur > 0 ? '#9ca3af' : '#666666';
                     });
                     
-                    // Set stroke width as property
-                    this.globe.polygonStrokeWidth = 1;
-                    
-                    // Try function approach if available
+                    // Thicker border for selected country
                     if (typeof this.globe.polygonStrokeWidth === 'function') {
-                        this.globe.polygonStrokeWidth(1);
+                        this.globe.polygonStrokeWidth(d => {
+                            if (!d.properties || !d.properties.iso) {
+                                return 0.5;
+                            }
+                            
+                            const iso = d.properties.iso.toUpperCase();
+                            if (iso === countryCode) {
+                                return 3; // Very thick for selected
+                            }
+                            
+                            // Use heat map stroke widths
+                            const heatData = this.stats.countryHeatData?.[iso];
+                            if (heatData && heatData.donors_24h >= 16) {
+                                return 2;
+                            } else if (heatData && heatData.donors_24h >= 6) {
+                                return 1.5;
+                            } else if (heatData && heatData.donors_24h > 0) {
+                                return 1;
+                            }
+                            
+                            return 0.5;
+                        });
+                    } else {
+                        this.globe.polygonStrokeWidth = 1;
                     }
+                    
+                    // Refresh globe
+                    this.globe.polygonsData(this.globe.polygonsData());
                     
                     // Reset after 2 seconds
                     setTimeout(() => {
@@ -1303,6 +1469,8 @@
                 
                 const totalEur = country.properties.total_eur || 0;
                 const totalDonors = country.properties.total_donors || 0;
+                const donors24h = country.properties.donors_24h || 0;
+                const donors7d = country.properties.donors_7d || 0;
                 const countryCode = country.properties.iso;
                 const countryName = country.properties.name;
                 
@@ -1312,19 +1480,32 @@
                 const badge = document.createElement('div');
                 badge.className = 'country-hover-badge';
                 
-                // Determine badge class based on heart amount
-                if (totalEur === 0) badge.classList.add('basic');
-                else if (totalEur >= 1000) badge.classList.add('premium');
-                else if (totalEur >= 500) badge.classList.add('high');
-                else if (totalEur >= 100) badge.classList.add('medium');
-                else badge.classList.add('basic');
+                // Determine badge class based on donors_24h (today heat)
+                if (donors24h === 0 && totalEur === 0) {
+                    badge.classList.add('basic');
+                } else if (donors24h >= 31) {
+                    badge.classList.add('premium'); // Red - Very hot
+                } else if (donors24h >= 16) {
+                    badge.classList.add('high'); // Yellow - Hot
+                } else if (donors24h >= 6) {
+                    badge.classList.add('medium'); // Green - Medium
+                } else if (donors24h >= 1) {
+                    badge.classList.add('basic'); // Blue - Cool
+                } else if (totalEur >= 1000) {
+                    badge.classList.add('premium');
+                } else if (totalEur >= 500) {
+                    badge.classList.add('high');
+                } else if (totalEur >= 100) {
+                    badge.classList.add('medium');
+                } else {
+                    badge.classList.add('basic');
+                }
                 
                 // Get flag icon
                 const flagIcon = this.getCountryFlag(countryCode);
                 
-                // Create badge content
-                // Create content based on whether country has hearts
-                if (totalEur === 0) {
+                // Create badge content with today heat info
+                if (donors24h === 0 && totalEur === 0) {
                     badge.innerHTML = `
                         <div class="country-name">${countryName}</div>
                         <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
@@ -1333,12 +1514,19 @@
                         </div>
                     `;
                 } else {
+                    // Show today heat (donors_24h) as primary info
+                    const heatText = donors24h > 0 
+                        ? `<span class="donation-amount">${donors24h} donors today</span>`
+                        : `<span class="donation-amount">${totalEur} ❤️ total</span>`;
+                    
                     badge.innerHTML = `
                         <div class="country-name">${countryName}</div>
-                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px; flex-wrap: wrap; gap: 4px;">
                             <span class="flag-icon">${flagIcon}</span>
-                            <span class="donation-amount">${totalEur} ❤️ given</span>
+                            ${heatText}
+                            ${totalEur > 0 ? `<span class="donor-count">${totalEur} ❤️</span>` : ''}
                         </div>
+                        ${donors7d > donors24h ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">${donors7d} donors this week</div>` : ''}
                     `;
                 }
                 
@@ -1664,6 +1852,12 @@
                 try {
                     console.log('Loading stats...');
                     
+                    // Show updating indicator (only if not initial load)
+                    const updatingEl = document.getElementById('heatmap-updating');
+                    if (updatingEl && this.stats.totalDonations > 0) {
+                        updatingEl.classList.remove('hidden');
+                    }
+                    
                     const response = await fetch('/.netlify/functions/stats');
                     console.log('Stats response:', response);
                     
@@ -1679,14 +1873,30 @@
                     }
                     
                     this.stats.countryData = {};
+                    this.stats.countryHeatData = {}; // Store donors_24h for heat map
                     let totalDonations = 0;
                     let totalDonors = 0;
+                    let maxDonors24h = 0; // Track max for normalization
                     
                     data.forEach(country => {
-                        this.stats.countryData[country.iso] = country.total_eur;
-                        totalDonations += country.total_eur;
-                        totalDonors += (country.total_donors || country.donors_24h || 0);
+                        const iso = (country.iso || '').toUpperCase();
+                        this.stats.countryData[iso] = country.total_eur || 0;
+                        const donors24h = country.donors_24h || 0;
+                        this.stats.countryHeatData[iso] = {
+                            donors_24h: donors24h,
+                            total_eur: country.total_eur || 0,
+                            donors_7d: country.donors_7d || 0,
+                            total_donors: country.total_donors || 0
+                        };
+                        totalDonations += country.total_eur || 0;
+                        totalDonors += (country.total_donors || donors24h || 0);
+                        if (donors24h > maxDonors24h) {
+                            maxDonors24h = donors24h;
+                        }
                     });
+                    
+                    // Store max for heat map normalization
+                    this.stats.maxDonors24h = maxDonors24h;
                     
                     this.stats.totalDonations = totalDonations;
                     this.stats.totalCountries = data.length;
@@ -1699,6 +1909,12 @@
                     this.updateCaptainsList(data);
                     this.updateGlobeColors();
                     
+                    // Hide updating indicator
+                    const updatingEl = document.getElementById('heatmap-updating');
+                    if (updatingEl) {
+                        updatingEl.classList.add('hidden');
+                    }
+                    
                 } catch (error) {
                     console.error('Error loading stats:', error);
                     // Fallback values
@@ -1706,6 +1922,12 @@
                     this.stats.totalCountries = 0;
                     this.stats.totalDonors = 0;
                     this.updateStatsDisplay();
+                    
+                    // Hide updating indicator on error
+                    const updatingEl = document.getElementById('heatmap-updating');
+                    if (updatingEl) {
+                        updatingEl.classList.add('hidden');
+                    }
                 }
             }
             
@@ -1901,35 +2123,147 @@
                 }
             }
             
+            /**
+             * Get heat map color based on donors_24h
+             * Returns color gradient: transparent (0) → blue (1-5) → green (6-15) → yellow (16-30) → red (31+)
+             */
+            getHeatMapColor(donors24h) {
+                if (!donors24h || donors24h === 0) {
+                    return 'rgba(255,255,255,0.1)'; // Transparent for no activity
+                }
+                
+                // Heat map color scale based on donors_24h
+                if (donors24h >= 31) {
+                    return '#ef4444'; // Red - Very hot (31+ donors)
+                } else if (donors24h >= 16) {
+                    return '#f59e0b'; // Yellow/Orange - Hot (16-30 donors)
+                } else if (donors24h >= 6) {
+                    return '#22c55e'; // Green - Medium (6-15 donors)
+                } else if (donors24h >= 1) {
+                    return '#3b82f6'; // Blue - Cool (1-5 donors)
+                } else {
+                    return 'rgba(255,255,255,0.1)'; // Transparent
+                }
+            }
+            
+            /**
+             * Get heat map opacity based on donors_24h (for more subtle effect)
+             */
+            getHeatMapOpacity(donors24h, maxDonors) {
+                if (!donors24h || donors24h === 0 || !maxDonors || maxDonors === 0) {
+                    return 0.1; // Very transparent for no activity
+                }
+                
+                // Normalize opacity based on max (0.3 to 1.0 range)
+                const normalized = Math.min(donors24h / maxDonors, 1.0);
+                return 0.3 + (normalized * 0.7); // Range from 0.3 to 1.0
+            }
+            
             updateGlobeColors() {
                 if (this.globe && this.globe.polygonsData) {
-                    // Update polygon colors with proper borders
+                    const maxDonors = this.stats.maxDonors24h || 1;
+                    
+                    // Update polygon colors with heat map based on donors_24h
                     this.globe.polygonCapColor(d => {
-                        if (d.properties?.total_eur > 0) {
-                            return '#22c55e'; // Green for countries with hearts
+                        if (!d.properties || !d.properties.iso) {
+                            return 'rgba(255,255,255,0.1)';
                         }
-                        return 'rgba(255,255,255,0.1)'; // Transparent for others
+                        
+                        const iso = d.properties.iso.toUpperCase();
+                        const heatData = this.stats.countryHeatData?.[iso];
+                        
+                        if (heatData && heatData.donors_24h > 0) {
+                            // Use heat map color with opacity
+                            const baseColor = this.getHeatMapColor(heatData.donors_24h);
+                            const opacity = this.getHeatMapOpacity(heatData.donors_24h, maxDonors);
+                            
+                            // Convert hex to rgba with opacity
+                            if (baseColor.startsWith('#')) {
+                                const hex = baseColor.slice(1);
+                                const r = parseInt(hex.slice(0, 2), 16);
+                                const g = parseInt(hex.slice(2, 4), 16);
+                                const b = parseInt(hex.slice(4, 6), 16);
+                                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                            }
+                            return baseColor;
+                        }
+                        
+                        // Fallback: check total_eur for legacy support
+                        if (d.properties?.total_eur > 0) {
+                            return 'rgba(34, 197, 94, 0.3)'; // Light green with transparency
+                        }
+                        
+                        return 'rgba(255,255,255,0.1)'; // Transparent for no activity
                     });
                     
+                    // Update stroke color - brighter for countries with more activity
                     this.globe.polygonStrokeColor(d => {
-                        if (d.properties?.total_eur > 0) {
-                            return '#ffffff'; // White borders for active countries
+                        if (!d.properties || !d.properties.iso) {
+                            return '#666666';
                         }
-                        return '#999999'; // Lighter gray for inactive countries
+                        
+                        const iso = d.properties.iso.toUpperCase();
+                        const heatData = this.stats.countryHeatData?.[iso];
+                        
+                        if (heatData && heatData.donors_24h > 0) {
+                            // Brighter borders for more active countries
+                            if (heatData.donors_24h >= 16) {
+                                return '#ffffff'; // White for hot countries
+                            } else if (heatData.donors_24h >= 6) {
+                                return '#e5e7eb'; // Light gray for medium activity
+                            } else {
+                                return '#9ca3af'; // Gray for low activity
+                            }
+                        }
+                        
+                        // Fallback: check total_eur
+                        if (d.properties?.total_eur > 0) {
+                            return '#9ca3af'; // Gray border
+                        }
+                        
+                        return '#666666'; // Dark gray for inactive countries
                     });
                     
-                    // Set stroke width as property
-                    this.globe.polygonStrokeWidth = 1;
-                    
-                    // Try function approach if available
+                    // Set stroke width - thicker for more active countries
                     if (typeof this.globe.polygonStrokeWidth === 'function') {
-                        this.globe.polygonStrokeWidth(1);
+                        this.globe.polygonStrokeWidth(d => {
+                            if (!d.properties || !d.properties.iso) {
+                                return 0.5;
+                            }
+                            
+                            const iso = d.properties.iso.toUpperCase();
+                            const heatData = this.stats.countryHeatData?.[iso];
+                            
+                            if (heatData && heatData.donors_24h >= 16) {
+                                return 2; // Thicker border for hot countries
+                            } else if (heatData && heatData.donors_24h >= 6) {
+                                return 1.5; // Medium border
+                            } else if (heatData && heatData.donors_24h > 0) {
+                                return 1; // Normal border
+                            }
+                            
+                            return 0.5; // Thin border for inactive
+                        });
+                    } else {
+                        this.globe.polygonStrokeWidth = 1;
                     }
                     
-                    console.log('Updated globe colors and borders');
+                    console.log('Updated globe colors with heat map (donors_24h)', {
+                        maxDonors24h: maxDonors,
+                        countriesWithHeat: Object.keys(this.stats.countryHeatData || {}).length
+                    });
                     
                     // Refresh the globe
                     this.globe.polygonsData(this.globe.polygonsData());
+                    
+                    // Update legend visibility - show if there's heat data
+                    const legendEl = document.getElementById('heatmap-legend');
+                    if (legendEl) {
+                        const hasHeatData = Object.keys(this.stats.countryHeatData || {}).length > 0;
+                        if (hasHeatData && legendEl.style.display === 'none') {
+                            legendEl.style.display = 'block';
+                        }
+                    }
                 }
             }
             
