@@ -1,6 +1,8 @@
 const Stripe = require("stripe");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
+const { retry } = require("./utils/retry");
+const { createLogger } = require("./utils/logger");
 
 const supa = () =>
   createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -211,8 +213,14 @@ const donorHash = (idLike, salt) =>
   crypto.createHash("sha256").update(salt + "::" + (idLike || "").toLowerCase().trim()).digest("hex");
 
 exports.handler = async (event) => {
+  const requestId = event.requestContext?.requestId || Date.now().toString();
+  const log = createLogger({ function: "webhook", requestId });
+
   try {
-    if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
+    if (event.httpMethod !== "POST") {
+      log.warn("Invalid HTTP method", { method: event.httpMethod });
+      return { statusCode: 405, body: "Method Not Allowed" };
+    }
 
     const sig = event.headers["stripe-signature"];
     const whsec = process.env.STRIPE_WEBHOOK_SECRET || "";
@@ -221,12 +229,14 @@ exports.handler = async (event) => {
     let evt;
     try {
       evt = stripe.webhooks.constructEvent(event.body, sig, whsec);
+      log.info("Webhook signature verified", { type: evt.type });
     } catch (err) {
-      console.warn("WEBHOOK signature error:", err.message);
+      log.error("Webhook signature error", err);
       return { statusCode: 400, body: "Signature error: " + err.message };
     }
 
     if (evt.type !== "checkout.session.completed") {
+      log.info("Webhook event ignored", { type: evt.type });
       return { statusCode: 200, body: "ignored" };
     }
 
@@ -235,7 +245,7 @@ exports.handler = async (event) => {
 
     const amountCents = Number(session.amount_total || 0);
     if (!amountCents || amountCents < 100) {
-      console.warn("WEBHOOK: zero/low amount_total, skip", JSON.stringify({ amountCents }));
+      log.warn("Webhook: zero/low amount_total, skip", { amountCents });
       return { statusCode: 200, body: "skip: amount_total" };
     }
     const amount_eur = Math.round(amountCents / 100);
@@ -247,24 +257,26 @@ exports.handler = async (event) => {
     const country_name = meta.country_name || meta.name || "";
     const country_iso = normalizeISO(meta.country_iso, country_name);
     
-    console.log("WEBHOOK metadata:", JSON.stringify({ meta, country_name, country_iso }));
+    log.info("Webhook metadata", { meta, country_name, country_iso });
 
     if (country_iso === "UNK") {
-      console.warn("WEBHOOK: missing/unknown ISO, skip", JSON.stringify({ meta, country_name, country_iso }));
+      log.warn("Webhook: missing/unknown ISO, skip", { meta, country_name, country_iso });
       return { statusCode: 200, body: "skip: unknown iso" };
     }
 
     const donorHashValue = donorHash(pseudoId, salt);
-    console.log("WEBHOOK: Generated donor_hash:", donorHashValue, "from pseudoId:", pseudoId);
+    log.info("Generated donor_hash", { donor_hash: donorHashValue, pseudoId });
     
     const influencer_ref = meta.influencer_ref || null;
     const commission_rate = parseFloat(meta.commission_rate || "0.25");
     const commission_amount = influencer_ref ? Math.round(amount_eur * commission_rate * 100) / 100 : 0;
     
-    console.log("DEBUG - meta.influencer_ref:", meta.influencer_ref);
-    console.log("DEBUG - meta:", meta);
-    console.log("DEBUG - influencer_ref:", influencer_ref);
-    console.log("DEBUG - commission_amount:", commission_amount);
+    log.debug("Commission calculation", {
+      influencer_ref,
+      commission_rate,
+      commission_amount,
+      amount_eur,
+    });
 
     const row = {
       created_at: new Date().toISOString(),
@@ -281,24 +293,75 @@ exports.handler = async (event) => {
       commission_amount
     };
 
-    const { error } = await supa()
-      .from("payments")
-      .upsert(row, { onConflict: "stripe_pi", ignoreDuplicates: true });
+    // Retry Supabase insert with exponential backoff
+    try {
+      await retry(
+        async () => {
+          const { error } = await supa()
+            .from("payments")
+            .upsert(row, { onConflict: "stripe_pi", ignoreDuplicates: true });
 
-    if (error) {
-      console.error("WEBHOOK supabase error:", error.message);
-      return { statusCode: 500, body: "supabase error: " + error.message };
+          if (error) {
+            log.error("Supabase upsert error", error, { row });
+            throw error;
+          }
+
+          return { success: true };
+        },
+        {
+          maxRetries: 3,
+          initialDelay: 1000,
+          maxDelay: 5000,
+          shouldRetry: (error) => {
+            // Retry on network errors and 5xx errors
+            if (error.code === "ECONNREFUSED" || error.code === "ETIMEDOUT") return true;
+            if (error.statusCode >= 500 && error.statusCode < 600) return true;
+            // Retry on Supabase connection errors
+            if (error.message && error.message.includes("connection")) return true;
+            return false;
+          },
+          onRetry: (error, attempt, delay) => {
+            log.warn("Retrying Supabase insert", {
+              attempt,
+              delay,
+              error: error.message,
+            });
+          },
+        }
+      );
+
+      log.info("Webhook payment inserted", {
+        iso: row.country_iso,
+        eur: row.amount_eur,
+        pi: row.stripe_pi,
+        requestId,
+      });
+
+      return { statusCode: 200, body: "ok" };
+    } catch (retryError) {
+      log.error("Webhook: Failed to insert payment after retries", retryError, {
+        row,
+        requestId,
+      });
+      // Return 500 to trigger Stripe retry
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: "Failed to process payment",
+          message: retryError.message,
+          requestId,
+        }),
+      };
     }
-
-    console.info("WEBHOOK inserted", JSON.stringify({
-      iso: row.country_iso,
-      eur: row.amount_eur,
-      pi: row.stripe_pi,
-    }));
-
-    return { statusCode: 200, body: "ok" };
   } catch (e) {
-    console.error("WEBHOOK fatal error:", e.message);
-    return { statusCode: 500, body: "webhook error: " + e.message };
+    log.error("Webhook fatal error", e);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: "Webhook processing error",
+        message: e.message,
+        requestId,
+      }),
+    };
   }
 };

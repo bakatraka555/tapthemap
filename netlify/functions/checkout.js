@@ -1,7 +1,18 @@
 // netlify/functions/checkout.js
 const Stripe = require("stripe");
+const { createRateLimiter } = require("./utils/rateLimit");
+const { createLogger } = require("./utils/logger");
+
+// Rate limiter: 50 requests per minute per IP (stricter for payments)
+const rateLimiter = createRateLimiter({
+  maxRequests: 50,
+  windowMs: 60000, // 1 minute
+});
 
 exports.handler = async (event) => {
+  const requestId = event.requestContext?.requestId || Date.now().toString();
+  const log = createLogger({ function: "checkout", requestId });
+
   try {
     // (opcionalno) preflight
     if (event.httpMethod === "OPTIONS") {
@@ -17,7 +28,15 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod !== "POST") {
+      log.warn("Invalid HTTP method", { method: event.httpMethod });
       return { statusCode: 405, body: "Method Not Allowed" };
+    }
+
+    // Rate limiting
+    const rateLimitResult = rateLimiter(event);
+    if (rateLimitResult) {
+      log.warn("Rate limit exceeded", { ip: event.headers['x-forwarded-for'] });
+      return rateLimitResult;
     }
 
     // 1) Sigurno parsiranje bodyja
@@ -25,8 +44,14 @@ exports.handler = async (event) => {
     try {
       body = typeof event.body === "string" ? JSON.parse(event.body || "{}") : (event.body || {});
     } catch (e) {
+      log.warn("Invalid JSON in request body", { error: e.message });
       return { statusCode: 400, body: "Invalid JSON" };
     }
+
+    log.info("Checkout request received", {
+      country_iso: body.country_iso,
+      amount: body.amount || body.amount_eur,
+    });
 
     // 2) Polja iz bodyja
     const country_iso = (body.country_iso || "").toString().toUpperCase().slice(0, 3);
@@ -43,11 +68,23 @@ exports.handler = async (event) => {
       if (Number.isFinite(n) && n > 0) { amountEur = n; break; }
     }
     if (!amountEur) {
-      return { statusCode: 400, body: "Amount missing or invalid" };
+      log.warn("Amount missing or invalid", { body });
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          error: "Amount missing or invalid",
+          requestId,
+        }),
+      };
     }
 
     // 4) Pretvori u cente (min 1 €)
     const amountCents = Math.max(100, Math.round(amountEur * 100));
+    log.debug("Amount calculated", { amountEur, amountCents });
 
     // 5) Stripe
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY /* , { apiVersion: '2024-06-20' } */);
@@ -83,13 +120,33 @@ exports.handler = async (event) => {
       }
     });
 
+    log.info("Checkout session created", {
+      sessionId: session.id,
+      amount: amountCents,
+      country_iso,
+    });
+
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ id: session.id, url: session.url })
     };
   } catch (e) {
-    console.error("Checkout error:", e);
-    return { statusCode: 500, body: `Checkout error: ${e.message}` };
+    log.error("Checkout error", e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        error: "Checkout error",
+        message: e.message,
+        requestId,
+      }),
+    };
   }
 };

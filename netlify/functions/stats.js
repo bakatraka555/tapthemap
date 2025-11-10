@@ -1,25 +1,47 @@
 // GET /.netlify/functions/stats
 // Agregira po zemlji: total_eur + donors_24h + donors_7d (ALL vrijeme)
 const { createClient } = require("@supabase/supabase-js");
+const { createRateLimiter } = require("./utils/rateLimit");
+const { createLogger } = require("./utils/logger");
 
 const supa = () =>
   createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_PUBLIC, {
     auth: { persistSession: false }
   });
 
-exports.handler = async () => {
+// Rate limiter: 200 requests per minute per IP
+const rateLimiter = createRateLimiter({
+  maxRequests: 200,
+  windowMs: 60000, // 1 minute
+});
+
+exports.handler = async (event) => {
+  const requestId = event.requestContext?.requestId || Date.now().toString();
+  const log = createLogger({ function: "stats", requestId });
+
   try {
+    // Rate limiting
+    if (event.httpMethod === "GET") {
+      const rateLimitResult = rateLimiter(event);
+      if (rateLimitResult) {
+        log.warn("Rate limit exceeded", { ip: event.headers['x-forwarded-for'] });
+        return rateLimitResult;
+      }
+    }
+
+    log.info("Stats request received");
     const { data, error } = await supa()
       .from("payments")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50000);
 
-    if (error) throw error;
+    if (error) {
+      log.error("Supabase query error", error);
+      throw error;
+    }
     
-    console.log('Stats: Raw data from Supabase:', data?.length, 'records');
-    console.log('Stats: Latest 3 records:', data?.slice(0, 3));
-    console.log('Stats: Sample record with donor_hash:', data?.find(r => r.donor_hash));
+    log.info("Data fetched from Supabase", { recordCount: data?.length });
 
     const by = new Map();
     const now = Date.now();
@@ -71,7 +93,7 @@ exports.handler = async () => {
       o.total_eur += amt;
       if (dh) {
         o.allDonors.add(dh); // Dodaj sve donore
-        console.log(`Adding donor ${dh} to ${iso}, total donors now: ${o.allDonors.size}`);
+        // Donor added to country
       }
       if (ts >= since7d && dh) o.donors7.add(dh);
       if (ts >= since24 && dh) o.donors24.add(dh);
@@ -92,10 +114,32 @@ exports.handler = async () => {
       return (b.total_eur||0) - (a.total_eur||0);
     });
 
-    console.log('Stats: Final output:', out);
-    console.log('Stats: Sample country with donors:', out.find(c => c.total_eur > 0));
-    return { statusCode: 200, body: JSON.stringify(out) };
+    log.info("Stats processed", {
+      countriesCount: out.length,
+      sampleCountry: out.find(c => c.total_eur > 0),
+    });
+    
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(out),
+    };
   } catch (e) {
-    return { statusCode: 500, body: `Stats error: ${e.message}` };
+    log.error("Stats error", e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        error: "Internal server error",
+        message: e.message,
+        requestId,
+      }),
+    };
   }
 };
