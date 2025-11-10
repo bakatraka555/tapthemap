@@ -651,9 +651,23 @@
             <div class="space-y-6">
                 <!-- Top Countries -->
                 <div class="glass-effect rounded-xl p-6">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        🏆 Top Countries
-                    </h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            🏆 Top Countries
+                        </h3>
+                    </div>
+                    <!-- Period Switcher -->
+                    <div class="flex space-x-2 mb-4 bg-gray-800 rounded-lg p-1">
+                        <button id="leaders-24h" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white leaders-period-btn active" data-period="24h">
+                            24h
+                        </button>
+                        <button id="leaders-7d" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors text-gray-300 hover:bg-gray-700 leaders-period-btn" data-period="7d">
+                            7d
+                        </button>
+                        <button id="leaders-all" class="flex-1 px-3 py-2 text-xs font-medium rounded-md transition-colors text-gray-300 hover:bg-gray-700 leaders-period-btn" data-period="all">
+                            All Time
+                        </button>
+                    </div>
                     <div id="leaders-list" class="space-y-3">
                         <div class="text-center text-gray-400 py-4">Loading leaders...</div>
                     </div>
@@ -757,7 +771,13 @@
                     totalDonors: 0,
                     countryData: {},
                     countryHeatData: {}, // Store donors_24h for heat map
-                    maxDonors24h: 0
+                    maxDonors24h: 0,
+                    leadersPeriod: '24h', // Current leaders period: 24h, 7d, all
+                    leadersData: {
+                        '24h': [],
+                        '7d': [],
+                        'all': []
+                    }
                 };
                 
                 this.init();
@@ -781,12 +801,15 @@
                         // Continue even if globe fails
                     }
                     
-                    // Load stats (non-blocking - globe should still show)
+                    // Load stats and leaders (non-blocking - globe should still show)
                     try {
-                        await this.loadStats();
-                    } catch (statsError) {
-                        console.error('Stats loading error:', statsError);
-                        // Continue even if stats fail
+                        await Promise.all([
+                            this.loadStats(),
+                            this.loadLeaders()
+                        ]);
+                    } catch (error) {
+                        console.error('Loading error:', error);
+                        // Continue even if loading fails
                     }
                     
                     // Setup referral
@@ -873,6 +896,16 @@
                         this.mousePosition = { x: e.clientX, y: e.clientY };
                     });
                 }
+                
+                // Leaders period switcher buttons
+                document.querySelectorAll('.leaders-period-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const period = e.target.dataset.period;
+                        if (period) {
+                            this.setLeadersPeriod(period);
+                        }
+                    });
+                });
             }
             
             selectCountry(country, name) {
@@ -1957,10 +1990,10 @@
                     console.log('Calculated stats:', this.stats);
                     
                     this.updateStatsDisplay();
-                    this.updateLeadersList(data);
                     this.updateCaptainsList(data);
                     this.updateGlobeCountryProperties(data);
                     this.updateGlobeColors();
+                    // Leaders are loaded separately via loadLeaders()
                     
                     // Hide updating indicator
                     if (updatingEl) {
@@ -2076,36 +2109,72 @@
                 }, 5000);
             }
             
-            updateLeadersList(data) {
+            async loadLeaders() {
+                try {
+                    console.log('Loading leaders...');
+                    const response = await fetch('/.netlify/functions/leaders');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Leaders data:', data);
+                    
+                    // Store leaders data
+                    this.stats.leadersData['24h'] = data.leaders_24h || [];
+                    this.stats.leadersData['7d'] = data.leaders_7d || [];
+                    this.stats.leadersData['all'] = data.leaders_all || [];
+                    
+                    // Update UI with current period
+                    this.updateLeadersList();
+                } catch (error) {
+                    console.error('Error loading leaders:', error);
+                    const leadersList = document.getElementById('leaders-list');
+                    if (leadersList) {
+                        leadersList.innerHTML = '<div class="text-center text-red-400 py-4">Error loading leaders</div>';
+                    }
+                }
+            }
+            
+            updateLeadersList() {
                 const leadersList = document.getElementById('leaders-list');
+                if (!leadersList) return;
+                
+                const period = this.stats.leadersPeriod;
+                const data = this.stats.leadersData[period] || [];
                 
                 if (data.length === 0) {
                     leadersList.innerHTML = '<div class="text-center text-gray-400 py-4">No hearts yet. Be the first!</div>';
                     return;
                 }
                 
-                const sortedData = data
-                    .sort((a, b) => (b.donors_24h || 0) - (a.donors_24h || 0))
-                    .slice(0, 5);
+                // Take top 5
+                const topCountries = data.slice(0, 5);
                 
-                
-                const htmlContent = sortedData.map((country, index) => {
-                    const flag = this.getCountryFlag(country.iso);
+                const htmlContent = topCountries.map((country, index) => {
+                    const flag = this.getCountryFlag(country.country_iso);
+                    const countryName = country.country_name || country.country_iso;
+                    const uniqueDonors = country.unique_donors || 0;
+                    const totalEur = country.total_eur || 0;
+                    
                     const html = `
-                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold">
+                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors">
+                        <div class="flex items-center space-x-3 flex-1">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 ${index + 1}
                             </div>
-                            <div>
-                                <div class="font-semibold">
-                                    <span class="country-flag">${flag}</span>
-                                    ${country.name || country.iso}
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold flex items-center space-x-2">
+                                    <span class="country-flag flex-shrink-0">${flag}</span>
+                                    <span class="truncate">${countryName}</span>
                                 </div>
-                                <div class="text-xs text-gray-400">${(country.total_eur || 0).toFixed(0)} ❤️ given</div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    ${uniqueDonors} ${uniqueDonors === 1 ? 'donor' : 'donors'} • ${Math.round(totalEur)} ❤️
+                                </div>
                             </div>
                         </div>
-                        <button class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors" onclick="app.selectCountry('${country.iso}', '${country.name || country.iso}')">
+                        <button class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded transition-colors flex-shrink-0 ml-2" onclick="app.selectCountry('${country.country_iso}', '${countryName.replace(/'/g, "\\'")}')">
                             Send Hearts
                         </button>
                     </div>
@@ -2114,6 +2183,29 @@
                 }).join('');
                 
                 leadersList.innerHTML = htmlContent;
+            }
+            
+            setLeadersPeriod(period) {
+                if (!['24h', '7d', 'all'].includes(period)) {
+                    console.error('Invalid leaders period:', period);
+                    return;
+                }
+                
+                this.stats.leadersPeriod = period;
+                
+                // Update button styles
+                document.querySelectorAll('.leaders-period-btn').forEach(btn => {
+                    if (btn.dataset.period === period) {
+                        btn.classList.add('bg-blue-600', 'text-white');
+                        btn.classList.remove('text-gray-300', 'hover:bg-gray-700');
+                    } else {
+                        btn.classList.remove('bg-blue-600', 'text-white');
+                        btn.classList.add('text-gray-300', 'hover:bg-gray-700');
+                    }
+                });
+                
+                // Update leaders list
+                this.updateLeadersList();
             }
             
             async updateCaptainsList(data) {
