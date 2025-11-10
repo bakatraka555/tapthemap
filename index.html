@@ -1517,12 +1517,15 @@
                 // Remove existing hover badge
                 this.hideHoverBadge();
                 
-                const totalEur = country.properties.total_eur || 0;
-                const totalDonors = country.properties.total_donors || 0;
-                const donors24h = country.properties.donors_24h || 0;
-                const donors7d = country.properties.donors_7d || 0;
-                const countryCode = country.properties.iso;
+                const countryCode = country.properties.iso ? country.properties.iso.toUpperCase() : null;
                 const countryName = country.properties.name;
+                
+                // Get data from countryHeatData first (most up-to-date), then fall back to properties
+                const heatData = countryCode ? (this.stats.countryHeatData?.[countryCode] || {}) : {};
+                const totalEur = heatData.total_eur || country.properties.total_eur || 0;
+                const totalDonors = heatData.total_donors || country.properties.total_donors || 0;
+                const donors24h = heatData.donors_24h || country.properties.donors_24h || 0;
+                const donors7d = heatData.donors_7d || country.properties.donors_7d || 0;
                 
                 // Show badge for all countries, regardless of hearts
                 
@@ -1555,7 +1558,8 @@
                 const flagIcon = this.getCountryFlag(countryCode);
                 
                 // Create badge content with today heat info
-                if (donors24h === 0 && totalEur === 0) {
+                // Show total hearts (total_eur) as primary info to match leaderboard
+                if (totalEur === 0) {
                     badge.innerHTML = `
                         <div class="country-name">${countryName}</div>
                         <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
@@ -1564,18 +1568,14 @@
                         </div>
                     `;
                 } else {
-                    // Show today heat (donors_24h) as primary info
-                    const heatText = donors24h > 0 
-                        ? `<span class="donation-amount">${donors24h} donors today</span>`
-                        : `<span class="donation-amount">${totalEur} ❤️ total</span>`;
-                    
+                    // Show total hearts (total_eur) as primary info to match leaderboard
                     badge.innerHTML = `
                         <div class="country-name">${countryName}</div>
                         <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px; flex-wrap: wrap; gap: 4px;">
                             <span class="flag-icon">${flagIcon}</span>
-                            ${heatText}
-                            ${totalEur > 0 ? `<span class="donor-count">${totalEur} ❤️</span>` : ''}
+                            <span class="donation-amount">${Math.round(totalEur)} ❤️ given</span>
                         </div>
+                        ${donors24h > 0 ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">${donors24h} donors today</div>` : ''}
                         ${donors7d > donors24h ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">${donors7d} donors this week</div>` : ''}
                     `;
                 }
@@ -1959,6 +1959,7 @@
                     this.updateStatsDisplay();
                     this.updateLeadersList(data);
                     this.updateCaptainsList(data);
+                    this.updateGlobeCountryProperties(data);
                     this.updateGlobeColors();
                     
                     // Hide updating indicator
@@ -2206,6 +2207,65 @@
                 // Normalize opacity based on max (0.3 to 1.0 range)
                 const normalized = Math.min(donors24h / maxDonors, 1.0);
                 return 0.3 + (normalized * 0.7); // Range from 0.3 to 1.0
+            }
+            
+            updateGlobeCountryProperties(statsData) {
+                // Update properties of countries on the globe with latest stats
+                if (this.globe && this.globe.polygonsData) {
+                    const currentData = this.globe.polygonsData();
+                    if (currentData && Array.isArray(currentData)) {
+                        // Create a map of stats by ISO code for quick lookup
+                        const statsMap = new Map();
+                        statsData.forEach(country => {
+                            const iso = (country.iso || '').toUpperCase();
+                            statsMap.set(iso, {
+                                total_eur: country.total_eur || 0,
+                                total_donors: country.total_donors || 0,
+                                donors_24h: country.donors_24h || 0,
+                                donors_7d: country.donors_7d || 0
+                            });
+                        });
+                        
+                        let updatedCount = 0;
+                        // Update properties for each country
+                        currentData.forEach(country => {
+                            if (country.properties && country.properties.iso) {
+                                const iso = country.properties.iso.toUpperCase();
+                                const stats = statsMap.get(iso);
+                                if (stats) {
+                                    country.properties.total_eur = stats.total_eur;
+                                    country.properties.total_donors = stats.total_donors;
+                                    country.properties.donors_24h = stats.donors_24h;
+                                    country.properties.donors_7d = stats.donors_7d;
+                                    updatedCount++;
+                                } else {
+                                    // Reset to 0 if no stats found (but keep existing data if it exists)
+                                    if (!country.properties.total_eur) {
+                                        country.properties.total_eur = 0;
+                                    }
+                                    if (!country.properties.total_donors) {
+                                        country.properties.total_donors = 0;
+                                    }
+                                    if (!country.properties.donors_24h) {
+                                        country.properties.donors_24h = 0;
+                                    }
+                                    if (!country.properties.donors_7d) {
+                                        country.properties.donors_7d = 0;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Update globe with updated data
+                        this.globe.polygonsData(currentData);
+                        console.log('Updated globe country properties with stats data', {
+                            totalCountries: currentData.length,
+                            updatedCount: updatedCount,
+                            statsDataCount: statsData.length,
+                            sampleStats: statsData.find(c => c.iso === 'NER' || c.iso === 'BEL')
+                        });
+                    }
+                }
             }
             
             updateGlobeColors() {
