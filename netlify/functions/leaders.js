@@ -138,7 +138,7 @@ exports.handler = async (event) => {
       total_eur: Math.round(c.total_eur)
     }));
 
-    // Leaders 24h - sortiraj po donors_24h, pa po total_eur_24h
+    // Leaders 24h - sortiraj po total_eur_24h (hearts), pa po donors_24h
     const leaders_24h = Array.from(byCountry.values())
       .map(c => ({
         country_iso: c.country_iso,
@@ -146,15 +146,15 @@ exports.handler = async (event) => {
         unique_donors: c.donors_24h.size,
         total_eur: Math.round(c.total_eur_24h)
       }))
-      .filter(c => c.unique_donors > 0)
+      .filter(c => c.total_eur > 0)
       .sort((a, b) => {
-        const donorsDiff = b.unique_donors - a.unique_donors;
-        if (donorsDiff !== 0) return donorsDiff;
-        return b.total_eur - a.total_eur;
+        const heartsDiff = b.total_eur - a.total_eur;
+        if (heartsDiff !== 0) return heartsDiff;
+        return b.unique_donors - a.unique_donors;
       })
       .slice(0, 20);
 
-    // Leaders 7d - sortiraj po donors_7d, pa po total_eur_7d
+    // Leaders 7d - sortiraj po total_eur_7d (hearts), pa po donors_7d
     const leaders_7d = Array.from(byCountry.values())
       .map(c => ({
         country_iso: c.country_iso,
@@ -162,15 +162,15 @@ exports.handler = async (event) => {
         unique_donors: c.donors_7d.size,
         total_eur: Math.round(c.total_eur_7d)
       }))
-      .filter(c => c.unique_donors > 0)
+      .filter(c => c.total_eur > 0)
       .sort((a, b) => {
-        const donorsDiff = b.unique_donors - a.unique_donors;
-        if (donorsDiff !== 0) return donorsDiff;
-        return b.total_eur - a.total_eur;
+        const heartsDiff = b.total_eur - a.total_eur;
+        if (heartsDiff !== 0) return heartsDiff;
+        return b.unique_donors - a.unique_donors;
       })
       .slice(0, 20);
 
-    // Leaders all-time - sortiraj po donors_all, pa po total_eur
+    // Leaders all-time - sortiraj po total_eur (hearts), pa po donors_all
     const leaders_all = Array.from(byCountry.values())
       .map(c => ({
         country_iso: c.country_iso,
@@ -178,11 +178,11 @@ exports.handler = async (event) => {
         unique_donors: c.donors_all.size,
         total_eur: Math.round(c.total_eur)
       }))
-      .filter(c => c.unique_donors > 0)
+      .filter(c => c.total_eur > 0)
       .sort((a, b) => {
-        const donorsDiff = b.unique_donors - a.unique_donors;
-        if (donorsDiff !== 0) return donorsDiff;
-        return b.total_eur - a.total_eur;
+        const heartsDiff = b.total_eur - a.total_eur;
+        if (heartsDiff !== 0) return heartsDiff;
+        return b.unique_donors - a.unique_donors;
       })
       .slice(0, 20);
 
