@@ -442,6 +442,39 @@
                 -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
             }
         }
+        
+        /* Custom amount container styling */
+        .amount-btn-custom {
+            cursor: pointer !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            touch-action: manipulation !important;
+            position: relative !important;
+            z-index: 10 !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .amount-btn-custom input {
+            pointer-events: auto !important;
+            color: white !important;
+        }
+        
+        .amount-btn-custom input::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        .amount-btn-custom input::-webkit-inner-spin-button,
+        .amount-btn-custom input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .amount-btn-custom input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
@@ -650,7 +683,13 @@
                             </button>
                         </div>
                         <div class="mt-3">
-                            <input type="number" id="custom-amount" placeholder="Custom amount (5-1000)" min="5" max="1000" class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-center">
+                            <div id="custom-amount-container" class="amount-btn-custom px-4 py-4 bg-gradient-to-r from-orange-600 to-orange-700 border-2 border-orange-500 rounded-xl text-white font-semibold hover:from-orange-700 hover:to-orange-800 transition-all hover:scale-105 active:scale-95 cursor-pointer relative">
+                                <div class="text-lg pointer-events-none flex items-center justify-center space-x-2">
+                                    <input type="number" id="custom-amount" placeholder="Enter amount" min="5" max="1000" class="w-28 bg-transparent border-none text-center text-lg font-semibold text-white placeholder-white/70 focus:outline-none focus:ring-0 pointer-events-auto" style="appearance: textfield;">
+                                    <span class="text-lg pointer-events-none">❤️</span>
+                                </div>
+                                <div class="text-xs opacity-80 pointer-events-none mt-1 text-center">Custom Impact</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -914,11 +953,45 @@
                 
                 // Custom amount - check if element exists
                 const customAmountEl = document.getElementById('custom-amount');
-                if (customAmountEl) {
+                const customAmountContainer = document.getElementById('custom-amount-container');
+                if (customAmountEl && customAmountContainer) {
+                    // Handle input events
                     customAmountEl.addEventListener('input', (e) => {
                         const amount = parseInt(e.target.value);
-                        if (amount > 0) {
+                        if (amount && !isNaN(amount) && amount > 0) {
+                            console.log('Custom amount entered:', amount);
+                            // Always call selectAmount to activate button, but show warning if out of range
                             this.selectAmount(amount);
+                            if (amount < 5 || amount > 1000) {
+                                // Show validation message but don't block
+                                this.showNotification('Amount must be between 5 and 1000 hearts', 'warning');
+                            }
+                        }
+                    });
+                    
+                    // Handle blur to ensure amount is set even if user just typed and clicked away
+                    customAmountEl.addEventListener('blur', (e) => {
+                        const amount = parseInt(e.target.value);
+                        if (amount && !isNaN(amount) && amount > 0) {
+                            this.selectAmount(amount);
+                            if (amount < 5 || amount > 1000) {
+                                this.showNotification('Amount must be between 5 and 1000 hearts', 'warning');
+                            }
+                        }
+                    });
+                    
+                    // Handle Enter key
+                    customAmountEl.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const amount = parseInt(e.target.value);
+                            if (amount && !isNaN(amount) && amount > 0) {
+                                this.selectAmount(amount);
+                                customAmountEl.blur(); // Remove focus
+                                if (amount < 5 || amount > 1000) {
+                                    this.showNotification('Amount must be between 5 and 1000 hearts', 'warning');
+                                }
+                            }
                         }
                     });
                 }
@@ -1098,6 +1171,25 @@
                             }, 200);
                         }
                     });
+                    
+                    // Update custom amount container styling
+                    const customAmountContainer = document.getElementById('custom-amount-container');
+                    const customAmountEl = document.getElementById('custom-amount');
+                    if (customAmountContainer && customAmountEl) {
+                        // Check if this is a custom amount (not 20, 50, or 100)
+                        if (amount !== 20 && amount !== 50 && amount !== 100) {
+                            // Highlight custom amount container
+                            customAmountContainer.classList.add('ring-2', 'ring-orange-400');
+                            // Ensure the input value matches
+                            if (parseInt(customAmountEl.value) !== amount) {
+                                customAmountEl.value = amount;
+                            }
+                        } else {
+                            // Remove highlight from custom amount if a preset button was clicked
+                            customAmountContainer.classList.remove('ring-2', 'ring-orange-400');
+                            customAmountEl.value = '';
+                        }
+                    }
                     
                     // Show success notification (removed to reduce delay - can be re-enabled if needed)
                     // this.showNotification(`Selected ${amount} hearts! Ready to send.`, 'success');
